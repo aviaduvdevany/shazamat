@@ -8,9 +8,9 @@ export default function Shows() {
       <div className="container-custom">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-start gap-12 lg:gap-16">
-             {/* Large Title - Right Side */}
-             <div className="flex-shrink-0">
-              <h2 className="text-[clamp(48px,8vw,120px)] font-bold leading-none text-right">
+            {/* Large Title - Right Side */}
+            <div className="flex-shrink-0">
+              <h2 className="lg:text-[120px] text-[80px] font-bold leading-none text-right">
                 הופעות
               </h2>
             </div>
@@ -20,13 +20,13 @@ export default function Shows() {
                 {upcomingShows.map((show, index) => (
                   <>
                     <ShowCard key={show.id} {...show} />
-                  {index !== upcomingShows.length - 1 && <div className="w-full h-[1px] bg-gray-200" />}
+                    {index !== upcomingShows.length - 1 && (
+                      <div className="w-full h-[1px] bg-gray-200" />
+                    )}
                   </>
                 ))}
               </div>
             </div>
-
-           
           </div>
         </div>
       </div>

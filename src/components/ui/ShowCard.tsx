@@ -7,10 +7,9 @@ interface ShowCardProps {
   venue: string;
 }
 
-
 export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between py-4 md:py-5 gap-4 md:gap-0">
+    <div className="flex flex-col flex-row md:items-center justify-between py-4 md:py-5 gap-4 md:gap-0">
       {/* Date Section */}
       <div className="flex-shrink-0 md:w-28 text-left">
         <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
@@ -21,9 +20,7 @@ export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
 
       {/* Event Details Section */}
       <div className="flex-1 md:px-6">
-        <div className="text-base font-medium text-black mb-1">
-          {venue}
-        </div>
+        <div className="text-base font-medium text-black mb-1">{venue}</div>
         <div className="text-sm text-gray-500">{city} </div>
       </div>
 
