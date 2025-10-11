@@ -5,8 +5,6 @@ import {
   Hero,
   Shows,
   Music,
-  EnergyBanner,
-  Gallery,
   Contact,
 } from "@/components";
 
@@ -17,8 +15,6 @@ export default function Home() {
       <Hero />
       <Shows />
       <Music />
-      <EnergyBanner />
-      <Gallery />
       <Contact />
       <Footer />
     </div>
