@@ -10,7 +10,7 @@ export const upcomingShows: Show[] = [
     day: "15",
     month: "נוב",
     city: "תל אביב",
-    venue: "קונטיינר, נמל תל אביב",
+    venue: "קונטיינר",
     ticketLink: "#",
   },
   {
@@ -18,7 +18,7 @@ export const upcomingShows: Show[] = [
     day: "22",
     month: "נוב",
     city: "חיפה",
-    venue: "בית האמנים, חיפה",
+    venue: "בית האמנים",
     ticketLink: "#",
   },
   {
@@ -26,7 +26,23 @@ export const upcomingShows: Show[] = [
     day: "29",
     month: "נוב",
     city: "ירושלים",
-    venue: "הזאפה, ירושלים",
+    venue: "הזאפה",
+    ticketLink: "#",
+  },
+  {
+    id: 4,
+    day: "06",
+    month: "דצמ",
+    city: "באר שבע",
+    venue: "קאנטרי",
+    ticketLink: "#",
+  },
+  {
+    id: 5,
+    day: "13",
+    month: "דצמ",
+    city: "רמת גן",
+    venue: "היכל התרבות",
     ticketLink: "#",
   },
 ];

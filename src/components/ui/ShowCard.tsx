@@ -7,29 +7,30 @@ interface ShowCardProps {
   venue: string;
 }
 
+
 export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
   return (
-    <div className="bg-white text-black rounded-[var(--radius-md)] p-6 md:p-8 border">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-start gap-4 mb-3">
-            {/* Date Badge */}
-            <div className="bg-[var(--shazamat-orange)] text-white rounded-[var(--radius-sm)] p-3 text-center min-w-[60px]">
-              <div className="text-2xl font-bold leading-none">{day}</div>
-              <div className="text-sm leading-none mt-1">{month}</div>
-            </div>
-
-            {/* Show Info */}
-            <div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-1">{city}</h3>
-              <p className="text-gray-600 text-lg">{venue}</p>
-            </div>
-          </div>
+    <div className="flex flex-col md:flex-row md:items-center justify-between py-4 md:py-5 gap-4 md:gap-0">
+      {/* Date Section */}
+      <div className="flex-shrink-0 md:w-28 text-left">
+        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+          {month}
         </div>
+        <div className="text-2xl font-bold text-black">{day}</div>
+      </div>
 
-        {/* CTA Button */}
-        <button className="bg-[var(--shazamat-orange)] text-black px-6 py-3 rounded-[var(--radius-md)] font-bold hover:bg-black hover:text-white transition-colors duration-[var(--duration-base)]">
-          קנה כרטיסים
+      {/* Event Details Section */}
+      <div className="flex-1 md:px-6">
+        <div className="text-base font-medium text-black mb-1">
+          {venue}
+        </div>
+        <div className="text-sm text-gray-500">{city} </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex-shrink-0 flex gap-2 mt-4 md:mt-0">
+        <button className="px-3 py-1.5 text-sm font-medium border border-black text-black hover:bg-black hover:text-white transition-colors duration-200">
+          כרטיסים
         </button>
       </div>
     </div>
