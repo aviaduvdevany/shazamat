@@ -28,9 +28,9 @@ export default function Header() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-black text-white">
       <div className="container-custom">
-        <div className="flex items-center justify-between h-[72px]">
+        <div className="flex items-center justify-between h-[80px]">
           {/* Desktop Navigation */}
-          <ul className="hidden md:flex items-center gap-8 text-base">
+          <ul className="hidden md:flex items-center gap-8 text-lg">
             {navItems.map((item) => (
               <li key={item.label}>
                 <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors">
@@ -61,7 +61,7 @@ export default function Header() {
             href="#home"
             className="text-2xl font-bold hover:text-[var(--shazamat-orange)] transition-colors"
           >
-            <Logo width={180} height={80} variant="logo" />
+            <Logo width={50} height={50} variant="icon" />
           </a>
         </div>
 
