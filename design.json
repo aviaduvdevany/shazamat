@@ -1,0 +1,290 @@
+{
+    "meta": {
+      "brand": "Shazamat",
+      "version": "1.0.0",
+      "generated": "2025-10-11",
+      "scope": "Design-only blueprint for the website (tokens, rules, components)",
+      "language": "he-IL",
+      "direction": "rtl",
+      "source_notes": "Values marked in `source:true` come directly from the brandbook PDF; others are implementation observations for web consistency."
+    },
+    "tokens": {
+      "color": {
+        "core": {
+          "white": { "value": "#FFFFFF", "description": "Primary light background", "source": true },
+          "black": { "value": "#000000", "description": "Primary dark background and text", "source": true },
+          "orangeAccent": { "value": "#DB7738", "description": "Accent for emphasis (not for logo)", "source": true }
+        },
+        "text": {
+          "onLight": { "value": "#000000" },
+          "onDark": { "value": "#FFFFFF" },
+          "onAccent": { "value": "#000000" }
+        },
+        "states": {
+          "focusRing": { "value": "#DB7738" },
+          "link": { "value": "#FFFFFF", "description": "Default in dark nav/hero" },
+          "linkHover": { "value": "#DB7738" }
+        }
+      },
+      "typography": {
+        "families": {
+          "display": { "value": "Mandatori, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", "source": true },
+          "albumDisplay": { "value": "Emulsi, Mandatori, system-ui, Arial, sans-serif", "note": "Use only in album/cover modules", "source": true },
+          "body": { "value": "system-ui, -apple-system, Segoe UI, Roboto, Heebo, Noto Sans Hebrew, Arial, sans-serif" }
+        },
+        "sizes": {
+          "h1": { "value": "clamp(40px, 6vw, 72px)" },
+          "h2": { "value": "clamp(32px, 4.5vw, 56px)" },
+          "h3": { "value": "clamp(24px, 3.5vw, 40px)" },
+          "bodyL": { "value": "18px" },
+          "bodyM": { "value": "16px" },
+          "bodyS": { "value": "14px" },
+          "label": { "value": "12px" }
+        },
+        "lineHeights": {
+          "display": { "value": 1.1 },
+          "body": { "value": 1.45 }
+        },
+        "letterSpacing": {
+          "display": { "value": "0" },
+          "body": { "value": "0" }
+        },
+        "weight": {
+          "regular": { "value": 400 },
+          "medium": { "value": 500 },
+          "bold": { "value": 700 }
+        }
+      },
+      "spacing": {
+        "scale": {
+          "xs": { "value": "4px" },
+          "sm": { "value": "8px" },
+          "md": { "value": "16px" },
+          "lg": { "value": "24px" },
+          "xl": { "value": "32px" },
+          "2xl": { "value": "48px" },
+          "3xl": { "value": "64px" }
+        },
+        "gridGutter": { "value": "24px" },
+        "containerPadding": { "value": "16px" }
+      },
+      "radii": {
+        "none": { "value": "0" },
+        "sm": { "value": "6px" },
+        "md": { "value": "10px" },
+        "lg": { "value": "14px" },
+        "pill": { "value": "999px" }
+      },
+      "elevation": {
+        "none": { "shadow": "none" },
+        "sm": { "shadow": "0 1px 2px rgba(0,0,0,0.08)" },
+        "md": { "shadow": "0 8px 24px rgba(0,0,0,0.12)" },
+        "lg": { "shadow": "0 16px 40px rgba(0,0,0,0.16)" }
+      },
+      "motion": {
+        "duration": {
+          "fast": { "value": "120ms" },
+          "base": { "value": "200ms" },
+          "slow": { "value": "320ms" }
+        },
+        "easing": {
+          "standard": { "value": "cubic-bezier(0.2, 0, 0, 1)" },
+          "emphasized": { "value": "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+        }
+      }
+    },
+    "identity": {
+      "logo": {
+        "variants": [
+          "Primary wordmark (text only)",
+          "Round icon (text + icon)",
+          "Wide logo (text only)"
+        ],
+        "usageRules": {
+          "separation": "Do not place wordmark and round icon adjacent; use one at a time.",
+          "noDistortion": "Do not stretch or alter proportions.",
+          "colors": "Logo must be black or white only (full or reversed).",
+          "backgroundsRecommended": ["Solid white", "Solid black"],
+          "scalingExamples": ["100%", "200%", "300%", "400%"]
+        },
+        "assets": {
+          "providedInBrandbook": true,
+          "fileTypes": ["SVG", "PNG"]
+        },
+        "source": true
+      },
+      "colorUsage": {
+        "logoColor": "Black or white only",
+        "brandAccentUsage": "Orange accent used for emphasis, CTAs, and highlights—not inside the logo",
+        "source": true
+      },
+      "iconography": {
+        "style": "Minimal, consistent stroke, monoline",
+        "rules": [
+          "Keep uniform stroke weight across the set",
+          "Prefer simple geometric forms",
+          "Avoid mixing different icon sets within a single module"
+        ],
+        "source": true
+      },
+      "imagery": {
+        "themes": [
+          "High-energy live performance (stadium vibe)",
+          "Ultras culture (flags/scarves, loyal crowd)",
+          "Authenticity and self-aware humor"
+        ],
+        "treatments": [
+          "Dominant black & white with high contrast",
+          "Selective orange accent (#DB7738) for emphasis",
+          "Subtle grain/noise to evoke live texture"
+        ],
+        "source": true
+      }
+    },
+    "layout": {
+      "grid": {
+        "type": "Fluid 12-column",
+        "breakpoints": {
+          "xs": 360,
+          "sm": 640,
+          "md": 768,
+          "lg": 1024,
+          "xl": 1280
+        },
+        "maxWidth": "1280px",
+        "gutter": "{tokens.spacing.gridGutter}",
+        "outerPadding": "{tokens.spacing.containerPadding}"
+      },
+      "whitespace": "Prefer generous whitespace to balance the monochrome aesthetic",
+      "imageBias": "Wide performance/crowd visuals as section anchors"
+    },
+    "accessibility": {
+      "contrast": "Meet WCAG AA minimum (black/white pairs exceed ratios)",
+      "focusStates": "Default browser focus plus orange accent outline for interactive elements",
+      "motionReduce": "Respect prefers-reduced-motion: reduce large parallax and long transitions"
+    },
+    "components": {
+      "Button": {
+        "variants": {
+          "primary": {
+            "background": "{tokens.color.core.orangeAccent.value}",
+            "text": "{tokens.color.text.onAccent.value}",
+            "radius": "{tokens.radii.md.value}",
+            "weight": "{tokens.typography.weight.bold.value}",
+            "hover": { "background": "{tokens.color.core.black.value}", "text": "{tokens.color.text.onDark.value}" }
+          },
+          "secondary": {
+            "background": "{tokens.color.core.black.value}",
+            "text": "{tokens.color.text.onDark.value}",
+            "border": "{tokens.color.text.onDark.value}",
+            "radius": "{tokens.radii.md.value}",
+            "hover": { "background": "#111111", "text": "{tokens.color.text.onDark.value}" }
+          },
+          "ghost": {
+            "background": "transparent",
+            "text": "{tokens.color.core.orangeAccent.value}",
+            "hover": { "background": "rgba(219,119,56,0.08)" }
+          }
+        },
+        "sizes": {
+          "sm": { "height": "36px", "paddingX": "12px", "font": "{tokens.typography.sizes.bodyS.value}" },
+          "md": { "height": "44px", "paddingX": "16px", "font": "{tokens.typography.sizes.bodyM.value}" },
+          "lg": { "height": "52px", "paddingX": "20px", "font": "{tokens.typography.sizes.bodyL.value}" }
+        }
+      },
+      "Link": {
+        "default": { "color": "{tokens.color.states.link.value}" },
+        "hover": { "color": "{tokens.color.states.linkHover.value}", "underline": true }
+      },
+      "Navbar": {
+        "background": "{tokens.color.core.black.value}",
+        "text": "{tokens.color.text.onDark.value}",
+        "linkActive": "{tokens.color.core.orangeAccent.value}",
+        "useLogo": "Use either wordmark or round icon (not both)",
+        "height": "72px"
+      },
+      "Hero": {
+        "background": "image or video (BW, high-contrast)",
+        "titleFont": "{tokens.typography.families.display.value}",
+        "titleSize": "{tokens.typography.sizes.h1.value}",
+        "ctaVariant": "primary",
+        "contentMaxWidth": "880px"
+      },
+      "ShowCard": {
+        "background": "{tokens.color.core.white.value}",
+        "text": "{tokens.color.text.onLight.value}",
+        "altBackground": "{tokens.color.core.black.value}",
+        "altText": "{tokens.color.text.onDark.value}",
+        "media": "BW photo, high contrast",
+        "radius": "{tokens.radii.md.value}",
+        "shadow": "{tokens.elevation.sm.shadow}"
+      },
+      "AlbumTile": {
+        "titleFont": "{tokens.typography.families.albumDisplay.value}",
+        "titleSize": "{tokens.typography.sizes.h3.value}",
+        "note": "Album/cover modules are the only place Emulsi is allowed"
+      },
+      "MerchTile": {
+        "image": "Neutral product photography; BW base with orange price/CTA accents",
+        "priceColor": "{tokens.color.core.orangeAccent.value}",
+        "ctaVariant": "primary"
+      },
+      "Footer": {
+        "background": "{tokens.color.core.black.value}",
+        "text": "{tokens.color.text.onDark.value}",
+        "iconStyle": "Match iconography stroke rules",
+        "columns": 3
+      },
+      "Badge": {
+        "style": "Pill",
+        "background": "{tokens.color.core.black.value}",
+        "text": "{tokens.color.text.onDark.value}",
+        "altBackground": "{tokens.color.core.orangeAccent.value}",
+        "altText": "{tokens.color.text.onAccent.value}"
+      }
+    },
+    "rules": {
+      "logo": {
+        "do": [
+          "Use black or white only",
+          "Keep proportions",
+          "Use either wordmark or round icon per area"
+        ],
+        "dont": [
+          "Do not place wordmark and icon side-by-side",
+          "Do not stretch or distort",
+          "Do not recolor the logo"
+        ],
+        "source": true
+      },
+      "color": {
+        "do": [
+          "Prefer monochrome backgrounds (black or white)",
+          "Use orange accent sparingly for emphasis and CTAs"
+        ],
+        "dont": [
+          "Do not introduce additional accent colors",
+          "Do not use orange inside the logo"
+        ],
+        "source": true
+      },
+      "typography": {
+        "headlines": "Mandatori for H1–H3 and decorative headings",
+        "body": "System sans for readability",
+        "album": "Emulsi reserved for album/cover modules only",
+        "source": true
+      },
+      "imagery": {
+        "do": [
+          "Favor BW live performance and crowd shots",
+          "Use high contrast and occasional orange overlays or UI accents"
+        ],
+        "dont": [
+          "Avoid overly polished stock imagery",
+          "Avoid low-contrast grays on grays"
+        ],
+        "source": true
+      }
+    }
+  }
+  
