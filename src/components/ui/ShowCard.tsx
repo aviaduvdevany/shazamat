@@ -9,7 +9,7 @@ interface ShowCardProps {
 
 export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
   return (
-    <div className="bg-white text-black rounded-[var(--radius-md)] p-6 md:p-8 hover:shadow-2xl transition-shadow duration-[var(--duration-slow)]">
+    <div className="bg-white text-black rounded-[var(--radius-md)] p-6 md:p-8 border">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-start gap-4 mb-3">

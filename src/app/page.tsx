@@ -3,7 +3,6 @@ import {
   Header,
   Footer,
   Hero,
-  About,
   Shows,
   Music,
   EnergyBanner,
@@ -16,7 +15,6 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
       <Hero />
-      <About />
       <Shows />
       <Music />
       <EnergyBanner />

@@ -1,15 +1,25 @@
 import Image from "next/image";
 import React from "react";
 
-export default function Logo() {
+export default function Logo({
+  width,
+  height,
+  variant,
+}: {
+  width: number;
+  height: number;
+  variant: "logo" | "icon";
+}) {
+  const variants = {
+    logo: "/shazamat-assets/logo-official.png",
+    icon: "/shazamat-assets/logo-shin.png",
+  };
   return (
-    <div className="flex items-center">
-      <Image
-        src="/shazamat-assets/logo-official.png"
-        alt="Shazamat"
-        width={100}
-        height={100}
-      />
-    </div>
+    <Image
+      src={variants[variant]}
+      alt="Shazamat"
+      width={width}
+      height={height}
+    />
   );
 }

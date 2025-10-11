@@ -19,7 +19,7 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto">
           {/* Main title */}
           <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-6 leading-none">
-            <Logo />
+            <Logo width={100} height={100} variant="logo" />
             <span className="block text-[var(--shazamat-orange)] text-[clamp(40px,6vw,90px)]">
               SHAZAMAT
             </span>

@@ -5,7 +5,7 @@ import { albums } from "@/data";
 
 export default function Music() {
   return (
-    <section id="music" className="py-24 md:py-32 bg-white">
+    <section id="music" className="py-24 md:py-32 bg-black text-white">
       <div className="container-custom">
         <h2 className="text-[clamp(40px,5vw,64px)] font-bold mb-12 text-center">
           המוזיקה שלנו
