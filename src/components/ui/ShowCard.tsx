@@ -9,7 +9,7 @@ interface ShowCardProps {
 
 export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
   return (
-    <div className="flex flex-col flex-row md:items-center justify-between py-4 md:py-5 gap-4 md:gap-0">
+    <div className="flex flex-row md:items-center justify-between py-4 md:py-5 gap-4 md:gap-0">
       {/* Date Section */}
       <div className="flex-shrink-0 md:w-28 text-left">
         <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">

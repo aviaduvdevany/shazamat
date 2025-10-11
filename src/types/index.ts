@@ -19,15 +19,10 @@ export interface Album {
   year: string;
   subtitle?: string;
   coverImage?: string;
-  streamingLinks?: StreamingLinks;
-}
-
-export interface StreamingLinks {
   spotify?: string;
   appleMusic?: string;
-  youtube?: string;
-  soundcloud?: string;
 }
+
 
 // Social Media Types
 export interface SocialPlatform {

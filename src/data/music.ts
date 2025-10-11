@@ -7,20 +7,35 @@ import type { Album } from "@/types";
 export const albums: Album[] = [
   {
     id: 1,
-    title: "האלבום הראשון",
-    year: "2024",
+    title: "רכב מפורק",
+    year: "2019",
+    coverImage: "/albums/meforak.jpeg",
+    spotify: "https://open.spotify.com/album/00000000000000000000000000000000",
+    appleMusic: "https://music.apple.com/album/00000000000000000000000000000000",
   },
   {
     id: 2,
-    title: "הופעה חיה",
-    year: "2023",
-    subtitle: "LIVE",
+    title: "התעוררנו מאוחר",
+    year: "2021",
+    coverImage: "/albums/hitorarnu.jpeg",
+    spotify: "https://open.spotify.com/album/00000000000000000000000000000000",
+    appleMusic: "https://music.apple.com/album/00000000000000000000000000000000",
   },
   {
     id: 3,
-    title: "סינגלים ו-EP",
-    year: "2023-2024",
-    subtitle: "EP",
+    title: "שיחת ליטופים",
+    year: "2023",
+    coverImage: "/albums/litufim.jpg",
+    spotify: "https://open.spotify.com/album/00000000000000000000000000000000",
+    appleMusic: "https://music.apple.com/album/00000000000000000000000000000000",
+  },
+  {
+    id: 4,
+    title: "תופס אוויר",
+    year: "2024",
+    coverImage: "/albums/tofes.jpg",
+    spotify: "https://open.spotify.com/album/00000000000000000000000000000000",
+    appleMusic: "https://music.apple.com/album/00000000000000000000000000000000",
   },
 ];
 
