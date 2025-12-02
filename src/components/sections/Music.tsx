@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import AlbumCard from "@/components/ui/AlbumCard";
 import { albums } from "@/data";
 
@@ -101,10 +102,40 @@ export default function Music() {
               <div
                 key={album.id}
                 id={`album-${album.id}`}
-                className="relative w-full flex justify-center transition-all duration-700 hover:scale-[1.02] scroll-mt-24 md:scroll-mt-32"
+                className="relative w-full py-16 md:py-24 flex justify-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
               >
+                {/* Blurred background of album cover */}
+                {album.coverImage && (
+                  <div className="absolute inset-0 opacity-60 pointer-events-none overflow-hidden">
+                    <div
+                      className="absolute"
+                      style={{
+                        top: "-90%",
+                        left: "-90%",
+                        right: "-90%",
+                        bottom: "-90%",
+                      }}
+                    >
+                      <Image
+                        src={album.coverImage}
+                        alt={`${album.title} background`}
+                        fill
+                        className="object-cover"
+                        style={{
+                          filter: "blur(5px) saturate(1.2)",
+                        }}
+                        quality={30}
+                        unoptimized
+                      />
+                    </div>
+                    {/* Additional dark overlay for better contrast */}
+                    <div className="absolute inset-0 bg-black/20" />
+                  </div>
+                )}
+
+                {/* Album card container */}
                 <div
-                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square md:aspect-[4/5] group"
+                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square md:aspect-[4/5] group z-10"
                   style={{
                     transform: rotation,
                   }}
