@@ -16,10 +16,6 @@ const navItems = [
     label: "מוזיקה",
     href: "#music",
   },
-  {
-    label: "צור קשר",
-    href: "#contact",
-  },
 ];
 
 export default function Header() {
@@ -33,12 +29,13 @@ export default function Header() {
           <ul className="hidden md:flex items-center gap-8 text-lg">
             {navItems.map((item) => (
               <li key={item.label}>
-                <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors">
+                <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors text-[30px]">
                   {item.label}
                 </a>
               </li>
             ))}
           </ul>
+          
 
           {/* Mobile Menu Button */}
           <button
@@ -71,7 +68,7 @@ export default function Header() {
             <ul className="flex flex-col gap-4 text-base">
               {navItems.map((item) => (
                 <li key={item.label}>
-                  <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors">
+                  <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors text-[16px]">
                     {item.label}
                   </a>
                 </li>

@@ -42,7 +42,7 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto">
           {/* Main title */}
           <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-6 leading-none">
-            <Logo width={550} height={200} variant="logo" />
+            <Logo width={650} height={300} variant="logo" />
           </h1>
 
           {/* CTA Buttons */}

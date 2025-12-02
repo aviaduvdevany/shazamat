@@ -8,7 +8,7 @@ export default function Contact() {
       <div className="container-custom">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-[clamp(40px,5vw,64px)] font-bold mb-6">
-            הצטרף למשפחה
+            ניוזלטר
           </h2>
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
             קבל עדכונים על הופעות חדשות, שירים חדשים, ותוכן בלעדי ישירות למייל
@@ -18,7 +18,10 @@ export default function Contact() {
           <NewsletterForm />
 
           {/* Social Links */}
-          <SocialLinks />
+          
+          <div className="mt-8">
+            <SocialLinks />
+          </div>
         </div>
       </div>
     </section>

@@ -8,9 +8,6 @@ export default function Footer() {
           {/* Column 1 - About */}
           <div>
             <h3 className="text-2xl font-bold mb-4">שאזאמאט</h3>
-            <p className="text-gray-400 leading-relaxed">
-              המוזיקה שמביאה את האנרגיה של האצטדיון לבמה
-            </p>
           </div>
 
           {/* Column 2 - Quick Links */}
@@ -56,9 +53,11 @@ export default function Footer() {
           <div>
             <h4 className="font-bold mb-4 text-lg">צור קשר</h4>
             <ul className="space-y-2 text-gray-400">
-              <li>info@shazamat.co.il</li>
-              <li>הזמנות: booking@shazamat.co.il</li>
-              <li>050-1234567</li>
+              <li>
+                <a href="mailto:mulu.records@gmail.com" className="hover:text-[var(--shazamat-orange)] transition-colors">
+                  mulu.records@gmail.com
+                </a>
+              </li>
             </ul>
           </div>
         </div>

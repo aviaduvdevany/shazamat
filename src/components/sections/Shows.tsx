@@ -19,7 +19,7 @@ export default function Shows() {
             <div className="flex-shrink-0 relative">
               {/* Rough shadow/outline effect */}
               <h2
-                className="lg:text-[120px] text-[80px] font-bold leading-none text-right relative"
+                className="lg:text-[120px] text-[80px] leading-none text-right relative"
                 style={{
                   textShadow: `
                     -2px -2px 0 #000,
@@ -30,8 +30,7 @@ export default function Shows() {
                     -1px -1px 0 rgba(0,0,0,0.3),
                     1px 1px 0 rgba(0,0,0,0.3)
                   `,
-                  transform: "rotate(-0.5deg)",
-                  letterSpacing: "-0.02em",
+                  transform: "rotate(2deg)",
                 }}
               >
                 <span className="relative z-10">הופעות</span>

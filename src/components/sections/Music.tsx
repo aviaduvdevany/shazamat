@@ -130,14 +130,14 @@ export default function Music() {
                         fill
                         className="object-cover"
                         style={{
-                          filter: "blur(5px) saturate(1.2)",
+                          filter: "blur(4px) saturate(1.5)",
                         }}
                         quality={30}
                         unoptimized
                       />
                     </div>
                     {/* Additional dark overlay for better contrast */}
-                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 bg-black/30" />
                   </div>
                 )}
 
