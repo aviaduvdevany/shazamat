@@ -65,44 +65,13 @@ export default function AlbumCard({
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
           {/* Album Title - Large and bold */}
           <div
-            className="text-white font-black text-xl md:text-2xl leading-tight text-right mb-3 group-hover:text-[var(--shazamat-orange)] transition-colors duration-500"
+            className="text-white font-black text-xl md:text-2xl leading-tight text-right group-hover:text-[var(--shazamat-orange)] transition-colors duration-500"
             style={{
               textShadow: "2px 2px 0 rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.5)",
               letterSpacing: "-0.02em",
             }}
           >
             {title}
-          </div>
-
-          {/* Streaming Icons - Compact */}
-          <div className="flex items-center gap-2 justify-end">
-            {spotify && (
-              <a
-                href={spotify}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white/20 hover:bg-white/30 border border-white/30 rounded-sm flex items-center justify-center transition-all duration-300 hover:scale-110 hover:border-white/50 backdrop-blur-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954">
-                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.414c-.391.391-.391 1.023 0 1.414.391.391 1.023.391 1.414 0 .391-.391.391-1.023 0-1.414-.391-.391-1.023-.391-1.414 0z" />
-                </svg>
-              </a>
-            )}
-
-            {appleMusic && (
-              <a
-                href={appleMusic}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 bg-white/20 hover:bg-white/30 border border-white/30 rounded-sm flex items-center justify-center transition-all duration-300 hover:scale-110 hover:border-white/50 backdrop-blur-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#FA243C">
-                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" />
-                </svg>
-              </a>
-            )}
           </div>
         </div>
       </div>

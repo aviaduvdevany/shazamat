@@ -15,7 +15,7 @@ export default function Music() {
   return (
     <section
       id="music"
-      className="py-32 md:py-48 bg-black text-white relative overflow-hidden"
+      className="py-24 md:py-32 bg-black text-white relative overflow-hidden"
     >
       {/* Background texture */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none grunge-overlay" />
@@ -102,7 +102,7 @@ export default function Music() {
               <div
                 key={album.id}
                 id={`album-${album.id}`}
-                className="relative w-full py-16 md:py-24 flex justify-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
+                className="relative w-full py-16 md:py-24 flex flex-col items-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
               >
                 {/* Blurred background of album cover */}
                 {album.coverImage && (
@@ -133,9 +133,48 @@ export default function Music() {
                   </div>
                 )}
 
+                {/* Streaming Icons - Above album card */}
+                {(album.spotify || album.appleMusic) && (
+                  <div className="relative z-10 flex items-center justify-center gap-4 md:gap-6 mb-6">
+                    {album.spotify && (
+                      <a
+                        href={album.spotify}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Image
+                          src="/icons/Spotify_logo.svg"
+                          alt="Spotify"
+                          fill
+                          className="object-contain drop-shadow-lg"
+                        />
+                      </a>
+                    )}
+
+                    {album.appleMusic && (
+                      <a
+                        href={album.appleMusic}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Image
+                          src="/icons/Apple_Music_icon.svg"
+                          alt="Apple Music"
+                          fill
+                          className="object-contain drop-shadow-lg"
+                        />
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 {/* Album card container */}
                 <div
-                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square md:aspect-[4/5] group z-10"
+                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square group z-10"
                   style={{
                     transform: rotation,
                   }}
