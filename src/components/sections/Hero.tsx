@@ -1,25 +1,35 @@
-import React from "react";
+"use client";
+import React, { Suspense, useState } from "react";
+import dynamic from "next/dynamic";
 import Logo from "../ui/Logo";
+import HeroImageFallback from "../ui/HeroImageFallback";
+
+const VideoBackground = dynamic(() => import("../ui/VideoBackground"), {
+  ssr: false,
+  loading: () => <HeroImageFallback />,
+});
 
 export default function Hero() {
+  const [videoReady, setVideoReady] = useState(false);
+
   return (
     <section
       id="home"
       className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden"
     >
-      {/* Vimeo Video Background */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden">
-        <iframe
-          src="https://player.vimeo.com/video/1126483445?h=a83562e4c3&autoplay=1&loop=1&muted=1&background=1&controls=0"
-          className="video-background"
-          style={{
-            border: "none",
-            pointerEvents: "none",
-          }}
-          allow="autoplay; fullscreen"
-          title="Shazamat Background Video"
-        />
+      {/* Image Fallback - visible until video is ready */}
+      <div
+        className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
+          videoReady ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
+        <HeroImageFallback />
       </div>
+
+      {/* Video Background with Image Fallback */}
+      <Suspense fallback={<HeroImageFallback />}>
+        <VideoBackground onReady={() => setVideoReady(true)} />
+      </Suspense>
 
       {/* Dark overlay for text readability */}
       <div className="absolute inset-0 bg-black/50"></div>
@@ -34,7 +44,6 @@ export default function Hero() {
           <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-6 leading-none">
             <Logo width={550} height={200} variant="logo" />
           </h1>
-
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
