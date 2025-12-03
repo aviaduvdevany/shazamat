@@ -1,9 +1,11 @@
 "use client";
 import React, { Suspense, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Logo from "../ui/Logo";
 import HeroImageFallback from "../ui/HeroImageFallback";
 import Link from "next/link";
+import { socialPlatforms } from "@/data";
 
 const VideoBackground = dynamic(() => import("../ui/VideoBackground"), {
   ssr: false,
@@ -56,9 +58,31 @@ export default function Hero() {
       <div className="relative z-10 container-custom text-center py-20">
         <div className="max-w-4xl mx-auto">
           {/* Main title */}
-          <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-6 leading-none">
+          <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-4 leading-none">
             <Logo width={650} height={300} variant="logo" />
           </h1>
+
+          {/* Social Links - Compact */}
+          <div className="flex justify-center items-center gap-6 mb-6">
+            {socialPlatforms.map((platform) => (
+              <a
+                key={platform.name}
+                href={platform.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={platform.name}
+                className="w-8 h-8 hover:scale-110 transition-transform duration-300 opacity-90"
+              >
+                <Image
+                  src={platform.icon}
+                  alt={platform.name}
+                  width={20}
+                  height={20}
+                  className="w-full h-full object-contain"
+                />
+              </a>
+            ))}
+          </div>
 
           {/* CTA Buttons */}
           {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -78,7 +102,7 @@ export default function Hero() {
 
       {/* Scroll Indicator - Arrow */}
       <div
-        className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 transition-opacity duration-500 ${
+        className={`absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 transition-opacity duration-500 ${
           scrollY > 50 ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
