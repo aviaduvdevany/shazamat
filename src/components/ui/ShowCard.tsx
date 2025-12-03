@@ -65,7 +65,7 @@ export default function ShowCard({ day, month, city, venue }: ShowCardProps) {
       {/* Action Buttons - rougher, more street art style */}
       <div className="flex-shrink-0 flex gap-2 mt-4 md:mt-0 relative z-10">
         <button
-          className="px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white hover:bg-black hover:text-white transition-all duration-200 relative overflow-hidden"
+          className="px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white hover:bg-black hover:text-white transition-all duration-200 relative overflow-hidden rounded-xs"
           style={{
             boxShadow:
               "2px 2px 0 rgba(0,0,0,0.1), inset 0 0 0 1px rgba(0,0,0,0.05)",

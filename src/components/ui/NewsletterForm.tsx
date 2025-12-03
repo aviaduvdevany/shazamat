@@ -29,7 +29,7 @@ export default function NewsletterForm() {
         type="submit"
         className="bg-[var(--shazamat-orange)] text-black px-8 py-4 rounded-[var(--radius-md)] font-bold text-lg hover:bg-black hover:text-white transition-colors duration-[var(--duration-base)] whitespace-nowrap"
       >
-        הרשם עכשיו
+        הרשמה
       </button>
     </form>
   );

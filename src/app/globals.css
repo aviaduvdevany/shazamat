@@ -326,27 +326,50 @@
     position: absolute;
     top: 50%;
     left: 50%;
+    width: 100vw;
+    height: 100vh;
     min-width: 100%;
     min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1.1);
     z-index: 0;
   }
 
-  /* Ensure video covers the container on all screen sizes */
+  /* Ensure video covers the container on all screen sizes - scale up to prevent edges */
   @media (min-aspect-ratio: 16/9) {
     .video-background {
-      width: 100%;
-      height: auto;
+      width: 100vw;
+      height: 100vh;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%) scale(1.1);
     }
   }
 
   @media (max-aspect-ratio: 16/9) {
     .video-background {
-      width: auto;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%) scale(1.1);
     }
+  }
+
+  /* Scroll Indicator Animation - Arrow bounce */
+  @keyframes scroll-arrow {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(8px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-scroll-arrow {
+    animation: scroll-arrow 2s ease-in-out infinite;
   }
 }
 
@@ -358,5 +381,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .animate-scroll-indicator {
+    animation: none;
   }
 }
