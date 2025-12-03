@@ -1,9 +1,11 @@
 "use client";
 import React from "react";
 import ShowCard from "@/components/ui/ShowCard";
-import { upcomingShows } from "@/data";
+import { useShows } from "@/hooks/useShows";
 
 export default function Shows() {
+  const shows = useShows();
+
   return (
     <section
       id="shows"
@@ -56,7 +58,7 @@ export default function Shows() {
               />
 
               <div className="space-y-6 relative">
-                {upcomingShows.map((show, index) => (
+                {shows.map((show, index) => (
                   <div key={show.id} className="relative">
                     {/* Slight rotation for hand-placed feel */}
                     <div
@@ -67,9 +69,9 @@ export default function Shows() {
                             : "rotate(-0.15deg)",
                       }}
                     >
-                      <ShowCard {...show} />
+                      <ShowCard {...show} isPast={show.isPast} />
                     </div>
-                    {index !== upcomingShows.length - 1 && (
+                    {index !== shows.length - 1 && (
                       <div
                         className="w-full h-[2px] bg-black opacity-10 relative mt-6"
                         style={{

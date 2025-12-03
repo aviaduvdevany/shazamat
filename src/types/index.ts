@@ -5,8 +5,7 @@
 // Show/Event Types
 export interface Show {
   id: number;
-  day: string;
-  month: string;
+  date: string; // ISO date string (YYYY-MM-DD)
   city: string;
   venue: string;
   ticketLink?: string;
@@ -22,7 +21,6 @@ export interface Album {
   spotify?: string;
   appleMusic?: string;
 }
-
 
 // Social Media Types
 export interface SocialPlatform {
