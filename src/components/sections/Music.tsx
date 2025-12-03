@@ -73,10 +73,10 @@ export default function Music() {
               <button
                 key={album.id}
                 onClick={() => scrollToAlbum(album.id)}
-                className="text-center group cursor-pointer transition-all duration-300 hover:scale-105"
+                className="text-center group cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 md:active:scale-105 touch-manipulation"
               >
                 <div
-                  className="text-5xl md:text-7xl font-black text-white/20 group-hover:text-[var(--shazamat-orange)] transition-colors duration-300"
+                  className="text-5xl md:text-7xl font-black text-white/70 md:text-white/20 group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/20 transition-colors duration-300"
                   style={{
                     transform: "rotate(-1deg)",
                     textShadow: "2px 2px 0 rgba(0,0,0,0.3)",
@@ -84,7 +84,7 @@ export default function Music() {
                 >
                   {album.year}
                 </div>
-                <div className="text-xs md:text-sm text-white/30 mt-2 font-medium group-hover:text-[var(--shazamat-orange)] transition-colors">
+                <div className="text-xs md:text-sm text-white/80 md:text-white/30 mt-2 font-medium group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/30 transition-colors">
                   {album.title}
                 </div>
               </button>
