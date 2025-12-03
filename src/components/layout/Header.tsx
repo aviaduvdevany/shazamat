@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Logo from "../ui/Logo";
 
 const navItems = [
@@ -20,22 +20,53 @@ const navItems = [
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Close menu on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mobileMenuOpen]);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuOpen &&
+        navRef.current &&
+        !navRef.current.contains(event.target as Node)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [mobileMenuOpen]);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-black text-white">
+    <nav ref={navRef} className="fixed top-0 w-full z-50 bg-black text-white">
       <div className="container-custom">
         <div className="flex items-center justify-between h-[80px]">
           {/* Desktop Navigation */}
           <ul className="hidden md:flex items-center gap-8 text-lg">
             {navItems.map((item) => (
               <li key={item.label}>
-                <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors text-[30px]">
+                <a
+                  href={item.href}
+                  className="hover:text-[var(--shazamat-orange)] transition-colors text-[30px]"
+                >
                   {item.label}
                 </a>
               </li>
             ))}
           </ul>
-          
 
           {/* Mobile Menu Button */}
           <button
@@ -68,7 +99,11 @@ export default function Header() {
             <ul className="flex flex-col gap-4 text-base">
               {navItems.map((item) => (
                 <li key={item.label}>
-                  <a href={item.href} className="hover:text-[var(--shazamat-orange)] transition-colors text-[16px]">
+                  <a
+                    href={item.href}
+                    className="hover:text-[var(--shazamat-orange)] transition-colors text-[20px]"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     {item.label}
                   </a>
                 </li>

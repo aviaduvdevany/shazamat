@@ -24,14 +24,6 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="#about"
-                  className="hover:text-[var(--shazamat-orange)] transition-colors"
-                >
-                  אודות
-                </a>
-              </li>
-              <li>
-                <a
                   href="#shows"
                   className="hover:text-[var(--shazamat-orange)] transition-colors"
                 >
