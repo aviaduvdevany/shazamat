@@ -13,9 +13,14 @@ export default function Music() {
       const offsetPosition =
         elementPosition + window.pageYOffset - headerHeight - 40; // Extra 40px for spacing
 
+      // Check for prefers-reduced-motion
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
       window.scrollTo({
         top: offsetPosition,
-        behavior: "smooth",
+        behavior: prefersReducedMotion ? "auto" : "smooth",
       });
     }
   };
@@ -74,9 +79,10 @@ export default function Music() {
                 key={album.id}
                 onClick={() => scrollToAlbum(album.id)}
                 className="text-center group cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 md:active:scale-105 touch-manipulation"
+                aria-label={`עבור לאלבום ${album.title} משנת ${album.year}`}
               >
                 <div
-                  className="text-5xl md:text-7xl font-black text-white/70 md:text-white/20 group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/20 transition-colors duration-300"
+                  className="text-5xl md:text-7xl font-black text-white/70 md:text-white/40 group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/40 transition-colors duration-300"
                   style={{
                     transform: "rotate(-1deg)",
                     textShadow: "2px 2px 0 rgba(0,0,0,0.3)",
@@ -84,7 +90,7 @@ export default function Music() {
                 >
                   {album.year}
                 </div>
-                <div className="text-xs md:text-sm text-white/80 md:text-white/30 mt-2 font-medium group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/30 transition-colors">
+                <div className="text-xs md:text-sm text-white/80 md:text-white/50 mt-2 font-medium group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/50 transition-colors">
                   {album.title}
                 </div>
               </button>
@@ -107,10 +113,11 @@ export default function Music() {
             const rotation = rotations[index] || "";
 
             return (
-              <div
+              <article
                 key={album.id}
                 id={`album-${album.id}`}
                 className="relative w-full py-16 md:py-24 flex flex-col items-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
+                aria-labelledby={`album-title-${album.id}`}
               >
                 {/* Blurred background of album cover */}
                 {album.coverImage && (
@@ -158,7 +165,8 @@ export default function Music() {
                         {album.year}
                       </div>
                       {/* Album Title */}
-                      <div
+                      <h3
+                        id={`album-title-${album.id}`}
                         className="text-xl  md:text-3xl font-black text-white/70 md:text-white/70 text-center md:text-right"
                         style={{
                           textShadow:
@@ -167,7 +175,7 @@ export default function Music() {
                         }}
                       >
                         {album.title}
-                      </div>
+                      </h3>
                     </div>
                   </div>
                 </div>
@@ -184,7 +192,11 @@ export default function Music() {
 
                   {/* Album card with enhanced styling */}
                   <div className="relative w-full h-full bg-transparent">
-                    <AlbumCard coverImage={album.coverImage} />
+                    <AlbumCard
+                      coverImage={album.coverImage}
+                      albumTitle={album.title}
+                      albumYear={album.year}
+                    />
                   </div>
 
                   {/* Decorative corner element */}
@@ -209,12 +221,14 @@ export default function Music() {
                         rel="noopener noreferrer"
                         className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
                         onClick={(e) => e.stopPropagation()}
+                        aria-label={`האזן לאלבום ${album.title} ב-Spotify`}
                       >
                         <Image
                           src="/icons/Spotify_logo.svg"
-                          alt="Spotify"
+                          alt=""
                           fill
                           className="object-contain drop-shadow-lg"
+                          aria-hidden="true"
                         />
                       </a>
                     )}
@@ -226,18 +240,20 @@ export default function Music() {
                         rel="noopener noreferrer"
                         className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
                         onClick={(e) => e.stopPropagation()}
+                        aria-label={`האזן לאלבום ${album.title} ב-Apple Music`}
                       >
                         <Image
                           src="/icons/Apple_Music_icon.svg"
-                          alt="Apple Music"
+                          alt=""
                           fill
                           className="object-contain drop-shadow-lg"
+                          aria-hidden="true"
                         />
                       </a>
                     )}
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>

@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "שאזאמאט - Shazamat",
-  description: "שאזאמאס",
+  description: "שאזאמאט - להקת היפ-הופ ישראלית. מוזיקה, הופעות, אלבומים .",
 };
 
 export default function RootLayout({

@@ -110,11 +110,17 @@ export default function Hero() {
           onClick={() => {
             const showsSection = document.getElementById("shows");
             if (showsSection) {
-              showsSection.scrollIntoView({ behavior: "smooth" });
+              // Check for prefers-reduced-motion
+              const prefersReducedMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)"
+              ).matches;
+              showsSection.scrollIntoView({
+                behavior: prefersReducedMotion ? "auto" : "smooth",
+              });
             }
           }}
           className="flex flex-col items-center gap-2 group"
-          aria-label="Scroll down"
+          aria-label="גלול למטה לסעיף הופעות"
         >
           <div className="relative w-6 h-6 animate-scroll-arrow">
             <svg

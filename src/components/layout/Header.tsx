@@ -21,6 +21,9 @@ const navItems = [
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const firstMenuItemRef = useRef<HTMLAnchorElement>(null);
 
   // Close menu on scroll
   useEffect(() => {
@@ -50,6 +53,59 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
 
+  // Keyboard handlers: Escape key and focus trap
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    // Focus trap: keep focus within menu when open
+    const handleTab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+
+      const menuItems =
+        menuRef.current?.querySelectorAll<HTMLAnchorElement>(
+          'a[role="menuitem"]'
+        );
+      if (!menuItems || menuItems.length === 0) return;
+
+      const firstItem = menuItems[0];
+      const lastItem = menuItems[menuItems.length - 1];
+
+      if (event.shiftKey) {
+        // Shift+Tab: if focus is on first item, move to menu button
+        if (document.activeElement === firstItem) {
+          event.preventDefault();
+          menuButtonRef.current?.focus();
+        }
+      } else {
+        // Tab: if focus is on last item, move to menu button
+        if (document.activeElement === lastItem) {
+          event.preventDefault();
+          menuButtonRef.current?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleTab);
+
+    // Focus first menu item when menu opens
+    setTimeout(() => {
+      firstMenuItemRef.current?.focus();
+    }, 100);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleTab);
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <nav ref={navRef} className="fixed top-0 w-full z-50 bg-black text-white">
       <div className="container-custom">
@@ -70,8 +126,12 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
+            ref={menuButtonRef}
             className="md:hidden text-white"
-            aria-label="תפריט"
+            aria-label={mobileMenuOpen ? "סגור תפריט" : "פתח תפריט"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-haspopup="true"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <svg
@@ -80,6 +140,7 @@ export default function Header() {
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
+              aria-hidden="true"
             >
               <path d="M3 12h18M3 6h18M3 18h18" />
             </svg>
@@ -95,14 +156,22 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4">
+          <div
+            ref={menuRef}
+            id="mobile-menu"
+            className="md:hidden pb-4"
+            role="menu"
+            aria-label="תפריט ניווט ראשי"
+          >
             <ul className="flex flex-col gap-4 text-base">
-              {navItems.map((item) => (
+              {navItems.map((item, index) => (
                 <li key={item.label}>
                   <a
+                    ref={index === 0 ? firstMenuItemRef : null}
                     href={item.href}
                     className="hover:text-[var(--shazamat-orange)] transition-colors text-[20px]"
                     onClick={() => setMobileMenuOpen(false)}
+                    role="menuitem"
                   >
                     {item.label}
                   </a>

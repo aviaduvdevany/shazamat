@@ -7,6 +7,7 @@ interface ShowCardProps {
   city: string;
   venue: string;
   isPast?: boolean;
+  ticketLink?: string;
 }
 
 const BUTTON_STYLES = {
@@ -25,8 +26,12 @@ export default function ShowCard({
   city,
   venue,
   isPast = false,
+  ticketLink,
 }: ShowCardProps) {
   const { day, month } = formatDateToHebrew(date);
+  const buttonLabel = isPast
+    ? `כרטיסים להופעה ב-${venue}, ${city} - הופעה זו כבר התקיימה`
+    : `קנה כרטיסים להופעה ב-${venue}, ${city}`;
 
   const handleButtonMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isPast) {
@@ -107,20 +112,21 @@ export default function ShowCard({
 
       {/* Action Buttons - rougher, more street art style */}
       <div className="flex-shrink-0 flex gap-2 mt-4 md:mt-0 relative z-10">
-        <button
-          disabled={isPast}
-          className={`px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white transition-all duration-200 relative overflow-hidden rounded-xs ${
-            isPast
-              ? "opacity-40 cursor-not-allowed line-through decoration-2"
-              : "hover:bg-black hover:text-white"
-          }`}
-          style={BUTTON_STYLES.default}
-          onMouseEnter={handleButtonMouseEnter}
-          onMouseLeave={handleButtonMouseLeave}
-        >
-          <span className="relative z-10">כרטיסים</span>
-          {/* Rough texture overlay */}
-          {!isPast && (
+        {ticketLink && !isPast ? (
+          <a
+            href={ticketLink}
+            className={`px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white transition-all duration-200 relative overflow-hidden rounded-xs hover:bg-black hover:text-white inline-block`}
+            style={BUTTON_STYLES.default}
+            onMouseEnter={(e) => {
+              Object.assign(e.currentTarget.style, BUTTON_STYLES.hover);
+            }}
+            onMouseLeave={(e) => {
+              Object.assign(e.currentTarget.style, BUTTON_STYLES.default);
+            }}
+            aria-label={buttonLabel}
+          >
+            <span className="relative z-10">כרטיסים</span>
+            {/* Rough texture overlay */}
             <div
               className="absolute inset-0 opacity-10 pointer-events-none"
               style={{
@@ -128,8 +134,34 @@ export default function ShowCard({
                 backgroundSize: "20px 20px",
               }}
             />
-          )}
-        </button>
+          </a>
+        ) : (
+          <button
+            disabled={isPast}
+            aria-disabled={isPast}
+            className={`px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white transition-all duration-200 relative overflow-hidden rounded-xs ${
+              isPast
+                ? "opacity-40 cursor-not-allowed line-through decoration-2"
+                : "hover:bg-black hover:text-white"
+            }`}
+            style={BUTTON_STYLES.default}
+            onMouseEnter={handleButtonMouseEnter}
+            onMouseLeave={handleButtonMouseLeave}
+            aria-label={buttonLabel}
+          >
+            <span className="relative z-10">כרטיסים</span>
+            {/* Rough texture overlay */}
+            {!isPast && (
+              <div
+                className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='rough'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23rough)'/%3E%3C/svg%3E")`,
+                  backgroundSize: "20px 20px",
+                }}
+              />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
