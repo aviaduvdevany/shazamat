@@ -141,9 +141,67 @@ export default function Music() {
                   </div>
                 )}
 
-                {/* Streaming Icons - Above album card */}
+                {/* Album Year and Title - Positioned in background area */}
+                <div className="absolute top-8 md:top-12 left-0 right-0 z-10 pointer-events-none hidden md:block">
+                  <div className="container-custom">
+                    <div className="flex flex-col items-center md:items-start gap-2 md:gap-3">
+                      {/* Year - Large and bold */}
+                      <div
+                        className="text-3xl md:text-8xl font-black text-white/60 md:text-white/60"
+                        style={{
+                          transform: "rotate(-1deg)",
+                          textShadow:
+                            "4px 4px 0 rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)",
+                          letterSpacing: "-0.05em",
+                        }}
+                      >
+                        {album.year}
+                      </div>
+                      {/* Album Title */}
+                      <div
+                        className="text-xl  md:text-3xl font-black text-white/70 md:text-white/70 text-center md:text-right"
+                        style={{
+                          textShadow:
+                            "2px 2px 0 rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.3)",
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {album.title}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Album card container */}
+                <div
+                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square group z-10"
+                  style={{
+                    transform: rotation,
+                  }}
+                >
+                  {/* Hover glow effect */}
+                  <div className="absolute -inset-2 bg-white opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 rounded-lg" />
+
+                  {/* Album card with enhanced styling */}
+                  <div className="relative w-full h-full bg-transparent">
+                    <AlbumCard coverImage={album.coverImage} />
+                  </div>
+
+                  {/* Decorative corner element */}
+                  {index % 2 === 0 && (
+                    <div
+                      className="hidden md:block absolute -top-4 -right-4 w-16 h-16 border-2 border-white opacity-10 group-hover:opacity-20 transition-opacity"
+                      style={{
+                        transform: "rotate(45deg)",
+                        clipPath: "polygon(0 0, 50% 0, 100% 50%, 50% 50%)",
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Streaming Icons - Below album card */}
                 {(album.spotify || album.appleMusic) && (
-                  <div className="relative z-10 flex items-center justify-center gap-4 md:gap-6 mb-6">
+                  <div className="relative z-10 flex items-center justify-center gap-4 md:gap-6 mt-6">
                     {album.spotify && (
                       <a
                         href={album.spotify}
@@ -179,33 +237,6 @@ export default function Music() {
                     )}
                   </div>
                 )}
-
-                {/* Album card container */}
-                <div
-                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square group z-10"
-                  style={{
-                    transform: rotation,
-                  }}
-                >
-                  {/* Hover glow effect */}
-                  <div className="absolute -inset-2 bg-white opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 rounded-lg" />
-
-                  {/* Album card with enhanced styling */}
-                  <div className="relative w-full h-full bg-transparent">
-                    <AlbumCard {...album} />
-                  </div>
-
-                  {/* Decorative corner element */}
-                  {index % 2 === 0 && (
-                    <div
-                      className="hidden md:block absolute -top-4 -right-4 w-16 h-16 border-2 border-white opacity-10 group-hover:opacity-20 transition-opacity"
-                      style={{
-                        transform: "rotate(45deg)",
-                        clipPath: "polygon(0 0, 50% 0, 100% 50%, 50% 50%)",
-                      }}
-                    />
-                  )}
-                </div>
               </div>
             );
           })}
