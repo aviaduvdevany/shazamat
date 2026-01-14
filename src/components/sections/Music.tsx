@@ -1,10 +1,14 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import Image from "next/image";
 import AlbumCard from "@/components/ui/AlbumCard";
 import { albums } from "@/data";
 
 export default function Music() {
+  // Sort albums by year (newest first)
+  const sortedAlbums = useMemo(() => {
+    return [...albums].sort((a, b) => parseInt(b.year) - parseInt(a.year));
+  }, []);
   const scrollToAlbum = (albumId: number) => {
     const element = document.getElementById(`album-${albumId}`);
     if (element) {
@@ -74,7 +78,7 @@ export default function Music() {
         {/* Year timeline indicator - Moved to top with scroll functionality */}
         <div className="mb-24 md:mb-32 pb-8 border-b border-white/10">
           <div className="flex flex-wrap gap-6 md:gap-12 justify-center items-center">
-            {albums.map((album) => (
+            {sortedAlbums.map((album) => (
               <button
                 key={album.id}
                 onClick={() => scrollToAlbum(album.id)}
@@ -100,7 +104,7 @@ export default function Music() {
 
         {/* Vertical Album Layout - All albums stacked, centered, same size */}
         <div className="space-y-16 md:space-y-24">
-          {albums.map((album, index) => {
+          {sortedAlbums.map((album, index) => {
             // Subtle rotations in different directions
             const rotations = [
               "md:rotate(-1.2deg)",

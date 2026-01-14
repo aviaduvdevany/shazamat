@@ -1,5 +1,5 @@
 import React from "react";
-import { Header, Footer, Hero, Shows, Music, Contact } from "@/components";
+import { Header, Footer, Hero, Shows, Music } from "@/components";
 import SkipLinks from "@/components/ui/SkipLinks";
 import StructuredData from "@/components/seo/StructuredData";
 
@@ -13,7 +13,7 @@ export default function Home() {
         <Hero />
         <Shows />
         <Music />
-        <Contact />
+        {/* <Contact /> */}
       </main>
       <Footer />
     </div>

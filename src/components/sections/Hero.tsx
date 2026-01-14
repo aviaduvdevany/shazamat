@@ -78,7 +78,7 @@ export default function Hero() {
                   alt={platform.name}
                   width={20}
                   height={20}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
                 />
               </a>
             ))}

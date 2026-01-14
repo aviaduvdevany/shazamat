@@ -1,13 +1,5 @@
 /* Custom Fonts */
 @font-face {
-  font-family: "Mandatory";
-  src: url("/fonts/MandatoryVariable.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Emulsi";
   src: url("/fonts/EmulsiVF.ttf") format("truetype");
   font-weight: 100 900;
@@ -69,7 +61,7 @@
   --shazamat-orange: #db7738;
 
   /* Typography */
-  --font-display: "Mandatory", system-ui, -apple-system, sans-serif;
+  --font-display: "Emulsi", system-ui, -apple-system, sans-serif;
   --font-body: "Emulsi", system-ui, -apple-system, sans-serif;
 
   /* Spacing */
