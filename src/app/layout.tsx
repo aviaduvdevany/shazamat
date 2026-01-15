@@ -4,7 +4,7 @@ import "./globals.css";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 const siteName = "שאזאמאט - Shazamat";
 const description =
-  "שאזאמאט - להקת היפ-הופ ישראלית. מוזיקה, הופעות, אלבומים. האזן למוזיקה החדשה שלנו ב-Spotify ו-Apple Music.";
+  "שאזאמאט - להקת היפ-הופ ישראלית. מוזיקה, הופעות, אלבומים.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
