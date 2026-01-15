@@ -1,5 +1,5 @@
 import React from "react";
-import { Header, Footer, Hero, Shows, Music } from "@/components";
+import { Header, Footer, Hero, UpcomingShow, Shows, Music } from "@/components";
 import SkipLinks from "@/components/ui/SkipLinks";
 import StructuredData from "@/components/seo/StructuredData";
 
@@ -11,6 +11,7 @@ export default function Home() {
       <Header />
       <main id="main-content">
         <Hero />
+        <UpcomingShow />
         <Shows />
         <Music />
         {/* <Contact /> */}

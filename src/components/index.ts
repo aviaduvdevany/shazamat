@@ -9,6 +9,7 @@ export { default as Footer } from "./layout/Footer";
 
 // Section Components
 export { default as Hero } from "./sections/Hero";
+export { default as UpcomingShow } from "./sections/UpcomingShow";
 export { default as Shows } from "./sections/Shows";
 export { default as Music } from "./sections/Music";
 export { default as Contact } from "./sections/Contact";
