@@ -21,17 +21,8 @@ export default function Shows() {
             <div className="flex-shrink-0 relative">
               {/* Rough shadow/outline effect */}
               <h2
-                className="lg:text-[120px] text-[80px] leading-none text-right relative"
+                className="lg:text-[120px] text-[65px] leading-none text-right relative"
                 style={{
-                  textShadow: `
-                    -2px -2px 0 #000,
-                    2px -2px 0 #000,
-                    -2px 2px 0 #000,
-                    2px 2px 0 #000,
-                    4px 4px 8px rgba(0,0,0,0.1),
-                    -1px -1px 0 rgba(0,0,0,0.3),
-                    1px 1px 0 rgba(0,0,0,0.3)
-                  `,
                   transform: "rotate(2deg)",
                 }}
               >

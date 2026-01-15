@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Logo from "../ui/Logo";
 import HeroImageFallback from "../ui/HeroImageFallback";
-import Link from "next/link";
 import { socialPlatforms } from "@/data";
 
 const VideoBackground = dynamic(() => import("../ui/VideoBackground"), {
@@ -63,7 +62,7 @@ export default function Hero() {
           </h1>
 
           {/* Social Links - Compact */}
-          <div className="flex justify-center items-center gap-6 mb-6">
+          <div className="flex justify-center items-center gap-3 mb-6">
             {socialPlatforms.map((platform) => (
               <a
                 key={platform.name}
@@ -71,14 +70,18 @@ export default function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={platform.name}
-                className="w-8 h-8 hover:scale-110 transition-transform duration-300 opacity-90"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-white/15 border border-white/30 hover:bg-white/25 hover:border-white/50 hover:scale-110 group shadow-sm"
               >
                 <Image
                   src={platform.icon}
                   alt={platform.name}
-                  width={20}
-                  height={20}
-                  className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  width={24}
+                  height={24}
+                  className={`object-contain transition-all duration-300 ${
+                    platform.name === "YouTube"
+                      ? "brightness-0 invert group-hover:brightness-100 group-hover:invert-0"
+                      : "grayscale group-hover:grayscale-0"
+                  }`}
                 />
               </a>
             ))}
