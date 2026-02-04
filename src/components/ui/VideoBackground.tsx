@@ -106,7 +106,7 @@ export default function VideoBackground({ onReady }: VideoBackgroundProps) {
     >
       <iframe
         ref={iframeRef}
-        src="https://player.vimeo.com/video/1126483445?h=a83562e4c3&autoplay=1&loop=1&muted=1&background=1&controls=0"
+        src="https://player.vimeo.com/video/1161696100?h=a83562e4c3&autoplay=1&loop=1&muted=1&background=1&controls=0"
         className="video-background"
         style={{
           border: "none",
