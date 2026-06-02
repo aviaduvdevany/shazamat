@@ -73,8 +73,8 @@ export default function UpcomingShow() {
               >
                 <div className="relative aspect-[4/5] md:aspect-[4/4] w-full max-w-md mx-auto">
                   <Image
-                    src="/images/barby-april.png"
-                    alt="שאזאמאט בארבי - 4.4.26"
+                    src="/images/barby-july.png"
+                    alt="שאזאמאט בארבי - 4.7.26"
                     fill
                     className="object-cover brightness-100 group-hover:brightness-110 transition-all duration-500"
                     priority
@@ -154,7 +154,7 @@ export default function UpcomingShow() {
                     letterSpacing: "0.1em",
                   }}
                 >
-                  4.4.26
+                  4.7.26
                 </div>
                 <div
                   className="text-base md:text-lg text-white/80 font-medium"

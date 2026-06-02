@@ -36,7 +36,7 @@ export const upcomingShows: Show[] = [
   },
   {
     id: 5,
-    date: "2026-04-04", 
+    date: "2026-07-04", 
     city: "תל אביב",
     venue: " בארבי",
     ticketLink: "https://barby.co.il/show/4338",
