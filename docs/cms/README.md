@@ -37,6 +37,12 @@ The CMS lives at `/admin` and lets the band manager:
 | Feature a show (homepage highlight) | Toggle in shows table or FeaturedCard |
 | Hide a show from the public site | Eye icon in shows table |
 | Upload a cover image for a show | Drag-and-drop inside ShowForm |
+| View & manage all albums | `/admin/albums` |
+| Create a new album | Dialog on `/admin/albums` |
+| Edit an existing album | `/admin/albums/[id]/edit` |
+| Delete an album | Button in albums table |
+| Hide an album from the public site | Eye icon in albums table |
+| Upload a cover image for an album | Drag-and-drop inside AlbumForm |
 
 The public site reads directly from the same database — there is no publish/deploy step. Changes appear immediately.
 
@@ -82,29 +88,41 @@ src/
 │   ├── auth.ts                          Session helpers (createSession, verifySession, isAuthenticated, checkCredentials)
 │   ├── blob.ts                          uploadCoverImage / deleteCoverImage (server-side helpers)
 │   ├── prisma.ts                        Singleton PrismaClient with @prisma/adapter-pg
-│   └── shows/
-│       ├── schemas.ts                   Zod ShowSchema + exported types (ShowFormData, ActionResult)
-│       ├── queries.ts                   DB read functions (getAllShows, getPublicShows, getFeaturedShow, …)
-│       └── actions.ts                   "use server" — createShow, updateShow, deleteShow,
-│                                         toggleShowVisibility, setFeaturedShow, clearFeaturedShow
+│   ├── shows/
+│   │   ├── schemas.ts                   Zod ShowSchema + exported types (ShowFormData, ActionResult)
+│   │   ├── queries.ts                   DB read functions (getAllShows, getPublicShows, getFeaturedShow, …)
+│   │   └── actions.ts                   "use server" — createShow, updateShow, deleteShow,
+│   │                                     toggleShowVisibility, setFeaturedShow, clearFeaturedShow
+│   └── albums/
+│       ├── schemas.ts                   Zod AlbumSchema + exported types (AlbumFormData, ActionResult)
+│       ├── queries.ts                   DB read functions (getAllAlbums, getPublicAlbums, getAlbumById)
+│       └── actions.ts                   "use server" — createAlbum, updateAlbum, deleteAlbum,
+│                                         toggleAlbumVisibility
 ├── app/
 │   ├── admin/
-│   │   ├── layout.tsx                   Admin shell — header, nav, logout button, <Toaster>
+│   │   ├── layout.tsx                   Admin shell — header, nav (shows + albums), logout button, <Toaster>
 │   │   ├── page.tsx                     Redirects / → /admin/shows
 │   │   ├── auth-actions.ts              loginAction / logoutAction server actions
 │   │   ├── login/
 │   │   │   ├── page.tsx
 │   │   │   └── LoginForm.tsx            Login card UI
-│   │   └── shows/
-│   │       ├── page.tsx                 Main shows dashboard (RSC — fetches data, renders FeaturedCard + ShowsTable)
-│   │       ├── NewShowDialog.tsx        "הוספת הופעה" dialog — wraps ShowForm, calls router.refresh() on success
-│   │       ├── ShowForm.tsx             Shared create/edit form (RHF + Zod, Vercel Blob upload, WebP conversion)
-│   │       ├── ShowsTable.tsx           Client component — shows list, delete/edit/hide/feature buttons
-│   │       ├── FeaturedCard.tsx         Highlighted card for the currently featured show
-│   │       ├── new/
-│   │       │   └── page.tsx             Legacy page (kept for direct URL access, not linked from UI)
+│   │   ├── shows/
+│   │   │   ├── page.tsx                 Main shows dashboard (RSC — fetches data, renders FeaturedCard + ShowsTable)
+│   │   │   ├── NewShowDialog.tsx        "הוספת הופעה" dialog — wraps ShowForm, calls router.refresh() on success
+│   │   │   ├── ShowForm.tsx             Shared create/edit form (RHF + Zod, Vercel Blob upload, WebP conversion)
+│   │   │   ├── ShowsTable.tsx           Client component — shows list, delete/edit/hide/feature buttons
+│   │   │   ├── FeaturedCard.tsx         Highlighted card for the currently featured show
+│   │   │   ├── new/
+│   │   │   │   └── page.tsx             Legacy page (kept for direct URL access, not linked from UI)
+│   │   │   └── [id]/edit/
+│   │   │       └── page.tsx             Edit page — fetches show by id, renders ShowForm
+│   │   └── albums/
+│   │       ├── page.tsx                 Main albums dashboard (RSC — fetches data, renders AlbumsTable)
+│   │       ├── NewAlbumDialog.tsx       "הוספת אלבום" dialog — wraps AlbumForm, calls router.refresh() on success
+│   │       ├── AlbumForm.tsx            Shared create/edit form (RHF + Zod, Vercel Blob upload, WebP conversion)
+│   │       ├── AlbumsTable.tsx          Client component — albums list, delete/edit/hide buttons
 │   │       └── [id]/edit/
-│   │           └── page.tsx             Edit page — fetches show by id, renders ShowForm
+│   │           └── page.tsx             Edit page — fetches album by id, renders AlbumForm
 │   └── api/
 │       └── admin/
 │           └── upload/
@@ -136,11 +154,27 @@ model Show {
   @@index([isFeatured])
   @@index([isHidden])
 }
+
+model Album {
+  id         String   @id @default(cuid())
+  title      String
+  year       Int                      // release year, used for display and sorting
+  subtitle   String?                  // e.g. "EP", "סינגל"
+  coverImage String?                  // /albums/... local path or Vercel Blob URL
+  spotify    String?                  // full Spotify album URL or null
+  appleMusic String?                  // full Apple Music album URL or null
+  isHidden   Boolean  @default(false) // excluded from public site when true
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([year])
+  @@index([isHidden])
+}
 ```
 
 **Invariants enforced in code (not in DB):**
-- Only one `isFeatured = true` at a time. `createShow` and `updateShow` use a `$transaction` that resets all others before setting the new one.
-- `isHidden` shows are filtered out by all `getPublic*` queries but remain visible in the admin.
+- Only one `isFeatured = true` at a time (shows only). `createShow` and `updateShow` use a `$transaction` that resets all others before setting the new one.
+- `isHidden` records are filtered out by all `getPublic*` queries but remain visible in the admin (both shows and albums).
 
 ---
 
@@ -196,6 +230,8 @@ Allowed types: `image/jpeg`, `image/png`, `image/webp`, `image/gif` — max 10 M
 
 All in `src/lib/shows/actions.ts` (`"use server"`). All require authentication.
 
+**Shows** (`src/lib/shows/actions.ts`):
+
 | Action | Signature | Notes |
 |---|---|---|
 | `createShow` | `(data: ShowFormData) → ActionResult` | Wraps in transaction if `isFeatured: true` |
@@ -205,7 +241,18 @@ All in `src/lib/shows/actions.ts` (`"use server"`). All require authentication.
 | `setFeaturedShow` | `(id) → ActionResult` | Clears all others, sets this one featured |
 | `clearFeaturedShow` | `() → ActionResult` | Sets all `isFeatured = false` |
 
-All actions call `revalidatePath("/")` and `revalidatePath("/admin/shows")` on success.
+All show actions call `revalidatePath("/")` and `revalidatePath("/admin/shows")` on success.
+
+**Albums** (`src/lib/albums/actions.ts`):
+
+| Action | Signature | Notes |
+|---|---|---|
+| `createAlbum` | `(data: AlbumFormData) → ActionResult` | No featured concept |
+| `updateAlbum` | `(id, data: AlbumFormData) → ActionResult` | — |
+| `deleteAlbum` | `(id) → ActionResult` | Deletes Blob image first if present |
+| `toggleAlbumVisibility` | `(id) → ActionResult` | Flips `isHidden` |
+
+All album actions call `revalidatePath("/")` and `revalidatePath("/admin/albums")` on success.
 
 `ActionResult` type:
 ```ts
@@ -218,14 +265,15 @@ type ActionResult =
 
 ## Public site integration
 
-The public site reads show data server-side. There is **no static data file** — everything comes from the DB.
+The public site reads all data server-side. There is **no static data file** for shows or albums — everything comes from the DB.
 
 | Query function | Where used | Filters |
 |---|---|---|
 | `getPublicShows()` | `src/app/page.tsx` → `Shows` component | `isHidden: false`, sorted ascending by date |
 | `getPublicFeaturedShow()` | `src/app/page.tsx` → `UpcomingShow` component | `isFeatured: true`, `isHidden: false` |
+| `getPublicAlbums()` | `src/app/page.tsx` → `Music` + `StructuredData` + `sitemap.ts` | `isHidden: false`, sorted descending by year |
 
-**Relevant files:** `src/lib/shows/queries.ts`, `src/app/page.tsx`, `src/components/sections/Shows.tsx`, `src/components/sections/UpcomingShow.tsx`, `src/app/sitemap.ts`
+**Relevant files:** `src/lib/shows/queries.ts`, `src/lib/albums/queries.ts`, `src/app/page.tsx`, `src/components/sections/Shows.tsx`, `src/components/sections/UpcomingShow.tsx`, `src/components/sections/Music.tsx`, `src/app/sitemap.ts`
 
 ---
 
@@ -289,6 +337,10 @@ import { prisma } from "@/lib/prisma";
 4. Update `createShow` and `updateShow` in `src/lib/shows/actions.ts` to read/write the new field.
 5. Update `ShowForm.tsx` to render the new input.
 6. Update `queries.ts` return types if the public site needs the field.
+
+### Add a field to Album
+
+Same pattern as adding to Show — extend `AlbumSchema` in `src/lib/albums/schemas.ts`, update `createAlbum`/`updateAlbum` in `actions.ts`, update `AlbumForm.tsx`, run a migration.
 
 ### Add a new admin section (e.g. "Media")
 

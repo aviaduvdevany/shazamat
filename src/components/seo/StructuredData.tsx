@@ -1,11 +1,17 @@
 import React from "react";
-import { albums } from "@/data/music";
 import { socialPlatforms } from "@/data/social";
 import type { PublicShow } from "@/lib/shows/queries";
+import type { PublicAlbum } from "@/lib/albums/queries";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
-export default function StructuredData({ shows = [] }: { shows?: PublicShow[] }) {
+export default function StructuredData({
+  shows = [],
+  albums = [],
+}: {
+  shows?: PublicShow[];
+  albums?: PublicAlbum[];
+}) {
   // MusicGroup schema for the band
   const musicGroupSchema = {
     "@context": "https://schema.org",
@@ -24,22 +30,21 @@ export default function StructuredData({ shows = [] }: { shows?: PublicShow[] })
       name: "Israel",
     },
     album: albums.map((album) => {
-      const albumData: any = {
+      const albumData: Record<string, unknown> = {
         "@type": "MusicAlbum",
         name: album.title,
         "@id": `${siteUrl}/#album-${album.id}`,
         datePublished: album.year,
       };
       if (album.coverImage) {
-        albumData.image = `${siteUrl}${album.coverImage}`;
+        albumData.image = album.coverImage.startsWith("/")
+          ? `${siteUrl}${album.coverImage}`
+          : album.coverImage;
       }
       if (album.spotify) {
         albumData.potentialAction = {
           "@type": "ListenAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate: album.spotify,
-          },
+          target: { "@type": "EntryPoint", urlTemplate: album.spotify },
         };
       }
       return albumData;
@@ -53,7 +58,9 @@ export default function StructuredData({ shows = [] }: { shows?: PublicShow[] })
     "@id": `${siteUrl}/#album-${album.id}`,
     name: album.title,
     ...(album.coverImage && {
-      image: `${siteUrl}${album.coverImage}`,
+      image: album.coverImage.startsWith("/")
+        ? `${siteUrl}${album.coverImage}`
+        : album.coverImage,
     }),
     datePublished: album.year,
     byArtist: {

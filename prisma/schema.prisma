@@ -24,3 +24,19 @@ model Show {
   @@index([isFeatured])
   @@index([isHidden])
 }
+
+model Album {
+  id         String   @id @default(cuid())
+  title      String
+  year       Int
+  subtitle   String?
+  coverImage String?
+  spotify    String?
+  appleMusic String?
+  isHidden   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([year])
+  @@index([isHidden])
+}

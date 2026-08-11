@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
-import { albums } from "@/data/music";
 import { getPublicShows } from "@/lib/shows/queries";
+import { getPublicAlbums } from "@/lib/albums/queries";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
@@ -34,14 +34,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const albumRoutes = albums.map((album) => ({
-    url: `${baseUrl}#album-${album.id}`,
-    lastModified: new Date(),
-    changeFrequency: "yearly" as const,
-    priority: 0.6,
-  }));
-
+  let albumRoutes: MetadataRoute.Sitemap = [];
   let showRoutes: MetadataRoute.Sitemap = [];
+
+  try {
+    const albums = await getPublicAlbums();
+    albumRoutes = albums.map((album) => ({
+      url: `${baseUrl}#album-${album.id}`,
+      lastModified: new Date(),
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // DB unavailable during build; skip album routes
+  }
+
   try {
     const shows = await getPublicShows();
     const futureShows = shows.filter((s) => !s.isPast);

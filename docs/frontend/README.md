@@ -139,6 +139,8 @@ components.json                 # shadcn config
 | `/admin/shows` | `src/app/admin/shows/page.tsx` | Shows list + create dialog |
 | `/admin/shows/new` | `src/app/admin/shows/new/page.tsx` | Full-page create (also covered by dialog) |
 | `/admin/shows/[id]/edit` | `src/app/admin/shows/[id]/edit/page.tsx` | Edit show |
+| `/admin/albums` | `src/app/admin/albums/page.tsx` | Albums list + create dialog |
+| `/admin/albums/[id]/edit` | `src/app/admin/albums/[id]/edit/page.tsx` | Edit album |
 | `/api/admin/upload` | `src/app/api/admin/upload/route.ts` | Vercel Blob client upload |
 | `/sitemap.xml` | `src/app/sitemap.ts` | Sitemap |
 | `/robots.txt` | `src/app/robots.ts` | Robots |
@@ -149,14 +151,16 @@ components.json                 # shadcn config
 
 | Content | Source of truth | Edit how |
 |---|---|---|
-| Shows (public + admin) | **Postgres via Prisma** | Admin CMS, or `src/lib/shows/*` |
+| Shows (public + admin) | **Postgres via Prisma** | Admin CMS (`/admin/shows`), or `src/lib/shows/*` |
 | Featured show | DB (`isFeatured`) | Admin FeaturedCard / table toggle |
-| Albums / music | **`src/data/music.ts`** | Edit the file + put art in `public/albums/` |
+| Albums / music | **Postgres via Prisma** | Admin CMS (`/admin/albums`), or `src/lib/albums/*` |
 | Social links | **`src/data/social.ts`** | Edit the file |
 | Hero video | Hardcoded Vimeo id in `VideoBackground` | Edit component |
 | Logos | `public/shazamat-assets/` | Replace assets; `Logo.tsx` maps variants |
 
 **Do not** add new public shows to `src/data/shows.ts` — that file is legacy. The live homepage uses `getPublicShows()` / `getPublicFeaturedShow()`.
+
+**Do not** edit `src/data/music.ts` for album changes — that file is now legacy. The live homepage uses `getPublicAlbums()`. To add or edit albums, use the admin CMS at `/admin/albums`.
 
 Canonical public type:
 
@@ -216,7 +220,7 @@ Admin: `http://localhost:3000/admin/login`
 | Edit hero (video, logo, socials) | `src/components/sections/Hero.tsx` |
 | Edit featured show UI | `src/components/sections/UpcomingShow.tsx` |
 | Edit shows list / cards | `Shows.tsx` + `ShowCard.tsx` |
-| Add/edit album | `src/data/music.ts` + `public/albums/` |
+| Add/edit album | Admin CMS `/admin/albums` (or `src/lib/albums/*` for data layer) |
 | Change social URLs | `src/data/social.ts` |
 | Brand colors / fonts / motion | `src/app/globals.css` (+ check `design.json`) |
 | Nav links | `src/components/layout/Header.tsx` |

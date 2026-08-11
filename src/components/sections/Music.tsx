@@ -2,14 +2,18 @@
 import React, { useMemo } from "react";
 import Image from "next/image";
 import AlbumCard from "@/components/ui/AlbumCard";
-import { albums } from "@/data";
+import type { PublicAlbum } from "@/lib/albums/queries";
 
-export default function Music() {
-  // Sort albums by year (newest first)
+interface MusicProps {
+  albums: PublicAlbum[];
+}
+
+export default function Music({ albums }: MusicProps) {
+  // Sort albums by year (newest first) — already sorted by query, but keep for safety
   const sortedAlbums = useMemo(() => {
-    return [...albums].sort((a, b) => parseInt(b.year) - parseInt(a.year));
-  }, []);
-  const scrollToAlbum = (albumId: number) => {
+    return [...albums].sort((a, b) => b.year - a.year);
+  }, [albums]);
+  const scrollToAlbum = (albumId: string) => {
     const element = document.getElementById(`album-${albumId}`);
     if (element) {
       const headerHeight = 80; // Header height in pixels
@@ -124,7 +128,7 @@ export default function Music() {
                 aria-labelledby={`album-title-${album.id}`}
               >
                 {/* Blurred background of album cover */}
-                {album.coverImage && (
+                {album.coverImage != null && (
                   <div className="absolute inset-0 opacity-60 pointer-events-none overflow-hidden">
                     <div
                       className="absolute"
@@ -197,9 +201,9 @@ export default function Music() {
                   {/* Album card with enhanced styling */}
                   <div className="relative w-full h-full bg-transparent">
                     <AlbumCard
-                      coverImage={album.coverImage}
+                      coverImage={album.coverImage ?? undefined}
                       albumTitle={album.title}
-                      albumYear={album.year}
+                      albumYear={String(album.year)}
                     />
                   </div>
 

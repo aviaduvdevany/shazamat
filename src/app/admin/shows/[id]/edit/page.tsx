@@ -38,7 +38,7 @@ export default async function EditShowPage({
       <ShowForm
         defaultValues={showToFormData(show)}
         showId={id}
-        onSubmit={(data) => updateShow(id, data)}
+        onSubmit={updateShow.bind(null, id)}
       />
     </div>
   );

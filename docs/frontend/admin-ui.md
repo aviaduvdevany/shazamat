@@ -9,7 +9,7 @@ UI patterns for `/admin`. For auth, Prisma, Blob, and server actions, read [`doc
 [`src/app/admin/layout.tsx`](../../src/app/admin/layout.tsx):
 
 - Own `<html lang="he" dir="rtl">` + dark `body`
-- Sticky top bar: brand chip, link to הופעות, logout form (`logoutAction`)
+- Sticky top bar: brand chip, links to הופעות + אלבומים, logout form (`logoutAction`)
 - `<Toaster />` from **`sonner`** (not `@/components/ui/sonner`)
 - `robots: noindex,nofollow`
 
@@ -25,8 +25,10 @@ Login page sits under this layout too (logout still visible — acceptable).
 | `/admin/shows` | `FeaturedCard` + `NewShowDialog` + `ShowsTable` |
 | `/admin/shows/new` | Full-page `ShowForm` + `createShow` |
 | `/admin/shows/[id]/edit` | `ShowForm` with defaults from `showToFormData` + `updateShow` |
+| `/admin/albums` | `NewAlbumDialog` + `AlbumsTable` |
+| `/admin/albums/[id]/edit` | `AlbumForm` with defaults from `albumToFormData` + `updateAlbum` |
 
-Prefer the **dialog create** path on the list page; `/new` is an alternate full page.
+Prefer the **dialog create** path on the list page for both shows and albums.
 
 ---
 
@@ -120,9 +122,9 @@ Frontend agents should not weaken middleware checks or move secrets client-side.
 
 | Need | Existing approach |
 |---|---|
-| Validation | Zod in `schemas.ts` |
-| Mutations | `src/lib/shows/actions.ts` |
-| Upload | Blob client + `/api/admin/upload` |
+| Validation | Zod in `src/lib/shows/schemas.ts` / `src/lib/albums/schemas.ts` |
+| Mutations | `src/lib/shows/actions.ts` / `src/lib/albums/actions.ts` |
+| Upload | Blob client + `/api/admin/upload` (shared for shows and albums) |
 | Feedback | `toast` from `sonner` |
 | Refresh after mutate | `revalidatePath` in actions + client `router.refresh()` where needed |
 

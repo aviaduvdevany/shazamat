@@ -38,6 +38,12 @@ export default function AdminLayout({
               >
                 הופעות
               </a>
+              <a
+                href="/admin/albums"
+                className="px-3 py-1.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-md transition-all duration-150"
+              >
+                אלבומים
+              </a>
             </nav>
 
             {/* Logout */}
