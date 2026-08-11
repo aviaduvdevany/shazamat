@@ -1,11 +1,13 @@
 "use client";
 import React from "react";
 import ShowCard from "@/components/ui/ShowCard";
-import { useShows } from "@/hooks/useShows";
+import type { PublicShow } from "@/lib/shows/queries";
 
-export default function Shows() {
-  const shows = useShows();
+interface ShowsProps {
+  shows: PublicShow[];
+}
 
+export default function Shows({ shows }: ShowsProps) {
   return (
     <section
       id="shows"
@@ -60,7 +62,13 @@ export default function Shows() {
                             : "rotate(-0.15deg)",
                       }}
                     >
-                      <ShowCard {...show} isPast={show.isPast} />
+                      <ShowCard
+                        date={show.date}
+                        city={show.city}
+                        venue={show.venue}
+                        ticketLink={show.ticketLink ?? undefined}
+                        isPast={show.isPast}
+                      />
                     </div>
                     {index !== shows.length - 1 && (
                       <div

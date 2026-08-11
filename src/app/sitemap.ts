@@ -1,13 +1,12 @@
 import { MetadataRoute } from "next";
 import { albums } from "@/data/music";
-import { upcomingShows } from "@/data/shows";
+import { getPublicShows } from "@/lib/shows/queries";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteUrl;
 
-  // Main pages
   const routes = [
     {
       url: baseUrl,
@@ -35,7 +34,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Album pages
   const albumRoutes = albums.map((album) => ({
     url: `${baseUrl}#album-${album.id}`,
     lastModified: new Date(),
@@ -43,20 +41,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // Show pages (only future shows)
-  const showRoutes = upcomingShows
-    .filter((show) => {
-      const showDate = new Date(show.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return showDate >= today;
-    })
-    .map((show) => ({
+  let showRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const shows = await getPublicShows();
+    const futureShows = shows.filter((s) => !s.isPast);
+    showRoutes = futureShows.map(() => ({
       url: `${baseUrl}#shows`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.7,
     }));
+  } catch {
+    // DB unavailable during build; skip show routes
+  }
 
   return [...routes, ...albumRoutes, ...showRoutes];
 }

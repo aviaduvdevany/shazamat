@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Show {
+  id         String   @id @default(cuid())
+  date       DateTime @db.Date
+  city       String
+  venue      String
+  ticketLink String?
+  doorsTime  String?
+  coverImage String?
+  isFeatured Boolean  @default(false)
+  isHidden   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([date])
+  @@index([isFeatured])
+  @@index([isHidden])
+}

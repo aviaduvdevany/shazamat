@@ -1,11 +1,11 @@
 import React from "react";
 import { albums } from "@/data/music";
-import { upcomingShows } from "@/data/shows";
 import { socialPlatforms } from "@/data/social";
+import type { PublicShow } from "@/lib/shows/queries";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
-export default function StructuredData() {
+export default function StructuredData({ shows = [] }: { shows?: PublicShow[] }) {
   // MusicGroup schema for the band
   const musicGroupSchema = {
     "@context": "https://schema.org",
@@ -80,13 +80,7 @@ export default function StructuredData() {
   }));
 
   // Event schemas for upcoming shows
-  const eventSchemas = upcomingShows
-    .filter((show) => {
-      const showDate = new Date(show.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return showDate >= today;
-    })
+  const eventSchemas = shows
     .map((show) => {
       const showDate = new Date(show.date);
       return {
