@@ -138,7 +138,7 @@ Root metadata (`layout.tsx`):
 
 `StructuredData` builds rich-results entities from shows + albums. It is an **async RSC** that self-fetches — no longer receives props from `page.tsx`.
 
-`sitemap.ts` includes hash routes and DB shows (show entries currently all point at `#shows` — low granularity).
+`sitemap.ts` returns only the homepage URL (`/`). Hash fragments (`#shows`, `#music`, etc.) are not separate indexable URLs and are omitted. Keeping it DB-free avoids a production 500 if the DB is unavailable at crawl time.
 
 `robots.ts` disallows `/admin` from all crawlers.
 

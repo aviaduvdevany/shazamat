@@ -1,5 +1,5 @@
 import React from "react";
-import { socialPlatforms } from "@/data/social";
+import { entitySameAs } from "@/data/social";
 import { getPublicShows } from "@/lib/shows/queries";
 import { getPublicAlbums } from "@/lib/albums/queries";
 
@@ -22,7 +22,7 @@ export default async function StructuredData() {
     image: `${siteUrl}/images/hero-image.webp`,
     logo: `${siteUrl}/images/hero-image.webp`,
     genre: "Hip Hop",
-    sameAs: socialPlatforms.map((platform) => platform.url),
+    sameAs: entitySameAs,
     email: "mulu.records@gmail.com",
     foundingLocation: { "@type": "Place", name: "Israel" },
     album: albums.map((album) => {
@@ -102,7 +102,7 @@ export default async function StructuredData() {
     alternateName: "Shazamat",
     url: siteUrl,
     logo: `${siteUrl}/images/hero-image.webp`,
-    sameAs: socialPlatforms.map((platform) => platform.url),
+    sameAs: entitySameAs,
     contactPoint: { "@type": "ContactPoint", email: "mulu.records@gmail.com", contactType: "customer service" },
   };
 
@@ -113,7 +113,6 @@ export default async function StructuredData() {
       { "@type": "ListItem", position: 1, name: "בית", item: siteUrl },
       { "@type": "ListItem", position: 2, name: "הופעות", item: `${siteUrl}#shows` },
       { "@type": "ListItem", position: 3, name: "מוזיקה", item: `${siteUrl}#music` },
-      { "@type": "ListItem", position: 4, name: "צור קשר", item: `${siteUrl}#contact` },
     ],
   };
 
