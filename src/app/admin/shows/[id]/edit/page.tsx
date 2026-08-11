@@ -3,7 +3,30 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getShowById } from "@/lib/shows/queries";
 import { updateShow } from "@/lib/shows/actions";
-import ShowForm, { showToFormData } from "../../ShowForm";
+import ShowForm from "../../ShowForm";
+import type { Show } from "@/generated/prisma/client";
+import type { ShowFormData } from "@/lib/shows/schemas";
+
+function toInputDate(d: Date | string | null | undefined): string {
+  if (!d) return "";
+  const date = new Date(d);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function showToFormData(show: Show): Partial<ShowFormData> {
+  return {
+    date: toInputDate(show.date),
+    city: show.city,
+    venue: show.venue,
+    ticketLink: show.ticketLink ?? "",
+    doorsTime: show.doorsTime ?? "",
+    coverImage: show.coverImage ?? "",
+    isFeatured: show.isFeatured,
+  };
+}
 
 export default async function EditShowPage({
   params,

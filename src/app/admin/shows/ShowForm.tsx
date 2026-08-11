@@ -9,7 +9,6 @@ import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
 import { ShowSchema, type ShowFormData } from "@/lib/shows/schemas";
 import { Upload, Star, Loader2, ImageIcon } from "lucide-react";
-import type { Show } from "@/generated/prisma/client";
 
 interface ShowFormProps {
   defaultValues?: Partial<ShowFormData>;
@@ -17,27 +16,6 @@ interface ShowFormProps {
   onSubmit: (data: ShowFormData) => Promise<{ success: boolean; error?: string }>;
   onSuccess?: () => void;
   onCancel?: () => void;
-}
-
-function toInputDate(d: Date | string | null | undefined): string {
-  if (!d) return "";
-  const date = new Date(d);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-export function showToFormData(show: Show): Partial<ShowFormData> {
-  return {
-    date: toInputDate(show.date),
-    city: show.city,
-    venue: show.venue,
-    ticketLink: show.ticketLink ?? "",
-    doorsTime: show.doorsTime ?? "",
-    coverImage: show.coverImage ?? "",
-    isFeatured: show.isFeatured,
-  };
 }
 
 function FieldLabel({
