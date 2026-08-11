@@ -151,12 +151,12 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
     <form onSubmit={handleSubmit(submit)} className="space-y-8" dir="rtl">
       {/* Section: פרטי אלבום */}
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-100">פרטי האלבום</h3>
           <p className="text-xs text-zinc-500 mt-0.5">מידע בסיסי שיוצג בסקשן המוזיקה</p>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Title */}
           <div className="md:col-span-2">
             <FieldLabel required>שם האלבום</FieldLabel>
@@ -240,16 +240,16 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
 
       {/* Section: תמונה וגדרות */}
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-100">תמונה והגדרות</h3>
           <p className="text-xs text-zinc-500 mt-0.5">עטיפת האלבום וגדרות תצוגה</p>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
           {/* Cover image */}
           <div>
             <FieldLabel hint="מומלץ: ריבועי">עטיפת האלבום</FieldLabel>
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               {/* Preview */}
               <div className={`relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border transition-colors ${
                 imagePreview ? "border-zinc-600" : "border-zinc-700 border-dashed"
@@ -350,11 +350,11 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 pt-2">
         <button
           type="submit"
           disabled={isPending || uploading}
-          className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-orange-500/20 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-orange-500/20 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           {isPending ? "שומר..." : "שמור אלבום"}
@@ -362,7 +362,7 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
         <button
           type="button"
           onClick={() => onCancel ? onCancel() : router.back()}
-          className="px-6 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-200 border border-zinc-700 hover:border-zinc-600 rounded-xl transition-all duration-150"
+          className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-center text-zinc-400 hover:text-zinc-200 border border-zinc-700 hover:border-zinc-600 rounded-xl transition-all duration-150"
         >
           ביטול
         </button>

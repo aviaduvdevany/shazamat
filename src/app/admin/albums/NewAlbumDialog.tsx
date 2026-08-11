@@ -35,7 +35,7 @@ export default function NewAlbumDialog() {
         dir="rtl"
         className="!max-w-2xl w-full bg-zinc-950 border-zinc-800 text-zinc-100 max-h-[90vh] overflow-y-auto p-0"
       >
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-zinc-800">
+        <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-zinc-800">
           <DialogTitle className="text-xl font-black text-white text-right">
             הוספת אלבום חדש
           </DialogTitle>
@@ -44,7 +44,7 @@ export default function NewAlbumDialog() {
           </p>
         </DialogHeader>
 
-        <div className="px-6 py-6">
+        <div className="px-4 sm:px-6 py-5 sm:py-6">
           <AlbumForm onSubmit={createAlbum} onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
         </div>
       </DialogContent>

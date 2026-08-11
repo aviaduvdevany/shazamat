@@ -32,7 +32,7 @@ export default function FeaturedCard({ featured }: { featured: Show | null }) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
       {/* Section label */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-4 border-b border-zinc-800">
         <div className="flex items-center gap-2.5">
           <span className="flex h-2 w-2 rounded-full bg-orange-400 ring-2 ring-orange-400/30" />
           <h2 className="text-sm font-semibold text-zinc-100">הופעה מודגשת</h2>
@@ -61,7 +61,7 @@ export default function FeaturedCard({ featured }: { featured: Show | null }) {
 
       {/* Content */}
       {show ? (
-        <div className="flex items-center gap-6 p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 p-4 sm:p-6">
           {/* Cover image */}
           {show.coverImage ? (
             <div className="relative flex-shrink-0 w-20 h-24 overflow-hidden rounded-lg shadow-lg ring-1 ring-white/10">
@@ -82,7 +82,7 @@ export default function FeaturedCard({ featured }: { featured: Show | null }) {
           {/* Info */}
           <div className="flex-1 min-w-0 space-y-3">
             <div>
-              <h3 className="text-2xl font-black text-white leading-tight">{show.venue}</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">{show.venue}</h3>
             </div>
             <div className="flex flex-wrap items-center gap-4">
               <span className="flex items-center gap-1.5 text-sm text-zinc-300">

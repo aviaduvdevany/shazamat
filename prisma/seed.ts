@@ -64,7 +64,7 @@ async function main() {
         venue: "בארבי",
         ticketLink: "https://barby.co.il/show/4338",
         doorsTime: "20:30",
-        coverImage: "/images/barby-july.png",
+        coverImage: "/images/barby-july.webp",
         isFeatured: true,
       },
     });

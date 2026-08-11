@@ -162,17 +162,17 @@ export default function ShowsTable({ shows }: { shows: ShowWithStatus[] }) {
   return (
     <div className="space-y-3">
       {/* Stats */}
-      <div className="flex items-center gap-6 px-1">
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6 px-1">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black text-white">{items.length}</span>
           <span className="text-xs text-zinc-500 leading-tight">סה״כ<br />הופעות</span>
         </div>
-        <div className="w-px h-8 bg-zinc-800" />
+        <div className="hidden sm:block w-px h-8 bg-zinc-800" />
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black text-emerald-400">{upcoming.length}</span>
           <span className="text-xs text-zinc-500 leading-tight">הופעות<br />עתידיות</span>
         </div>
-        <div className="w-px h-8 bg-zinc-800" />
+        <div className="hidden sm:block w-px h-8 bg-zinc-800" />
         <div className="flex items-center gap-2">
           <span className="text-2xl font-black text-yellow-500">{hidden.length}</span>
           <span className="text-xs text-zinc-500 leading-tight">הופעות<br />מוסתרות</span>
@@ -181,8 +181,8 @@ export default function ShowsTable({ shows }: { shows: ShowWithStatus[] }) {
 
       {/* Table */}
       <div className="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900">
-        {/* Header */}
-        <div className="grid grid-cols-[140px_1fr_1fr_160px_120px] border-b border-zinc-800 bg-zinc-800/50 px-6 py-3">
+        {/* Desktop column header — hidden on mobile */}
+        <div className="hidden md:grid grid-cols-[140px_1fr_1fr_160px_120px] border-b border-zinc-800 bg-zinc-800/50 px-6 py-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">תאריך</span>
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">מקום</span>
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">עיר</span>
@@ -194,85 +194,116 @@ export default function ShowsTable({ shows }: { shows: ShowWithStatus[] }) {
         <div className="divide-y divide-zinc-800/70">
           {items.map((show) => {
             const { day, month, year } = formatDate(show.date);
+            const onDeleted = () => setItems((prev) => prev.filter((s) => s.id !== show.id));
+            const onToggle = (next: boolean) =>
+              setItems((prev) => prev.map((s) => (s.id === show.id ? { ...s, isHidden: next } : s)));
+
             return (
               <div
                 key={show.id}
-                className={`grid grid-cols-[140px_1fr_1fr_160px_120px] items-center px-6 py-4 transition-colors group ${
-                  show.isHidden
-                    ? "bg-yellow-950/10 hover:bg-yellow-950/20"
-                    : "hover:bg-zinc-800/30"
+                className={`transition-colors group ${
+                  show.isHidden ? "bg-yellow-950/10" : ""
                 } ${show.isPast && !show.isHidden ? "opacity-55" : ""}`}
               >
-                {/* Date tile */}
-                <div className="flex items-center gap-2.5">
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-lg border flex flex-col items-center justify-center transition-colors group-hover:border-zinc-600 ${
-                    show.isHidden ? "bg-zinc-800/50 border-zinc-700/50" : "bg-zinc-800 border-zinc-700"
-                  }`}>
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase leading-none">{month}</span>
-                    <span className={`text-base font-black leading-tight ${show.isHidden ? "text-zinc-500" : "text-white"}`}>{day}</span>
+                {/* ── Mobile card (hidden md+) ── */}
+                <div className={`md:hidden p-4 ${show.isHidden ? "hover:bg-yellow-950/20" : "hover:bg-zinc-800/30"}`}>
+                  <div className="flex items-start gap-3">
+                    {/* Date tile */}
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg border flex flex-col items-center justify-center ${
+                      show.isHidden ? "bg-zinc-800/50 border-zinc-700/50" : "bg-zinc-800 border-zinc-700"
+                    }`}>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase leading-none">{month}</span>
+                      <span className={`text-base font-black leading-tight ${show.isHidden ? "text-zinc-500" : "text-white"}`}>{day}</span>
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        {show.isFeatured && <Star className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 fill-orange-400" />}
+                        <span className={`text-sm font-semibold truncate ${show.isHidden ? "text-zinc-500" : "text-zinc-100"}`}>{show.venue}</span>
+                      </div>
+                      <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1">
+                        <span className={`text-xs ${show.isHidden ? "text-zinc-600" : "text-zinc-400"}`}>{show.city}</span>
+                        <span className="text-zinc-700 text-xs">·</span>
+                        <span className="text-xs text-zinc-600">{year}</span>
+                        {show.isHidden && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-950/60 text-yellow-500 border border-yellow-800/50">
+                            <EyeOff className="w-2.5 h-2.5" />מוסתר
+                          </span>
+                        )}
+                        {!show.isHidden && (
+                          show.isPast ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-500 border border-zinc-700">עברה</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">עתידית</span>
+                          )
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs text-zinc-600">{year}</span>
+                  {/* Mobile action row */}
+                  <div className="flex items-center justify-end gap-0.5 mt-3 pt-3 border-t border-zinc-800/60">
+                    <Link
+                      href={`/admin/shows/${show.id}/edit`}
+                      title="ערוך"
+                      className="p-2 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50 rounded-md transition-all duration-150"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Link>
+                    <SetFeaturedButton id={show.id} isFeatured={show.isFeatured} />
+                    <VisibilityButton id={show.id} isHidden={show.isHidden} onToggle={onToggle} />
+                    <DeleteButton id={show.id} onDeleted={onDeleted} />
+                  </div>
                 </div>
 
-                {/* Venue */}
-                <div className="flex items-center gap-2 min-w-0">
-                  {show.isFeatured && (
-                    <Star className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 fill-orange-400" />
-                  )}
-                  <span className={`text-sm font-semibold truncate ${show.isHidden ? "text-zinc-500" : "text-zinc-100"}`}>
-                    {show.venue}
-                  </span>
-                </div>
-
-                {/* City */}
-                <span className={`text-sm ${show.isHidden ? "text-zinc-600" : "text-zinc-400"}`}>
-                  {show.city}
-                </span>
-
-                {/* Status badges */}
-                <div className="flex gap-1.5 flex-wrap items-center">
-                  {show.isHidden && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-950/60 text-yellow-500 border border-yellow-800/50">
-                      <EyeOff className="w-2.5 h-2.5" />
-                      מוסתר
-                    </span>
-                  )}
-                  {!show.isHidden && (
-                    show.isPast ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-500 border border-zinc-700">
-                        עברה
+                {/* ── Desktop row (hidden < md) ── */}
+                <div className={`hidden md:grid grid-cols-[140px_1fr_1fr_160px_120px] items-center px-6 py-4 ${
+                  show.isHidden ? "hover:bg-yellow-950/20" : "hover:bg-zinc-800/30"
+                }`}>
+                  {/* Date tile */}
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg border flex flex-col items-center justify-center transition-colors group-hover:border-zinc-600 ${
+                      show.isHidden ? "bg-zinc-800/50 border-zinc-700/50" : "bg-zinc-800 border-zinc-700"
+                    }`}>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase leading-none">{month}</span>
+                      <span className={`text-base font-black leading-tight ${show.isHidden ? "text-zinc-500" : "text-white"}`}>{day}</span>
+                    </div>
+                    <span className="text-xs text-zinc-600">{year}</span>
+                  </div>
+                  {/* Venue */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {show.isFeatured && <Star className="w-3.5 h-3.5 text-orange-400 flex-shrink-0 fill-orange-400" />}
+                    <span className={`text-sm font-semibold truncate ${show.isHidden ? "text-zinc-500" : "text-zinc-100"}`}>{show.venue}</span>
+                  </div>
+                  {/* City */}
+                  <span className={`text-sm ${show.isHidden ? "text-zinc-600" : "text-zinc-400"}`}>{show.city}</span>
+                  {/* Status badges */}
+                  <div className="flex gap-1.5 flex-wrap items-center">
+                    {show.isHidden && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-yellow-950/60 text-yellow-500 border border-yellow-800/50">
+                        <EyeOff className="w-2.5 h-2.5" />מוסתר
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">
-                        עתידית
-                      </span>
-                    )
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-center gap-0.5">
-                  <Link
-                    href={`/admin/shows/${show.id}/edit`}
-                    title="ערוך"
-                    className="p-1.5 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50 rounded-md transition-all duration-150"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Link>
-                  <SetFeaturedButton id={show.id} isFeatured={show.isFeatured} />
-                  <VisibilityButton
-                    id={show.id}
-                    isHidden={show.isHidden}
-                    onToggle={(next) =>
-                      setItems((prev) =>
-                        prev.map((s) => (s.id === show.id ? { ...s, isHidden: next } : s))
+                    )}
+                    {!show.isHidden && (
+                      show.isPast ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-800 text-zinc-500 border border-zinc-700">עברה</span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">עתידית</span>
                       )
-                    }
-                  />
-                  <DeleteButton
-                    id={show.id}
-                    onDeleted={() => setItems((prev) => prev.filter((s) => s.id !== show.id))}
-                  />
+                    )}
+                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center justify-center gap-0.5">
+                    <Link
+                      href={`/admin/shows/${show.id}/edit`}
+                      title="ערוך"
+                      className="p-1.5 text-zinc-600 hover:text-zinc-200 hover:bg-zinc-700/50 rounded-md transition-all duration-150"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Link>
+                    <SetFeaturedButton id={show.id} isFeatured={show.isFeatured} />
+                    <VisibilityButton id={show.id} isHidden={show.isHidden} onToggle={onToggle} />
+                    <DeleteButton id={show.id} onDeleted={onDeleted} />
+                  </div>
                 </div>
               </div>
             );
