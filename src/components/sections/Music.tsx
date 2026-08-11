@@ -1,48 +1,29 @@
-"use client";
-import React, { useMemo } from "react";
+import React from "react";
 import Image from "next/image";
 import AlbumCard from "@/components/ui/AlbumCard";
-import type { PublicAlbum } from "@/lib/albums/queries";
+import YearNav from "@/components/ui/YearNav";
+import { getPublicAlbums } from "@/lib/albums/queries";
 
-interface MusicProps {
-  albums: PublicAlbum[];
-}
+const rotations = [
+  "md:rotate(-1.2deg)",
+  "md:rotate(1.5deg)",
+  "md:rotate(-0.8deg)",
+  "md:rotate(1.3deg)",
+  "md:rotate(-1deg)",
+];
 
-export default function Music({ albums }: MusicProps) {
-  // Sort albums by year (newest first) — already sorted by query, but keep for safety
-  const sortedAlbums = useMemo(() => {
-    return [...albums].sort((a, b) => b.year - a.year);
-  }, [albums]);
-  const scrollToAlbum = (albumId: string) => {
-    const element = document.getElementById(`album-${albumId}`);
-    if (element) {
-      const headerHeight = 80; // Header height in pixels
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition =
-        elementPosition + window.pageYOffset - headerHeight - 40; // Extra 40px for spacing
-
-      // Check for prefers-reduced-motion
-      const prefersReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-      });
-    }
-  };
+export default async function Music() {
+  const albums = await getPublicAlbums();
 
   return (
     <section
       id="music"
       className="py-24 md:py-32 bg-black text-white relative overflow-hidden"
     >
-      {/* Background texture */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none grunge-overlay" />
 
       <div className="container-custom relative z-10">
-        {/* Massive Title - Breaking boundaries */}
+        {/* Massive Title */}
         <div className="relative mb-16 md:mb-20">
           <h2
             className="lg:text-[140px] text-[100px] font-black leading-none text-left relative z-10"
@@ -62,7 +43,6 @@ export default function Music({ albums }: MusicProps) {
             <span className="relative z-10">מוזיקה</span>
           </h2>
 
-          {/* Decorative elements */}
           <div
             className="absolute top-[-20px] left-[10%] w-[120px] h-[8px] bg-white opacity-20"
             style={{
@@ -79,191 +59,136 @@ export default function Music({ albums }: MusicProps) {
           />
         </div>
 
-        {/* Year timeline indicator - Moved to top with scroll functionality */}
-        <div className="mb-24 md:mb-32 pb-8 border-b border-white/10">
-          <div className="flex flex-wrap gap-6 md:gap-12 justify-center items-center">
-            {sortedAlbums.map((album) => (
-              <button
-                key={album.id}
-                onClick={() => scrollToAlbum(album.id)}
-                className="text-center group cursor-pointer transition-all duration-300 hover:scale-105 active:scale-95 md:active:scale-105 touch-manipulation"
-                aria-label={`עבור לאלבום ${album.title} משנת ${album.year}`}
-              >
-                <div
-                  className="text-5xl md:text-7xl font-black text-white/70 md:text-white/40 group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/40 transition-colors duration-300"
-                  style={{
-                    transform: "rotate(-1deg)",
-                    textShadow: "2px 2px 0 rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {album.year}
-                </div>
-                <div className="text-xs md:text-sm text-white/80 md:text-white/50 mt-2 font-medium group-hover:text-[var(--shazamat-orange)] active:text-[var(--shazamat-orange)] md:active:text-white/50 transition-colors">
-                  {album.title}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Year navigation — client island (scroll-to behavior) */}
+        <YearNav albums={albums.map((a) => ({ id: a.id, year: a.year, title: a.title }))} />
 
-        {/* Vertical Album Layout - All albums stacked, centered, same size */}
+        {/* Album list */}
         <div className="space-y-16 md:space-y-24">
-          {sortedAlbums.map((album, index) => {
-            // Subtle rotations in different directions
-            const rotations = [
-              "md:rotate(-1.2deg)",
-              "md:rotate(1.5deg)",
-              "md:rotate(-0.8deg)",
-              "md:rotate(1.3deg)",
-              "md:rotate(-1deg)",
-            ];
+          {albums.map((album, index) => (
+            <article
+              key={album.id}
+              id={`album-${album.id}`}
+              className="relative w-full py-16 md:py-24 flex flex-col items-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
+              aria-labelledby={`album-title-${album.id}`}
+            >
+              {/* Blurred background — tiny source, heavily blurred = tiny cost */}
+              {album.coverImage && (
+                <div className="absolute inset-0 opacity-60 pointer-events-none overflow-hidden">
+                  <div
+                    className="absolute"
+                    style={{ top: "-60%", left: "-60%", right: "-60%", bottom: "-60%" }}
+                  >
+                    <Image
+                      src={album.coverImage}
+                      alt=""
+                      fill
+                      aria-hidden="true"
+                      className="object-cover"
+                      style={{ filter: "blur(24px) saturate(1.4)" }}
+                      quality={35}
+                      sizes="30vw"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-black/30" />
+                </div>
+              )}
 
-            const rotation = rotations[index] || "";
-
-            return (
-              <article
-                key={album.id}
-                id={`album-${album.id}`}
-                className="relative w-full py-16 md:py-24 flex flex-col items-center transition-all duration-700 scroll-mt-24 md:scroll-mt-32 overflow-hidden"
-                aria-labelledby={`album-title-${album.id}`}
-              >
-                {/* Blurred background of album cover */}
-                {album.coverImage != null && (
-                  <div className="absolute inset-0 opacity-60 pointer-events-none overflow-hidden">
+              {/* Year + title overlay */}
+              <div className="absolute top-8 md:top-12 left-0 right-0 z-10 pointer-events-none hidden md:block">
+                <div className="container-custom">
+                  <div className="flex flex-col items-center md:items-start gap-2 md:gap-3">
                     <div
-                      className="absolute"
+                      className="text-3xl md:text-8xl font-black text-white/60"
                       style={{
-                        top: "-90%",
-                        left: "-90%",
-                        right: "-90%",
-                        bottom: "-90%",
+                        transform: "rotate(-1deg)",
+                        textShadow: "4px 4px 0 rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)",
+                        letterSpacing: "-0.05em",
                       }}
                     >
-                      <Image
-                        src={album.coverImage}
-                        alt={`${album.title} background`}
-                        fill
-                        className="object-cover"
-                        style={{
-                          filter: "blur(4px) saturate(1.5)",
-                        }}
-                        quality={30}
-                        unoptimized
-                      />
+                      {album.year}
                     </div>
-                    {/* Additional dark overlay for better contrast */}
-                    <div className="absolute inset-0 bg-black/30" />
-                  </div>
-                )}
-
-                {/* Album Year and Title - Positioned in background area */}
-                <div className="absolute top-8 md:top-12 left-0 right-0 z-10 pointer-events-none hidden md:block">
-                  <div className="container-custom">
-                    <div className="flex flex-col items-center md:items-start gap-2 md:gap-3">
-                      {/* Year - Large and bold */}
-                      <div
-                        className="text-3xl md:text-8xl font-black text-white/60 md:text-white/60"
-                        style={{
-                          transform: "rotate(-1deg)",
-                          textShadow:
-                            "4px 4px 0 rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)",
-                          letterSpacing: "-0.05em",
-                        }}
-                      >
-                        {album.year}
-                      </div>
-                      {/* Album Title */}
-                      <h3
-                        id={`album-title-${album.id}`}
-                        className="text-xl  md:text-3xl font-black text-white/70 md:text-white/70 text-center md:text-right"
-                        style={{
-                          textShadow:
-                            "2px 2px 0 rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.3)",
-                          letterSpacing: "-0.02em",
-                        }}
-                      >
-                        {album.title}
-                      </h3>
-                    </div>
+                    <h3
+                      id={`album-title-${album.id}`}
+                      className="text-xl md:text-3xl font-black text-white/70 text-center md:text-right"
+                      style={{
+                        textShadow: "2px 2px 0 rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.3)",
+                        letterSpacing: "-0.02em",
+                      }}
+                    >
+                      {album.title}
+                    </h3>
                   </div>
                 </div>
+              </div>
 
-                {/* Album card container */}
-                <div
-                  className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square group z-10"
-                  style={{
-                    transform: rotation,
-                  }}
-                >
-                  {/* Hover glow effect */}
-                  <div className="absolute -inset-2 bg-white opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 rounded-lg" />
+              {/* Album card */}
+              <div
+                className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square group z-10"
+                style={{ transform: rotations[index] || "" }}
+              >
+                <div className="absolute -inset-2 bg-white opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 rounded-lg" />
+                <div className="relative w-full h-full bg-transparent">
+                  <AlbumCard
+                    coverImage={album.coverImage ?? undefined}
+                    albumTitle={album.title}
+                    albumYear={String(album.year)}
+                    blurDataURL={album.coverBlurDataURL ?? undefined}
+                  />
+                </div>
+                {index % 2 === 0 && (
+                  <div
+                    className="hidden md:block absolute -top-4 -right-4 w-16 h-16 border-2 border-white opacity-10 group-hover:opacity-20 transition-opacity"
+                    style={{
+                      transform: "rotate(45deg)",
+                      clipPath: "polygon(0 0, 50% 0, 100% 50%, 50% 50%)",
+                    }}
+                  />
+                )}
+              </div>
 
-                  {/* Album card with enhanced styling */}
-                  <div className="relative w-full h-full bg-transparent">
-                    <AlbumCard
-                      coverImage={album.coverImage ?? undefined}
-                      albumTitle={album.title}
-                      albumYear={String(album.year)}
-                    />
-                  </div>
-
-                  {/* Decorative corner element */}
-                  {index % 2 === 0 && (
-                    <div
-                      className="hidden md:block absolute -top-4 -right-4 w-16 h-16 border-2 border-white opacity-10 group-hover:opacity-20 transition-opacity"
-                      style={{
-                        transform: "rotate(45deg)",
-                        clipPath: "polygon(0 0, 50% 0, 100% 50%, 50% 50%)",
-                      }}
-                    />
+              {/* Streaming links — use <img> for SVGs (no optimization needed) */}
+              {(album.spotify || album.appleMusic) && (
+                <div className="relative z-10 flex items-center justify-center gap-4 md:gap-6 mt-6">
+                  {album.spotify && (
+                    <a
+                      href={album.spotify}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300 flex items-center justify-center"
+                      aria-label={`האזן לאלבום ${album.title} ב-Spotify`}
+                    >
+                      <img
+                        src="/icons/Spotify_logo.svg"
+                        alt=""
+                        aria-hidden="true"
+                        width={48}
+                        height={48}
+                        className="object-contain drop-shadow-lg w-full h-full"
+                      />
+                    </a>
+                  )}
+                  {album.appleMusic && (
+                    <a
+                      href={album.appleMusic}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300 flex items-center justify-center"
+                      aria-label={`האזן לאלבום ${album.title} ב-Apple Music`}
+                    >
+                      <img
+                        src="/icons/Apple_Music_icon.svg"
+                        alt=""
+                        aria-hidden="true"
+                        width={48}
+                        height={48}
+                        className="object-contain drop-shadow-lg w-full h-full"
+                      />
+                    </a>
                   )}
                 </div>
-
-                {/* Streaming Icons - Below album card */}
-                {(album.spotify || album.appleMusic) && (
-                  <div className="relative z-10 flex items-center justify-center gap-4 md:gap-6 mt-6">
-                    {album.spotify && (
-                      <a
-                        href={album.spotify}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`האזן לאלבום ${album.title} ב-Spotify`}
-                      >
-                        <Image
-                          src="/icons/Spotify_logo.svg"
-                          alt=""
-                          fill
-                          className="object-contain drop-shadow-lg"
-                          aria-hidden="true"
-                        />
-                      </a>
-                    )}
-
-                    {album.appleMusic && (
-                      <a
-                        href={album.appleMusic}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative w-12 h-12 md:w-16 md:h-16 hover:scale-110 transition-transform duration-300"
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`האזן לאלבום ${album.title} ב-Apple Music`}
-                      >
-                        <Image
-                          src="/icons/Apple_Music_icon.svg"
-                          alt=""
-                          fill
-                          className="object-contain drop-shadow-lg"
-                          aria-hidden="true"
-                        />
-                      </a>
-                    )}
-                  </div>
-                )}
-              </article>
-            );
-          })}
+              )}
+            </article>
+          ))}
         </div>
       </div>
     </section>

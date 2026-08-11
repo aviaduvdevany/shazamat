@@ -1,18 +1,17 @@
 import React from "react";
 import { socialPlatforms } from "@/data/social";
-import type { PublicShow } from "@/lib/shows/queries";
-import type { PublicAlbum } from "@/lib/albums/queries";
+import { getPublicShows } from "@/lib/shows/queries";
+import { getPublicAlbums } from "@/lib/albums/queries";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
-export default function StructuredData({
-  shows = [],
-  albums = [],
-}: {
-  shows?: PublicShow[];
-  albums?: PublicAlbum[];
-}) {
-  // MusicGroup schema for the band
+export default async function StructuredData() {
+  const [shows, albums] = await Promise.all([
+    getPublicShows(),
+    getPublicAlbums(),
+  ]);
+  const futureShows = shows.filter((s) => !s.isPast);
+
   const musicGroupSchema = {
     "@context": "https://schema.org",
     "@type": "MusicGroup",
@@ -25,10 +24,7 @@ export default function StructuredData({
     genre: "Hip Hop",
     sameAs: socialPlatforms.map((platform) => platform.url),
     email: "mulu.records@gmail.com",
-    foundingLocation: {
-      "@type": "Place",
-      name: "Israel",
-    },
+    foundingLocation: { "@type": "Place", name: "Israel" },
     album: albums.map((album) => {
       const albumData: Record<string, unknown> = {
         "@type": "MusicAlbum",
@@ -51,7 +47,6 @@ export default function StructuredData({
     }),
   };
 
-  // Individual MusicAlbum schemas
   const albumSchemas = albums.map((album) => ({
     "@context": "https://schema.org",
     "@type": "MusicAlbum",
@@ -63,11 +58,7 @@ export default function StructuredData({
         : album.coverImage,
     }),
     datePublished: album.year,
-    byArtist: {
-      "@type": "MusicGroup",
-      name: "שאזאמאט",
-      alternateName: "Shazamat",
-    },
+    byArtist: { "@type": "MusicGroup", name: "שאזאמאט", alternateName: "Shazamat" },
     ...(album.spotify && {
       offers: {
         "@type": "Offer",
@@ -78,51 +69,32 @@ export default function StructuredData({
       },
     }),
     ...(album.appleMusic && {
-      additionalProperty: {
-        "@type": "PropertyValue",
-        name: "Apple Music",
-        value: album.appleMusic,
-      },
+      additionalProperty: { "@type": "PropertyValue", name: "Apple Music", value: album.appleMusic },
     }),
   }));
 
-  // Event schemas for upcoming shows
-  const eventSchemas = shows
-    .map((show) => {
-      const showDate = new Date(show.date);
-      return {
-        "@context": "https://schema.org",
-        "@type": "MusicEvent",
-        name: `הופעה של שאזאמאט - ${show.city}`,
-        startDate: showDate.toISOString(),
-        eventStatus: "https://schema.org/EventScheduled",
-        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-        location: {
-          "@type": "Place",
-          name: show.venue,
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: show.city,
-            addressCountry: "IL",
-          },
-        },
-        performer: {
-          "@type": "MusicGroup",
-          name: "שאזאמאט",
-          alternateName: "Shazamat",
-        },
-        ...(show.ticketLink &&
-          show.ticketLink !== "#" && {
-            offers: {
-              "@type": "Offer",
-              url: show.ticketLink,
-              availability: "https://schema.org/InStock",
-            },
-          }),
-      };
-    });
+  const eventSchemas = futureShows.map((show) => ({
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: `הופעה של שאזאמאט - ${show.city}`,
+    startDate: new Date(show.date).toISOString(),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: show.venue,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: show.city,
+        addressCountry: "IL",
+      },
+    },
+    performer: { "@type": "MusicGroup", name: "שאזאמאט", alternateName: "Shazamat" },
+    ...(show.ticketLink && show.ticketLink !== "#" && {
+      offers: { "@type": "Offer", url: show.ticketLink, availability: "https://schema.org/InStock" },
+    }),
+  }));
 
-  // Organization schema
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -131,53 +103,21 @@ export default function StructuredData({
     url: siteUrl,
     logo: `${siteUrl}/images/hero-image.webp`,
     sameAs: socialPlatforms.map((platform) => platform.url),
-    contactPoint: {
-      "@type": "ContactPoint",
-      email: "mulu.records@gmail.com",
-      contactType: "customer service",
-    },
+    contactPoint: { "@type": "ContactPoint", email: "mulu.records@gmail.com", contactType: "customer service" },
   };
 
-  // BreadcrumbList schema
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "בית",
-        item: siteUrl,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "הופעות",
-        item: `${siteUrl}#shows`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: "מוזיקה",
-        item: `${siteUrl}#music`,
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
-        name: "צור קשר",
-        item: `${siteUrl}#contact`,
-      },
+      { "@type": "ListItem", position: 1, name: "בית", item: siteUrl },
+      { "@type": "ListItem", position: 2, name: "הופעות", item: `${siteUrl}#shows` },
+      { "@type": "ListItem", position: 3, name: "מוזיקה", item: `${siteUrl}#music` },
+      { "@type": "ListItem", position: 4, name: "צור קשר", item: `${siteUrl}#contact` },
     ],
   };
 
-  // Combine all schemas
-  const schemas = [
-    musicGroupSchema,
-    organizationSchema,
-    breadcrumbSchema,
-    ...albumSchemas,
-    ...eventSchemas,
-  ];
+  const schemas = [musicGroupSchema, organizationSchema, breadcrumbSchema, ...albumSchemas, ...eventSchemas];
 
   return (
     <>

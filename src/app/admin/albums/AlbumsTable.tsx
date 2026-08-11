@@ -173,7 +173,7 @@ export default function AlbumsTable({ albums }: { albums: Album[] }) {
                           alt={album.title}
                           fill
                           className="object-cover"
-                          unoptimized={album.coverImage.startsWith("/")}
+                          sizes="44px"
                         />
                       ) : (
                         <div className="flex items-center justify-center w-full h-full text-zinc-600 text-sm">💿</div>
@@ -228,13 +228,13 @@ export default function AlbumsTable({ albums }: { albums: Album[] }) {
                   {/* Cover */}
                   <div className="relative w-9 h-9 rounded-md overflow-hidden bg-zinc-800 border border-zinc-700 flex-shrink-0">
                     {album.coverImage ? (
-                      <Image
-                        src={album.coverImage}
-                        alt={album.title}
-                        fill
-                        className="object-cover"
-                        unoptimized={album.coverImage.startsWith("/")}
-                      />
+                    <Image
+                          src={album.coverImage}
+                          alt={album.title}
+                          fill
+                          className="object-cover"
+                          sizes="36px"
+                        />
                     ) : (
                       <div className="flex items-center justify-center w-full h-full text-zinc-600 text-[10px]">💿</div>
                     )}

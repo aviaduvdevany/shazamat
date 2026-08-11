@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
@@ -9,13 +9,18 @@ import { ShowSchema, type ShowFormData, type ActionResult } from "./schemas";
 
 export type { ShowFormData, ActionResult };
 
-// ────────────────────────────────────────────────────────────
-// Auth guard
-// ────────────────────────────────────────────────────────────
-
 async function requireAuth() {
   const ok = await isAuthenticated();
   if (!ok) redirect("/admin/login");
+}
+
+function coverData(data: ShowFormData) {
+  return {
+    coverImage: data.coverImage || null,
+    coverWidth: data.coverWidth ?? null,
+    coverHeight: data.coverHeight ?? null,
+    coverBlurDataURL: data.coverBlurDataURL ?? null,
+  };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -33,10 +38,11 @@ export async function createShow(data: ShowFormData): Promise<ActionResult> {
     };
   }
 
-  const { date, city, venue, ticketLink, doorsTime, coverImage, isFeatured } =
-    parsed.data;
+  const { date, city, venue, ticketLink, doorsTime, isFeatured } = parsed.data;
 
   try {
+    const cover = coverData(parsed.data);
+
     if (isFeatured) {
       await prisma.$transaction(async (tx) => {
         await tx.show.updateMany({ data: { isFeatured: false } });
@@ -47,7 +53,7 @@ export async function createShow(data: ShowFormData): Promise<ActionResult> {
             venue,
             ticketLink: ticketLink || null,
             doorsTime: doorsTime || null,
-            coverImage: coverImage || null,
+            ...cover,
             isFeatured: true,
           },
         });
@@ -60,7 +66,7 @@ export async function createShow(data: ShowFormData): Promise<ActionResult> {
           venue,
           ticketLink: ticketLink || null,
           doorsTime: doorsTime || null,
-          coverImage: coverImage || null,
+          ...cover,
           isFeatured: false,
         },
       });
@@ -69,6 +75,7 @@ export async function createShow(data: ShowFormData): Promise<ActionResult> {
     return { success: false, error: "שגיאה ביצירת ההופעה" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };
@@ -92,10 +99,25 @@ export async function updateShow(
     };
   }
 
-  const { date, city, venue, ticketLink, doorsTime, coverImage, isFeatured } =
-    parsed.data;
+  const { date, city, venue, ticketLink, doorsTime, isFeatured } = parsed.data;
 
   try {
+    // Delete orphaned Blob if cover was replaced or cleared
+    const existing = await prisma.show.findUnique({
+      where: { id },
+      select: { coverImage: true },
+    });
+    const newCoverImage = parsed.data.coverImage || null;
+    if (
+      existing?.coverImage &&
+      existing.coverImage.includes("blob.vercel-storage.com") &&
+      existing.coverImage !== newCoverImage
+    ) {
+      await deleteCoverImage(existing.coverImage);
+    }
+
+    const cover = coverData(parsed.data);
+
     if (isFeatured) {
       await prisma.$transaction(async (tx) => {
         await tx.show.updateMany({
@@ -110,7 +132,7 @@ export async function updateShow(
             venue,
             ticketLink: ticketLink || null,
             doorsTime: doorsTime || null,
-            coverImage: coverImage || null,
+            ...cover,
             isFeatured: true,
           },
         });
@@ -124,7 +146,7 @@ export async function updateShow(
           venue,
           ticketLink: ticketLink || null,
           doorsTime: doorsTime || null,
-          coverImage: coverImage || null,
+          ...cover,
           isFeatured: false,
         },
       });
@@ -133,6 +155,7 @@ export async function updateShow(
     return { success: false, error: "שגיאה בעדכון ההופעה" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };
@@ -149,10 +172,7 @@ export async function deleteShow(id: string): Promise<ActionResult> {
     const show = await prisma.show.findUnique({ where: { id } });
     if (!show) return { success: false, error: "הופעה לא נמצאה" };
 
-    if (
-      show.coverImage &&
-      show.coverImage.includes("blob.vercel-storage.com")
-    ) {
+    if (show.coverImage && show.coverImage.includes("blob.vercel-storage.com")) {
       await deleteCoverImage(show.coverImage);
     }
 
@@ -161,13 +181,14 @@ export async function deleteShow(id: string): Promise<ActionResult> {
     return { success: false, error: "שגיאה במחיקת ההופעה" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };
 }
 
 // ────────────────────────────────────────────────────────────
-// Toggle visibility (hide / show)
+// Toggle visibility
 // ────────────────────────────────────────────────────────────
 
 export async function toggleShowVisibility(id: string): Promise<ActionResult> {
@@ -180,14 +201,12 @@ export async function toggleShowVisibility(id: string): Promise<ActionResult> {
     });
     if (!show) return { success: false, error: "הופעה לא נמצאה" };
 
-    await prisma.show.update({
-      where: { id },
-      data: { isHidden: !show.isHidden },
-    });
+    await prisma.show.update({ where: { id }, data: { isHidden: !show.isHidden } });
   } catch {
     return { success: false, error: "שגיאה בעדכון ההופעה" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };
@@ -209,6 +228,7 @@ export async function setFeaturedShow(id: string): Promise<ActionResult> {
     return { success: false, error: "שגיאה בהגדרת הופעה מודגשת" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };
@@ -223,6 +243,7 @@ export async function clearFeaturedShow(): Promise<ActionResult> {
     return { success: false, error: "שגיאה בניקוי הופעה מודגשת" };
   }
 
+  revalidateTag("shows");
   revalidatePath("/");
   revalidatePath("/admin/shows");
   return { success: true };

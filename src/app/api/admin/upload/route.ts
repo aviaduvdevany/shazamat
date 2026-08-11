@@ -15,7 +15,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async () => ({
-        allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+        allowedContentTypes: ["image/webp"],
         maximumSizeInBytes: 10 * 1024 * 1024,
         tokenPayload: JSON.stringify({ admin: true }),
       }),

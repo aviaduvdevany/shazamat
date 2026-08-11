@@ -10,7 +10,8 @@ export default function HeroImageFallback() {
         fill
         priority
         className="object-cover"
-        quality={90}
+        quality={80}
+        sizes="100vw"
       />
     </div>
   );

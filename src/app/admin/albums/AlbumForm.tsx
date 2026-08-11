@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
 import { AlbumSchema, type AlbumFormData } from "@/lib/albums/schemas";
+import { optimizeCoverImage } from "@/lib/images/client-optimize";
 import { Upload, Loader2, ImageIcon } from "lucide-react";
 
 interface AlbumFormProps {
@@ -74,55 +75,24 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
 
   const isHiddenValue = watch("isHidden");
 
-  async function convertToWebP(file: File, maxPx = 1200, quality = 0.85): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const img = new window.Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        let { width, height } = img;
-        if (width > maxPx || height > maxPx) {
-          const ratio = Math.min(maxPx / width, maxPx / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas not available"));
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return reject(new Error("WebP conversion failed"));
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }));
-          },
-          "image/webp",
-          quality
-        );
-      };
-      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
-      img.src = objectUrl;
-    });
-  }
-
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setUploadStats(null);
     try {
-      const originalKB = Math.round(file.size / 1024);
-      const converted = await convertToWebP(file);
-      const finalKB = Math.round(converted.size / 1024);
-      setUploadStats({ originalKB, finalKB });
-      const blob = await upload(converted.name, converted, {
+      const result = await optimizeCoverImage(file, "album-cover");
+      setUploadStats({ originalKB: result.originalKB, finalKB: result.finalKB });
+      const blob = await upload(result.file.name, result.file, {
         access: "public",
         handleUploadUrl: "/api/admin/upload",
       });
       setValue("coverImage", blob.url);
+      setValue("coverWidth", result.width);
+      setValue("coverHeight", result.height);
+      setValue("coverBlurDataURL", result.blurDataURL);
       setImagePreview(blob.url);
-      toast.success(`התמונה הועלתה ✓  ${originalKB} KB → ${finalKB} KB`);
+      toast.success(`התמונה הועלתה ✓  ${result.originalKB} KB → ${result.finalKB} KB`);
     } catch {
       toast.error("שגיאה בהעלאת התמונה");
     } finally {
@@ -261,11 +231,11 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
                       alt="תצוגה מקדימה"
                       fill
                       className="object-cover"
-                      unoptimized={imagePreview.startsWith("/")}
+                      sizes="96px"
                     />
                     <button
                       type="button"
-                      onClick={() => { setValue("coverImage", ""); setImagePreview(""); }}
+                      onClick={() => { setValue("coverImage", ""); setValue("coverWidth", undefined); setValue("coverHeight", undefined); setValue("coverBlurDataURL", undefined); setImagePreview(""); }}
                       className="absolute top-1 left-1 w-5 h-5 bg-black/70 rounded-full flex items-center justify-center text-white text-[10px] hover:bg-black transition-colors"
                     >
                       ✕
@@ -319,6 +289,9 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
               </label>
             </div>
             <input type="hidden" {...register("coverImage")} />
+          <input type="hidden" {...register("coverWidth", { valueAsNumber: true })} />
+          <input type="hidden" {...register("coverHeight", { valueAsNumber: true })} />
+          <input type="hidden" {...register("coverBlurDataURL")} />
           </div>
 
           {/* Hidden toggle */}

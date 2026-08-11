@@ -462,6 +462,29 @@
   }
 }
 
+/* ── Ticket button hover — CSS-only, works in RSC ─────────────── */
+.btn-ticket {
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: transform 200ms, box-shadow 200ms;
+}
+.btn-ticket:hover {
+  transform: translateY(0px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* ── Featured show CTA button hover ──────────────────────────── */
+.btn-featured {
+  transform: translateY(-3px);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3), 0 0 20px rgba(219, 119, 56, 0.2),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: all 300ms;
+}
+.btn-featured:hover {
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3), 0 0 30px rgba(219, 119, 56, 0.4);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

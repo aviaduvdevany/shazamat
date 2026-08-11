@@ -7,6 +7,9 @@ export const ShowSchema = z.object({
   ticketLink: z.string().url("קישור לא תקין").optional().or(z.literal("")),
   doorsTime: z.string().optional(),
   coverImage: z.string().optional(),
+  coverWidth: z.number().int().positive().optional(),
+  coverHeight: z.number().int().positive().optional(),
+  coverBlurDataURL: z.string().optional(),
   isFeatured: z.boolean(),
 });
 

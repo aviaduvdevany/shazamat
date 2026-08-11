@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
@@ -9,13 +9,18 @@ import { AlbumSchema, type AlbumFormData, type ActionResult } from "./schemas";
 
 export type { AlbumFormData, ActionResult };
 
-// ────────────────────────────────────────────────────────────
-// Auth guard
-// ────────────────────────────────────────────────────────────
-
 async function requireAuth() {
   const ok = await isAuthenticated();
   if (!ok) redirect("/admin/login");
+}
+
+function coverData(data: AlbumFormData) {
+  return {
+    coverImage: data.coverImage || null,
+    coverWidth: data.coverWidth ?? null,
+    coverHeight: data.coverHeight ?? null,
+    coverBlurDataURL: data.coverBlurDataURL ?? null,
+  };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -33,8 +38,7 @@ export async function createAlbum(data: AlbumFormData): Promise<ActionResult> {
     };
   }
 
-  const { title, year, subtitle, coverImage, spotify, appleMusic, isHidden } =
-    parsed.data;
+  const { title, year, subtitle, spotify, appleMusic, isHidden } = parsed.data;
 
   try {
     await prisma.album.create({
@@ -42,16 +46,17 @@ export async function createAlbum(data: AlbumFormData): Promise<ActionResult> {
         title,
         year,
         subtitle: subtitle || null,
-        coverImage: coverImage || null,
         spotify: spotify || null,
         appleMusic: appleMusic || null,
         isHidden,
+        ...coverData(parsed.data),
       },
     });
   } catch {
     return { success: false, error: "שגיאה ביצירת האלבום" };
   }
 
+  revalidateTag("albums");
   revalidatePath("/");
   revalidatePath("/admin/albums");
   return { success: true };
@@ -75,26 +80,40 @@ export async function updateAlbum(
     };
   }
 
-  const { title, year, subtitle, coverImage, spotify, appleMusic, isHidden } =
-    parsed.data;
+  const { title, year, subtitle, spotify, appleMusic, isHidden } = parsed.data;
 
   try {
+    // Delete orphaned Blob if cover was replaced or cleared
+    const existing = await prisma.album.findUnique({
+      where: { id },
+      select: { coverImage: true },
+    });
+    const newCoverImage = parsed.data.coverImage || null;
+    if (
+      existing?.coverImage &&
+      existing.coverImage.includes("blob.vercel-storage.com") &&
+      existing.coverImage !== newCoverImage
+    ) {
+      await deleteCoverImage(existing.coverImage);
+    }
+
     await prisma.album.update({
       where: { id },
       data: {
         title,
         year,
         subtitle: subtitle || null,
-        coverImage: coverImage || null,
         spotify: spotify || null,
         appleMusic: appleMusic || null,
         isHidden,
+        ...coverData(parsed.data),
       },
     });
   } catch {
     return { success: false, error: "שגיאה בעדכון האלבום" };
   }
 
+  revalidateTag("albums");
   revalidatePath("/");
   revalidatePath("/admin/albums");
   return { success: true };
@@ -111,10 +130,7 @@ export async function deleteAlbum(id: string): Promise<ActionResult> {
     const album = await prisma.album.findUnique({ where: { id } });
     if (!album) return { success: false, error: "אלבום לא נמצא" };
 
-    if (
-      album.coverImage &&
-      album.coverImage.includes("blob.vercel-storage.com")
-    ) {
+    if (album.coverImage && album.coverImage.includes("blob.vercel-storage.com")) {
       await deleteCoverImage(album.coverImage);
     }
 
@@ -123,18 +139,17 @@ export async function deleteAlbum(id: string): Promise<ActionResult> {
     return { success: false, error: "שגיאה במחיקת האלבום" };
   }
 
+  revalidateTag("albums");
   revalidatePath("/");
   revalidatePath("/admin/albums");
   return { success: true };
 }
 
 // ────────────────────────────────────────────────────────────
-// Toggle visibility (hide / show)
+// Toggle visibility
 // ────────────────────────────────────────────────────────────
 
-export async function toggleAlbumVisibility(
-  id: string
-): Promise<ActionResult> {
+export async function toggleAlbumVisibility(id: string): Promise<ActionResult> {
   await requireAuth();
 
   try {
@@ -144,14 +159,12 @@ export async function toggleAlbumVisibility(
     });
     if (!album) return { success: false, error: "אלבום לא נמצא" };
 
-    await prisma.album.update({
-      where: { id },
-      data: { isHidden: !album.isHidden },
-    });
+    await prisma.album.update({ where: { id }, data: { isHidden: !album.isHidden } });
   } catch {
     return { success: false, error: "שגיאה בעדכון האלבום" };
   }
 
+  revalidateTag("albums");
   revalidatePath("/");
   revalidatePath("/admin/albums");
   return { success: true };

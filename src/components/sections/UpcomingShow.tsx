@@ -1,42 +1,18 @@
-"use client";
 import React from "react";
 import Image from "next/image";
+import { getPublicShows } from "@/lib/shows/queries";
 import type { PublicShow } from "@/lib/shows/queries";
-
-const BUTTON_STYLES = {
-  default: {
-    transform: "translateY(-3px)",
-    boxShadow:
-      "6px 6px 0 rgba(0,0,0,0.3), 0 0 20px rgba(219,119,56,0.2), inset 0 0 0 1px rgba(0,0,0,0.1)",
-  },
-  hover: {
-    transform: "translateY(-1px)",
-    boxShadow: "4px 4px 0 rgba(0,0,0,0.3), 0 0 30px rgba(219,119,56,0.4)",
-  },
-} as const;
 
 function formatDisplayDate(dateStr: string): string {
   const [year, month, day] = dateStr.split("-").map(Number);
   return `${day}.${month}.${String(year).slice(2)}`;
 }
 
-interface UpcomingShowProps {
-  featured: PublicShow | null;
-}
-
-export default function UpcomingShow({ featured }: UpcomingShowProps) {
-  if (!featured) return null;
-
+function FeaturedContent({ featured }: { featured: PublicShow }) {
   const { venue, city, date, doorsTime, coverImage, ticketLink } = featured;
   const displayDate = formatDisplayDate(date);
 
-  const handleButtonMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    Object.assign(e.currentTarget.style, BUTTON_STYLES.hover);
-  };
-
-  const handleButtonMouseLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    Object.assign(e.currentTarget.style, BUTTON_STYLES.default);
-  };
+  const roughTextureSvg = `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='rough'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23rough)'/%3E%3C/svg%3E")`;
 
   return (
     <section
@@ -45,45 +21,28 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
     >
       {/* Gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-black to-[#1a0a00] pointer-events-none" />
-
-      {/* Orange accent glow in corners */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#db7738] opacity-5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#db7738] opacity-5 blur-3xl pointer-events-none" />
-
-      {/* Grunge texture overlay */}
       <div className="absolute inset-0 pointer-events-none grunge-overlay opacity-30" />
-
-      {/* Noise overlay for extra texture */}
       <div className="absolute inset-0 noise-overlay opacity-15" />
 
       <div className="container-custom relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            {/* Promotional Image - Left Side */}
+            {/* Promotional Image */}
             {coverImage && (
               <div className="flex-1 w-full lg:w-auto relative group">
-                {/* Orange glow effect behind image */}
                 <div
                   className="absolute -inset-8 bg-[#db7738] opacity-10 blur-2xl group-hover:opacity-15 transition-opacity duration-500"
-                  style={{
-                    clipPath: "polygon(2% 0, 98% 2%, 100% 98%, 0 100%)",
-                  }}
+                  style={{ clipPath: "polygon(2% 0, 98% 2%, 100% 98%, 0 100%)" }}
                 />
-
-                {/* Rough border effect with orange accent */}
                 <div
                   className="absolute -inset-4 border-2 border-[#db7738]/30 opacity-60 group-hover:opacity-80 transition-opacity duration-300"
-                  style={{
-                    clipPath: "polygon(2% 0, 98% 2%, 100% 98%, 0 100%)",
-                  }}
+                  style={{ clipPath: "polygon(2% 0, 98% 2%, 100% 98%, 0 100%)" }}
                 />
-
-                {/* Image container with rough edges */}
                 <div
                   className="relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500"
-                  style={{
-                    clipPath: "polygon(3% 0, 97% 2%, 100% 97%, 0 100%)",
-                  }}
+                  style={{ clipPath: "polygon(3% 0, 97% 2%, 100% 97%, 0 100%)" }}
                 >
                   <div className="relative aspect-[4/5] md:aspect-[4/4] w-full max-w-md mx-auto">
                     <Image
@@ -92,16 +51,13 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                       fill
                       className="object-cover brightness-100 group-hover:brightness-110 transition-all duration-500"
                       priority
-                      quality={90}
-                      unoptimized={coverImage.startsWith("/")}
+                      quality={85}
+                      sizes="(max-width: 768px) 90vw, 28rem"
                     />
-                    {/* Gradient overlay for depth with orange tint */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#db7738]/5 pointer-events-none" />
                   </div>
                 </div>
-
-                {/* Decorative rough edge accent with orange */}
                 <div
                   className="absolute -bottom-2 right-4 w-32 h-1.5 bg-[#db7738] opacity-70 group-hover:opacity-100 transition-opacity duration-300"
                   style={{
@@ -113,9 +69,8 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
               </div>
             )}
 
-            {/* Content - Right Side */}
+            {/* Content */}
             <div className="flex-1 w-full lg:w-auto text-center lg:text-right space-y-6 lg:space-y-8">
-              {/* Main Venue Title - Large and Bold with Orange Accent */}
               <div className="relative inline-block">
                 <h2
                   className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-none mb-3"
@@ -129,7 +84,6 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                 >
                   {venue}
                 </h2>
-                {/* Hand-drawn underline with orange accent */}
                 <div
                   className="absolute bottom-[-6px] right-0 w-[85%] h-[5px] bg-[#db7738] opacity-80"
                   style={{
@@ -138,16 +92,12 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                     boxShadow: "0 2px 8px rgba(219,119,56,0.4)",
                   }}
                 />
-                {/* Glow effect */}
                 <div
                   className="absolute -inset-4 bg-[#db7738] opacity-10 blur-xl"
-                  style={{
-                    clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-                  }}
+                  style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)" }}
                 />
               </div>
 
-              {/* City with emphasis */}
               <div className="relative">
                 <div
                   className="text-2xl md:text-3xl font-bold text-white/90 mb-2"
@@ -161,7 +111,6 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                 </div>
               </div>
 
-              {/* Date and Time - More prominent */}
               <div className="space-y-2">
                 <div
                   className="text-xl md:text-2xl font-black text-white"
@@ -175,16 +124,13 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                 {doorsTime && (
                   <div
                     className="text-base md:text-lg text-white/80 font-medium"
-                    style={{
-                      letterSpacing: "0.05em",
-                    }}
+                    style={{ letterSpacing: "0.05em" }}
                   >
                     דלתות {doorsTime}
                   </div>
                 )}
               </div>
 
-              {/* CTA Button */}
               {ticketLink && (
                 <div className="pt-6 space-y-4">
                   <div className="relative inline-block">
@@ -192,30 +138,19 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
                       href={ticketLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group inline-block px-10 py-5 text-xl md:text-2xl font-black border-[3px] border-[#db7738] text-white bg-[#db7738] hover:bg-transparent hover:text-[#db7738] transition-all duration-300 relative overflow-hidden"
-                      style={BUTTON_STYLES.default}
-                      onMouseEnter={handleButtonMouseEnter}
-                      onMouseLeave={handleButtonMouseLeave}
+                      className="group inline-block px-10 py-5 text-xl md:text-2xl font-black border-[3px] border-[#db7738] text-white bg-[#db7738] hover:bg-transparent hover:text-[#db7738] relative overflow-hidden btn-featured"
                       aria-label={`כרטיסים להופעה ${venue}, ${city}`}
                     >
                       <span className="relative z-10">כרטיסים</span>
-                      {/* Orange glow on hover */}
                       <div className="absolute inset-0 bg-[#db7738] opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
-                      {/* Rough texture overlay */}
                       <div
                         className="absolute inset-0 opacity-10 pointer-events-none"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='rough'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23rough)'/%3E%3C/svg%3E")`,
-                          backgroundSize: "20px 20px",
-                        }}
+                        style={{ backgroundImage: roughTextureSvg, backgroundSize: "20px 20px" }}
                       />
                     </a>
-                    {/* Button shadow/glow effect */}
                     <div
                       className="absolute -inset-2 bg-[#db7738] opacity-20 blur-md -z-10"
-                      style={{
-                        clipPath: "polygon(3% 0, 97% 2%, 100% 97%, 0 100%)",
-                      }}
+                      style={{ clipPath: "polygon(3% 0, 97% 2%, 100% 97%, 0 100%)" }}
                     />
                   </div>
                 </div>
@@ -226,4 +161,11 @@ export default function UpcomingShow({ featured }: UpcomingShowProps) {
       </div>
     </section>
   );
+}
+
+export default async function UpcomingShow() {
+  const shows = await getPublicShows();
+  const featured = shows.find((s) => s.isFeatured) ?? null;
+  if (!featured) return null;
+  return <FeaturedContent featured={featured} />;
 }

@@ -1,67 +1,32 @@
-"use client";
-import React, { Suspense, useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import Image from "next/image";
+import React from "react";
 import Logo from "../ui/Logo";
-import HeroImageFallback from "../ui/HeroImageFallback";
+import HeroMedia from "../ui/HeroMedia";
+import HeroScrollArrow from "../ui/HeroScrollArrow";
 import { socialPlatforms } from "@/data";
 
-const VideoBackground = dynamic(() => import("../ui/VideoBackground"), {
-  ssr: false,
-  loading: () => <HeroImageFallback />,
-});
-
 export default function Hero() {
-  const [videoReady, setVideoReady] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <section
       id="home"
       className="relative min-h-screen flex items-center justify-center bg-black text-white overflow-hidden"
     >
-      {/* Image Fallback - visible on mobile or until video is ready on desktop */}
-      <div
-        className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
-          videoReady
-            ? "md:opacity-0 md:pointer-events-none opacity-100"
-            : "opacity-100"
-        }`}
-      >
-        <HeroImageFallback />
-      </div>
-
-      {/* Video Background with Image Fallback - Hidden on mobile */}
-      <div className="hidden md:block absolute inset-0 w-full h-full overflow-hidden">
-        <Suspense fallback={null}>
-          <VideoBackground onReady={() => setVideoReady(true)} />
-        </Suspense>
-      </div>
+      {/* Media layer — video + image fallback (client island) */}
+      <HeroMedia />
 
       {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-black/50"></div>
+      <div className="absolute inset-0 bg-black/50" />
 
       {/* Noise overlay */}
-      <div className="absolute inset-0 noise-overlay opacity-20"></div>
+      <div className="absolute inset-0 noise-overlay opacity-20" />
 
-      {/* Content */}
+      {/* Content — fully static, no hydration needed */}
       <div className="relative z-10 container-custom text-center py-20">
         <div className="max-w-4xl mx-auto">
-          {/* Main title */}
           <h1 className="text-[clamp(50px,8vw,120px)] font-bold mb-4 leading-none">
             <Logo width={650} height={300} variant="logo" />
           </h1>
 
-          {/* Social Links - Compact */}
+          {/* Social links — use <img> directly (SVGs + one PNG, all tiny icons) */}
           <div className="flex justify-center items-center gap-3 mb-6">
             {socialPlatforms.map((platform) => (
               <a
@@ -72,9 +37,10 @@ export default function Hero() {
                 aria-label={platform.name}
                 className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 bg-white/15 border border-white/30 hover:bg-white/25 hover:border-white/50 hover:scale-110 group shadow-sm"
               >
-                <Image
+                <img
                   src={platform.icon}
-                  alt={platform.name}
+                  alt=""
+                  aria-hidden="true"
                   width={24}
                   height={24}
                   className={`object-contain transition-all duration-300 ${
@@ -86,62 +52,11 @@ export default function Hero() {
               </a>
             ))}
           </div>
-
-          {/* CTA Buttons */}
-          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="#music">
-            <button className="bg-white text-black px-8 py-4 rounded-xs font-bold text-lg hover:bg-white transition-all duration-[var(--duration-base)] min-w-[200px]">
-              מוזיקה
-            </button>
-            </Link>
-            <Link href="#shows">
-            <button className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-xs font-bold text-lg hover:bg-white hover:text-black transition-all duration-[var(--duration-base)] min-w-[200px]">
-              הופעות
-            </button>
-            </Link>
-          </div> */}
         </div>
       </div>
 
-      {/* Scroll Indicator - Arrow */}
-      <div
-        className={`absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 transition-opacity duration-500 ${
-          scrollY > 50 ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
-      >
-        <button
-          onClick={() => {
-            const showsSection = document.getElementById("shows");
-            if (showsSection) {
-              // Check for prefers-reduced-motion
-              const prefersReducedMotion = window.matchMedia(
-                "(prefers-reduced-motion: reduce)"
-              ).matches;
-              showsSection.scrollIntoView({
-                behavior: prefersReducedMotion ? "auto" : "smooth",
-              });
-            }
-          }}
-          className="flex flex-col items-center gap-2 group"
-          aria-label="גלול למטה לסעיף הופעות"
-        >
-          <div className="relative w-6 h-6 animate-scroll-arrow">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-white/70 group-hover:text-white/70 transition-colors duration-300"
-            >
-              <path d="M12 5v14M19 12l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
-      </div>
+      {/* Scroll indicator arrow (client island) */}
+      <HeroScrollArrow />
     </section>
   );
 }

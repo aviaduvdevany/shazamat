@@ -8,17 +8,20 @@ datasource db {
 }
 
 model Show {
-  id         String   @id @default(cuid())
-  date       DateTime @db.Date
-  city       String
-  venue      String
-  ticketLink String?
-  doorsTime  String?
-  coverImage String?
-  isFeatured Boolean  @default(false)
-  isHidden   Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(cuid())
+  date             DateTime @db.Date
+  city             String
+  venue            String
+  ticketLink       String?
+  doorsTime        String?
+  coverImage       String?
+  coverWidth       Int?
+  coverHeight      Int?
+  coverBlurDataURL String?
+  isFeatured       Boolean  @default(false)
+  isHidden         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([date])
   @@index([isFeatured])
@@ -26,16 +29,19 @@ model Show {
 }
 
 model Album {
-  id         String   @id @default(cuid())
-  title      String
-  year       Int
-  subtitle   String?
-  coverImage String?
-  spotify    String?
-  appleMusic String?
-  isHidden   Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  year             Int
+  subtitle         String?
+  coverImage       String?
+  coverWidth       Int?
+  coverHeight      Int?
+  coverBlurDataURL String?
+  spotify          String?
+  appleMusic       String?
+  isHidden         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([year])
   @@index([isHidden])

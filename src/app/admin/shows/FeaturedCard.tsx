@@ -70,7 +70,7 @@ export default function FeaturedCard({ featured }: { featured: Show | null }) {
                 alt={`${show.venue}`}
                 fill
                 className="object-cover"
-                unoptimized={show.coverImage.startsWith("/")}
+                sizes="80px"
               />
             </div>
           ) : (
