@@ -223,7 +223,7 @@ Admin: `http://localhost:3000/admin/login`
 | Add/edit album | Admin CMS `/admin/albums` (or `src/lib/albums/*` for data layer) |
 | Change social URLs | `src/data/social.ts` |
 | Brand colors / fonts / motion | `src/app/globals.css` (+ check `design.json`) |
-| Nav links | `src/components/layout/Header.tsx` |
+| Nav links | `src/components/layout/nav.ts` (shared config) → consumed by `Header.tsx`, `MobileNav.tsx`, `Footer.tsx` |
 | SEO / OG | `src/app/layout.tsx`, `components/seo/StructuredData.tsx` |
 | Admin form fields | `ShowForm.tsx` + `src/lib/shows/schemas.ts` |
 | Admin table actions | `ShowsTable.tsx` + `src/lib/shows/actions.ts` |

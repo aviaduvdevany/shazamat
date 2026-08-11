@@ -22,11 +22,17 @@ How the UI is structured, how data reaches the browser, and which pieces are ser
 └───────┼────────────────────────────────────────────────────┘
         │
         ▼
-  page.tsx (RSC)
-    getPublicShows() + getPublicFeaturedShow()
+  page.tsx (RSC, sync — no awaits)
+    Suspense boundaries per section
         │
         ▼
-  Neon Postgres (Prisma)     Static: data/music.ts, data/social.ts
+  Each section = async RSC — fetches from Next.js Data Cache
+    getPublicShows()   (unstable_cache, tag: 'shows')
+    getPublicAlbums()  (unstable_cache, tag: 'albums')
+        │
+        ▼
+  Neon Postgres (Prisma)
+  revalidateTag called on every CMS mutation → cache invalidated
 ```
 
 ---
@@ -35,21 +41,33 @@ How the UI is structured, how data reaches the browser, and which pieces are ser
 
 ### Pattern used on the public site
 
-1. **Server Component page** fetches serializable data.
-2. Passes plain props into **client section islands** that need interactivity (scroll, video, menus).
+1. **Async RSC sections** fetch their own data from the Next.js Data Cache.
+2. **Suspense boundaries** wrap each DB-dependent section so the static shell (Hero, Header) streams first.
+3. **Client islands** are the minimum slice that genuinely needs browser APIs or state.
 
 ```tsx
-// src/app/page.tsx — Server Component
-export const dynamic = "force-dynamic";
+// src/app/page.tsx — sync RSC, no data fetching
+export const revalidate = 60;
 
-export default async function Home() {
-  const [shows, featured] = await Promise.all([
-    getPublicShows(),
-    getPublicFeaturedShow(),
-  ]);
-  // ...
-  <UpcomingShow featured={featured} />
-  <Shows shows={shows} />
+export default function Home() {
+  return (
+    <>
+      <Suspense fallback={null}><StructuredData /></Suspense>
+      <Header />
+      <main>
+        <Hero />
+        <Suspense fallback={<section className="py-20 bg-black" />}>
+          <UpcomingShow />     {/* async RSC, self-fetching */}
+        </Suspense>
+        <Suspense fallback={<section className="py-24 bg-white" />}>
+          <Shows />            {/* async RSC, self-fetching */}
+        </Suspense>
+        <Suspense fallback={<section className="py-24 bg-black" />}>
+          <Music />            {/* async RSC, self-fetching */}
+        </Suspense>
+      </main>
+    </>
+  );
 }
 ```
 
@@ -59,14 +77,21 @@ export default async function Home() {
 
 | Area | Client? | Why |
 |---|---|---|
-| `Header` | Yes | Mobile menu, focus trap, scroll close |
-| `Hero` | Yes | Scroll parallax, video ready state |
+| `MobileNav` | Yes | Hamburger state, focus trap, scroll close |
+| `HeroMedia` | Yes | `videoReady` state, dynamic VideoBackground |
+| `HeroScrollArrow` | Yes | `scrollY` state for arrow fade |
 | `VideoBackground` | Yes | Vimeo player; loaded with `dynamic(..., { ssr: false })` |
-| `UpcomingShow`, `Shows`, `Music` | Yes | Interaction / motion / year scrolling |
-| `ShowCard`, `AlbumCard`, `Logo` | Often via parent | Mostly presentational |
-| `Footer` | No | Static markup |
-| `Contact` | No | But currently unused on homepage |
-| `StructuredData` | No | JSON-LD script |
+| `YearNav` | Yes | `scrollToAlbum` via `window.scrollTo` |
+| `Header` | **No** | RSC shell; passes static nav+logo to MobileNav |
+| `Hero` | **No** | RSC shell; includes HeroMedia + HeroScrollArrow islands |
+| `UpcomingShow` | **No** | Async RSC, self-fetching; CSS hover for button |
+| `Shows` | **No** | Async RSC, self-fetching |
+| `ShowCard` | **No** | RSC; `.btn-ticket` CSS class replaces JS hover |
+| `AlbumCard` | **No** | RSC; supports blur placeholder prop |
+| `Music` | **No** | Async RSC, self-fetching; `YearNav` handles scroll |
+| `SkipLinks` | **No** | Static HTML only |
+| `StructuredData` | **No** | Async RSC, self-fetching |
+| `Footer` | **No** | Static markup |
 | Admin forms/table/dialog | Yes | Forms, optimistic UI, uploads |
 | Admin pages | Mostly Server | Fetch data, pass into client children |
 
@@ -81,7 +106,8 @@ export default async function Home() {
 | Path | Responsibility |
 |---|---|
 | `src/app/layout.tsx` | Global metadata, `lang`/`dir`, import `globals.css` |
-| `src/app/page.tsx` | Compose public sections; fetch shows |
+| `src/app/page.tsx` | Compose public sections with Suspense; ISR `revalidate = 60` |
+| `src/app/loading.tsx` | Full-page skeleton (solid black) while page shell builds |
 | `src/app/admin/*` | CMS UI |
 | `src/app/api/admin/upload` | Issue Blob client upload tokens (auth required) |
 | `src/middleware.ts` | Protect `/admin/*` except `/admin/login` |
@@ -92,10 +118,10 @@ export default async function Home() {
 
 ```
 components/
-  layout/     → site chrome (Header, Footer)
-  sections/   → homepage blocks (one job each)
-  ui/         → reusable pieces (cards, logo, shadcn)
-  seo/        → structured data
+  layout/     → site chrome (Header [RSC], Footer [RSC], MobileNav [client])
+  sections/   → homepage blocks; all RSC, all self-fetching
+  ui/         → reusable pieces; RSC unless noted
+  seo/        → structured data (async RSC, self-fetching)
   index.ts    → public barrel (prefer for homepage imports)
 ```
 
@@ -120,21 +146,23 @@ Admin components under `src/app/admin/shows/` are **route-colocated** (not in `c
 
 ```
 Prisma Show model
-  → queries.ts (getPublicShows / getPublicFeaturedShow / getAllShows / …)
-  → page.tsx or admin pages
-  → sections / table / form
+  → queries.ts (unstable_cache wrappers for public; uncached for admin)
+  → async RSC sections (UpcomingShow, Shows) or admin pages
   → mutations via actions.ts (create/update/delete/toggle/feature)
-  → revalidatePath("/") + revalidatePath("/admin/shows")
+  → revalidateTag("shows") + revalidatePath("/") + revalidatePath("/admin/shows")
 ```
 
-### Music & social (static)
+### Albums (live)
 
 ```
-src/data/music.ts  → Music section, StructuredData, sitemap album anchors
-src/data/social.ts → Hero social icons, SocialLinks (Contact), StructuredData
+Prisma Album model
+  → queries.ts (unstable_cache wrapper for public; uncached for admin)
+  → async RSC section (Music) or admin pages
+  → mutations via actions.ts (create/update/delete/toggle)
+  → revalidateTag("albums") + revalidatePath("/") + revalidatePath("/admin/albums")
 ```
 
-### Legacy (avoid for new work)
+### Legacy (static — avoid for new work)
 
 | File | Status |
 |---|---|
@@ -142,14 +170,36 @@ src/data/social.ts → Hero social icons, SocialLinks (Contact), StructuredData
 | `src/hooks/useShows.ts` | Client hook over static shows — **not** used by homepage |
 | `src/types/index.ts` `Show` | Legacy `id: number` shape — use `PublicShow` for live UI |
 | `src/lib/shows.ts`, `src/lib/dates.ts` | Helpers for legacy static path |
+| `src/data/music.ts` | Legacy static albums used **only** by `StructuredData` fallback; live music uses DB |
 
 ---
 
 ## Caching / rendering
 
-- Homepage: `export const dynamic = "force-dynamic"` — always fresh shows from DB.
-- Admin shows pages: also force-dynamic.
-- After mutations, actions call `revalidatePath` for `/` and `/admin/shows`.
+- **Homepage ISR**: `export const revalidate = 60` in `page.tsx`.
+- **Data Cache**: `getPublicShows` and `getPublicAlbums` are wrapped in `unstable_cache` with `tags: ['shows']` / `tags: ['albums']`.
+- **Tag invalidation**: every CMS mutation calls `revalidateTag()` — the cache entry is purged immediately, not on the next 60-second tick.
+- **Admin pages**: always fresh (`unstable_cache` not used for admin queries; cache is irrelevant since admin is always behind auth and not CDN-cached).
+- **Streaming**: each section is in its own `<Suspense>` boundary. On a cold ISR revalidation, Hero + nav stream first while the DB sections resolve from the (fast) Data Cache.
+
+---
+
+## Image pipeline
+
+All cover images go through a **client-side optimize** step before upload:
+
+```
+src/lib/images/client-optimize.ts
+  optimizeCoverImage(file, role) → { file (WebP), width, height, blurDataURL }
+```
+
+Roles: `show-cover` (max 1600px, quality 0.82) · `album-cover` (max 1200px, quality 0.82).
+
+The LQIP blur placeholder (24 px thumbnail → JPEG base64) is generated in the same Canvas pass and stored in `coverBlurDataURL` on the DB row. Next.js renders it as `placeholder="blur"` on album cards.
+
+Upload route (`/api/admin/upload`) now accepts **WebP only** — the browser must convert before posting.
+
+On cover replace/clear: `updateShow`/`updateAlbum` delete the old Blob URL automatically.
 
 ---
 
@@ -158,9 +208,9 @@ src/data/social.ts → Hero social icons, SocialLinks (Contact), StructuredData
 | Piece | Location |
 |---|---|
 | Default metadata / OG / Twitter | `src/app/layout.tsx` |
-| JSON-LD (MusicGroup, events, albums) | `src/components/seo/StructuredData.tsx` |
+| JSON-LD (MusicGroup, events, albums) | `src/components/seo/StructuredData.tsx` (async RSC) |
 | Sitemap | `src/app/sitemap.ts` |
-| Robots | `src/app/robots.ts` |
+| Robots | `src/app/robots.ts` — disallows `/admin` |
 | Admin noindex | `src/app/admin/layout.tsx` metadata |
 
 Homepage passes **future** shows into `StructuredData` for MusicEvent entries.
@@ -185,6 +235,7 @@ Short version:
 - **Tailwind v4** via `@import "tailwindcss"` in `globals.css` (no classic `tailwind.config.js`).
 - Brand tokens as CSS variables on `:root`.
 - Utility classes: `.container-custom`, `.noise-overlay`, `.grunge-overlay`, video helpers, reduced-motion overrides.
+- **`.btn-ticket` / `.btn-featured`**: CSS-only hover transforms added to `globals.css` so `ShowCard` and `UpcomingShow` can be RSC without JS mouse handlers.
 - Public site leans on CSS variables + custom section CSS.
 - Admin leans on Tailwind zinc palette + `orange-500` accents.
 - shadcn configured in `components.json` (style: new-york, CSS variables, lucide icons).

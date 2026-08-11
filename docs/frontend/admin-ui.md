@@ -45,6 +45,9 @@ export const ShowSchema = z.object({
   ticketLink: z.string().url("קישור לא תקין").optional().or(z.literal("")),
   doorsTime: z.string().optional(),
   coverImage: z.string().optional(),
+  coverWidth: z.number().optional(),
+  coverHeight: z.number().optional(),
+  coverBlurDataURL: z.string().optional(),
   isFeatured: z.boolean(),
 });
 ```
@@ -54,16 +57,18 @@ export const ShowSchema = z.object({
 - Validates with `zodResolver(ShowSchema)`
 - Submits via `useTransition` + `onSubmit` prop (page wires server action)
 - Toasts success/error with `sonner`
-- Cover upload: client-side resize/compress to WebP → `@vercel/blob/client` `upload` with `handleUploadUrl: "/api/admin/upload"`
+- Cover upload: calls `optimizeCoverImage(file, role)` from `src/lib/images/client-optimize.ts` — Canvas API resize → WebP + LQIP base64 blur placeholder → `@vercel/blob/client` `upload` with `handleUploadUrl: "/api/admin/upload"` (WebP only)
+- `coverWidth`, `coverHeight`, `coverBlurDataURL` are stored as hidden inputs and persisted to DB
 - Ticket URL inputs use `dir="ltr"`
 - Styling: raw inputs + Tailwind zinc/orange — **not** shadcn Form kit
 
 When adding fields:
 
 1. Extend Zod schema + Prisma model (migration) + actions mapping
-2. Add input in `ShowForm`
+2. Add input in `ShowForm` (and `AlbumForm` if it applies to albums too)
 3. Update table/card display if the field is user-visible
 4. Keep Hebrew validation messages
+5. If adding cover-related metadata, follow the `coverWidth`/`coverHeight`/`coverBlurDataURL` pattern already wired for both forms
 
 ---
 
@@ -124,8 +129,9 @@ Frontend agents should not weaken middleware checks or move secrets client-side.
 |---|---|
 | Validation | Zod in `src/lib/shows/schemas.ts` / `src/lib/albums/schemas.ts` |
 | Mutations | `src/lib/shows/actions.ts` / `src/lib/albums/actions.ts` |
-| Upload | Blob client + `/api/admin/upload` (shared for shows and albums) |
+| Upload | Blob client + `/api/admin/upload` (shared; WebP only) |
+| Image optimize + LQIP | `src/lib/images/client-optimize.ts` (`optimizeCoverImage`) |
 | Feedback | `toast` from `sonner` |
-| Refresh after mutate | `revalidatePath` in actions + client `router.refresh()` where needed |
+| Refresh after mutate | `revalidateTag` + `revalidatePath` in actions + client `router.refresh()` where needed |
 
 Deep CMS reference: [`docs/cms/README.md`](../cms/README.md).

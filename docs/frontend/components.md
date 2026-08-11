@@ -14,20 +14,26 @@ Exported for clean public imports:
 | `Hero`, `UpcomingShow`, `Shows`, `Music`, `Contact` | `sections/` |
 | `ShowCard`, `AlbumCard`, `NewsletterForm`, `SocialLinks`, `StreamingPlatforms` | `ui/` |
 
-Not in the barrel (import by path): `SkipLinks`, `Logo`, `VideoBackground`, `HeroImageFallback`, `StructuredData`, all shadcn primitives, all admin colocated components.
+Not in the barrel (import by path): `SkipLinks`, `Logo`, `VideoBackground`, `HeroImageFallback`, `HeroMedia`, `HeroScrollArrow`, `MobileNav`, `YearNav`, `StructuredData`, all shadcn primitives, all admin colocated components.
 
 ---
 
 ## Layout
 
-### `Header` — `components/layout/Header.tsx` (`"use client"`)
+### `Header` — `components/layout/Header.tsx` (RSC)
 
-- Fixed nav, black bar, logo `variant="icon"`
-- Links: בית `#home`, הופעות `#shows`, מוזיקה `#music` (no Contact)
-- Mobile: hamburger, Escape, focus trap, click-outside, close-on-scroll
-- Active/hover → orange
+- Fixed nav, black bar, logo `variant="icon"` — rendered server-side as static HTML.
+- Links defined in `layout/nav.ts`: בית `#home`, הופעות `#shows`, מוזיקה `#music`, **מרץ׳** (external, new tab, external-link icon).
+- Desktop nav and logo are pre-rendered on the server and passed as slots into `MobileNav`.
+- All interactive mobile behavior lives in `MobileNav`.
 
-### `Footer` — `components/layout/Footer.tsx` (server)
+### `MobileNav` — `components/layout/MobileNav.tsx` (`"use client"`)
+
+- Receives `navSlot` (desktop nav markup) and `logoSlot` (logo markup) as React nodes.
+- Manages hamburger state, Escape key, focus trap, click-outside, close-on-scroll.
+- Active/hover → orange.
+
+### `Footer` — `components/layout/Footer.tsx` (RSC)
 
 - Black footer, 3 columns: brand blurb, quick links, email `mulu.records@gmail.com`
 - Copyright year currently hardcoded `2024`
@@ -36,44 +42,51 @@ Not in the barrel (import by path): `SkipLinks`, `Logo`, `VideoBackground`, `Her
 
 ## Sections (homepage)
 
-### `Hero` — `sections/Hero.tsx` (`"use client"`)
+All public sections are **async RSCs** — they fetch their own data from the Next.js Data Cache. `page.tsx` wraps each in a `Suspense` boundary.
+
+### `Hero` — `sections/Hero.tsx` (RSC shell)
 
 - Full-viewport black hero, `id="home"`
-- Mobile: static `HeroImageFallback` (`/images/hero-image.webp`)
-- Desktop: dynamic Vimeo `VideoBackground` (`ssr: false`), fades once ready
-- Brand signal: large `Logo` wordmark as H1
-- Social icon row from `socialPlatforms`
-- Scroll cue → `#shows`
-- Primary CTAs currently **commented out** in source
+- Static shell: large `Logo` wordmark as H1, social icon row from `socialPlatforms` (plain `<img>` tags).
+- Scroll cue and video background are delegated to client islands.
 
-### `UpcomingShow` — `sections/UpcomingShow.tsx` (`"use client"`)
+### `HeroMedia` — `ui/HeroMedia.tsx` (`"use client"`)
 
-```ts
-interface UpcomingShowProps {
-  featured: PublicShow | null;
-}
-```
+- Manages `videoReady` state.
+- Mobile: static `HeroImageFallback` (`/images/hero-image.webp`).
+- Desktop: dynamic Vimeo `VideoBackground` (`ssr: false`), fades once ready.
 
-- Returns `null` if no featured show
-- Grunge / orange energy treatment
-- Shows venue, city, date, doors, cover, ticket link
+### `HeroScrollArrow` — `ui/HeroScrollArrow.tsx` (`"use client"`)
 
-### `Shows` — `sections/Shows.tsx` (`"use client"`)
+- Shows scroll indicator arrow; fades out based on `scrollY` position.
 
-```ts
-interface ShowsProps {
-  shows: PublicShow[];
-}
-```
+### `UpcomingShow` — `sections/UpcomingShow.tsx` (async RSC)
+
+- Calls `getPublicShows()` and derives `featured` internally.
+- Returns `null` if no featured show.
+- Grunge / orange energy treatment.
+- Shows venue, city, date, doors, cover (with blur placeholder), ticket link.
+- Ticket button hover handled by CSS class `.btn-featured` (no JS).
+
+### `Shows` — `sections/Shows.tsx` (async RSC)
 
 - Section `id="shows"`
-- Maps to `ShowCard` (past shows styled differently)
+- Calls `getPublicShows()` internally.
+- Maps to `ShowCard` (past shows styled differently).
 
-### `Music` — `sections/Music.tsx` (`"use client"`)
+### `Music` — `sections/Music.tsx` (async RSC)
 
-- No props — reads `albums` from `@/data`
-- Year timeline + album covers; Spotify / Apple links inline
-- Anchors `#music`, `#album-{id}`
+- Calls `getPublicAlbums()` from DB (not static data).
+- Year timeline + album cards via `AlbumCard`.
+- Blurred background behind each album: `blur(24px) saturate(1.4)`, `quality={35}`, container expanded `-60%` all sides.
+- Streaming platform icon links use plain `<img>` tags (SVG icons — no `next/image` overhead).
+- `YearNav` client island handles smooth scroll.
+- Anchors `#music`, `#album-{id}`.
+
+### `YearNav` — `ui/YearNav.tsx` (`"use client"`)
+
+- Receives album list as props from `Music`.
+- Renders year-filter pill row; `scrollIntoView` on click.
 
 ### `Contact` — `sections/Contact.tsx`
 
@@ -87,25 +100,25 @@ interface ShowsProps {
 
 | Component | Path | Used by | Notes |
 |---|---|---|---|
-| `ShowCard` | `ui/ShowCard.tsx` | Shows | Hebrew date via `lib/hebrew.ts`; ticket CTA; past = muted/disabled |
-| `AlbumCard` | `ui/AlbumCard.tsx` | Music | Cover image presentation |
+| `ShowCard` | `ui/ShowCard.tsx` | Shows | RSC; Hebrew date via `lib/hebrew.ts`; ticket CTA; `.btn-ticket` CSS hover |
+| `AlbumCard` | `ui/AlbumCard.tsx` | Music | RSC; `next/image` with `blurDataURL` from DB; `sizes` set for layout |
 | `Logo` | `ui/Logo.tsx` | Header, Hero | `logo` \| `icon` variants |
-| `SkipLinks` | `ui/SkipLinks.tsx` | Home | A11y skip to main |
-| `HeroImageFallback` | `ui/HeroImageFallback.tsx` | Hero | Static hero image |
-| `VideoBackground` | `ui/VideoBackground.tsx` | Hero | Vimeo id `1161696100`; reduced-motion → null |
+| `SkipLinks` | `ui/SkipLinks.tsx` | Home | RSC; A11y skip to main |
+| `HeroImageFallback` | `ui/HeroImageFallback.tsx` | HeroMedia | Static hero image; `priority`, tuned `sizes` + `quality` |
+| `VideoBackground` | `ui/VideoBackground.tsx` | HeroMedia | Vimeo id `1161696100`; reduced-motion → null |
 | `SocialLinks` | `ui/SocialLinks.tsx` | Contact only | |
 | `NewsletterForm` | `ui/NewsletterForm.tsx` | Contact only | **Stub** — `console.log` + fake success |
-| `StreamingPlatforms` | `ui/StreamingPlatforms.tsx` | **Unused** | Music inlines platforms instead |
+| `StreamingPlatforms` | `ui/StreamingPlatforms.tsx` | **Unused** | Music inlines platform icons instead |
 
 ---
 
 ## SEO
 
-### `StructuredData` — `components/seo/StructuredData.tsx`
+### `StructuredData` — `components/seo/StructuredData.tsx` (async RSC)
 
-Props: `shows: PublicShow[]` (future shows for MusicEvent).
-
-Emits JSON-LD for MusicGroup, Organization, BreadcrumbList, MusicAlbum[], MusicEvent[].
+- **No props** — self-fetches `getPublicShows()` + `getPublicAlbums()` from the Data Cache.
+- Emits JSON-LD for MusicGroup, Organization, BreadcrumbList, MusicAlbum[], MusicEvent[].
+- Wrapped in a `Suspense` at the top of `page.tsx`.
 
 ---
 
@@ -117,11 +130,14 @@ Under `src/app/admin/`:
 |---|---|---|
 | `LoginForm` | `login/LoginForm.tsx` | Native form → `loginAction`; errors via `?error=1` |
 | `ShowsTable` | `shows/ShowsTable.tsx` | List + hide/delete/feature; optimistic local state; sonner toasts |
-| `ShowForm` | `shows/ShowForm.tsx` | RHF + Zod; WebP client compress; Blob upload |
+| `ShowForm` | `shows/ShowForm.tsx` | RHF + Zod; client-side image optimize + WebP; Blob upload; persists cover metadata |
 | `NewShowDialog` | `shows/NewShowDialog.tsx` | Radix Dialog wrapping `ShowForm` |
 | `FeaturedCard` | `shows/FeaturedCard.tsx` | Featured summary + clear/edit |
+| `AlbumForm` | `albums/AlbumForm.tsx` | RHF + Zod; client-side image optimize + WebP; Blob upload; persists cover metadata |
+| `AlbumsTable` | `albums/AlbumsTable.tsx` | List + hide/delete; optimistic local state |
+| `NewAlbumDialog` | `albums/NewAlbumDialog.tsx` | Radix Dialog wrapping `AlbumForm` |
 
-### `ShowForm` props
+### `ShowForm` / `AlbumForm` props
 
 ```ts
 interface ShowFormProps {
@@ -135,7 +151,9 @@ interface ShowFormProps {
 
 Schema: `src/lib/shows/schemas.ts` (`ShowSchema` / `ShowFormData`).
 
-**Important:** ShowForm uses **native inputs + Tailwind**, not shadcn `Form` / `Input` components — even though those files exist.
+**Important:** Both forms use **native inputs + Tailwind**, not shadcn `Form` / `Input` components — even though those files exist.
+
+Image processing: both forms call `optimizeCoverImage(file, role)` from `src/lib/images/client-optimize.ts`. This resizes, converts to WebP, and generates a LQIP base64 blur placeholder in one Canvas pass.
 
 ---
 
@@ -145,7 +163,7 @@ Configured by `components.json` (new-york, lucide, CSS variables).
 
 | File | Live usage |
 |---|---|
-| `dialog.tsx` | **Yes** — `NewShowDialog` |
+| `dialog.tsx` | **Yes** — `NewShowDialog`, `NewAlbumDialog` |
 | `button.tsx` | Indirectly via dialog |
 | `form.tsx` | Unused |
 | `input.tsx` | Unused |
@@ -172,13 +190,16 @@ Configured by `components.json` (new-york, lucide, CSS variables).
 |---|---|
 | `lib/utils.ts` | `cn()` (clsx + tailwind-merge) |
 | `lib/hebrew.ts` | Hebrew month labels for ShowCard |
-| `lib/shows/queries.ts` | `PublicShow` + fetchers |
-| `lib/shows/schemas.ts` | Zod form schema |
-| `lib/shows/actions.ts` | Mutations |
+| `lib/shows/queries.ts` | `PublicShow` + cached fetchers |
+| `lib/shows/schemas.ts` | Zod form schema (includes cover metadata fields) |
+| `lib/shows/actions.ts` | Mutations (with `revalidateTag`) |
+| `lib/albums/queries.ts` | `PublicAlbum` + cached fetcher |
+| `lib/albums/schemas.ts` | Zod form schema (includes cover metadata fields) |
+| `lib/albums/actions.ts` | Mutations (with `revalidateTag`) |
 | `lib/blob.ts` | Server-side cover delete |
-| `data/music.ts`, `data/social.ts` | Static content |
-
-Duplicate month maps may exist in admin table code — prefer consolidating on `lib/hebrew.ts` when touching that area.
+| `lib/images/client-optimize.ts` | Browser-side Canvas resize + WebP + LQIP |
+| `data/music.ts` | Legacy static album list (local `/public/albums/` paths — not the live DB source) |
+| `data/social.ts` | Static social platform config |
 
 ---
 

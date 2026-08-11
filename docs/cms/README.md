@@ -138,17 +138,20 @@ prisma/
 
 ```prisma
 model Show {
-  id         String   @id @default(cuid())
-  date       DateTime @db.Date        // stored as DATE (no time component)
-  city       String
-  venue      String
-  ticketLink String?                  // full URL or null
-  doorsTime  String?                  // free text e.g. "20:00"
-  coverImage String?                  // Vercel Blob URL or null
-  isFeatured Boolean  @default(false) // only ONE show should be featured at a time
-  isHidden   Boolean  @default(false) // excluded from public site when true
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(cuid())
+  date             DateTime @db.Date        // stored as DATE (no time component)
+  city             String
+  venue            String
+  ticketLink       String?                  // full URL or null
+  doorsTime        String?                  // free text e.g. "20:00"
+  coverImage       String?                  // Vercel Blob URL or null
+  coverWidth       Int?                     // intrinsic image width (set on upload)
+  coverHeight      Int?                     // intrinsic image height (set on upload)
+  coverBlurDataURL String?                  // LQIP base64 placeholder (set on upload)
+  isFeatured       Boolean  @default(false) // only ONE show should be featured at a time
+  isHidden         Boolean  @default(false) // excluded from public site when true
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([date])
   @@index([isFeatured])
@@ -156,16 +159,19 @@ model Show {
 }
 
 model Album {
-  id         String   @id @default(cuid())
-  title      String
-  year       Int                      // release year, used for display and sorting
-  subtitle   String?                  // e.g. "EP", "סינגל"
-  coverImage String?                  // /albums/... local path or Vercel Blob URL
-  spotify    String?                  // full Spotify album URL or null
-  appleMusic String?                  // full Apple Music album URL or null
-  isHidden   Boolean  @default(false) // excluded from public site when true
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String   @id @default(cuid())
+  title            String
+  year             Int                      // release year, used for display and sorting
+  subtitle         String?                  // e.g. "EP", "סינגל"
+  coverImage       String?                  // Vercel Blob URL or null
+  coverWidth       Int?                     // intrinsic image width (set on upload)
+  coverHeight      Int?                     // intrinsic image height (set on upload)
+  coverBlurDataURL String?                  // LQIP base64 placeholder (set on upload)
+  spotify          String?                  // full Spotify album URL or null
+  appleMusic       String?                  // full Apple Music album URL or null
+  isHidden         Boolean  @default(false) // excluded from public site when true
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([year])
   @@index([isHidden])
@@ -208,21 +214,29 @@ Images are stored in **Vercel Blob** (`BLOB_READ_WRITE_TOKEN` env var required).
 The upload flow is client-side direct upload to avoid sending large files through the Next.js server:
 
 ```
-Browser (ShowForm.tsx)
+Browser (ShowForm.tsx / AlbumForm.tsx)
   1. User selects image file
-  2. convertToWebP() — Canvas API resizes to max 1200px and converts to WebP (quality 0.85)
+  2. optimizeCoverImage(file, role) — src/lib/images/client-optimize.ts
+       • Canvas API resizes: show-cover → max 1600px, album-cover → max 1200px
+       • Converts to WebP (quality 0.82)
+       • Generates LQIP: 24-px thumbnail → JPEG base64 (coverBlurDataURL)
+       • Returns { file (WebP), width, height, blurDataURL }
   3. upload() from @vercel/blob/client
-       → POST /api/admin/upload  (get short-lived token — auth-gated)
+       → POST /api/admin/upload  (get short-lived token — auth-gated; accepts WebP only)
        → PUT directly to Vercel Blob CDN
   4. Returns public Blob URL → stored in form field coverImage
-  5. On form submit → URL saved to Show.coverImage in DB
+  5. On form submit → URL + width + height + blurDataURL saved to DB
 ```
 
-On **delete**: if `show.coverImage` contains `blob.vercel-storage.com`, `deleteCoverImage(url)` is called before the DB row is deleted.
+On **cover replace**: `updateShow` / `updateAlbum` detect the old `coverImage` URL (if it was a Blob URL) and call `deleteCoverImage(oldUrl)` before saving the new one.
 
-Allowed types: `image/jpeg`, `image/png`, `image/webp`, `image/gif` — max 10 MB (post-conversion WebP is typically well under 500 KB).
+On **cover clear**: same deletion logic runs if the user removes the cover.
 
-**Relevant files:** `src/lib/blob.ts`, `src/app/api/admin/upload/route.ts`, `src/app/admin/shows/ShowForm.tsx` (see `convertToWebP` and the `upload()` call)
+On **delete**: `deleteShow` / `deleteAlbum` call `deleteCoverImage(url)` before the DB row is deleted.
+
+Allowed upload type: **`image/webp` only** (the route rejects other MIME types). The browser must convert before posting.
+
+**Relevant files:** `src/lib/blob.ts`, `src/lib/images/client-optimize.ts`, `src/app/api/admin/upload/route.ts`, `src/app/admin/shows/ShowForm.tsx`, `src/app/admin/albums/AlbumForm.tsx`
 
 ---
 
@@ -241,18 +255,18 @@ All in `src/lib/shows/actions.ts` (`"use server"`). All require authentication.
 | `setFeaturedShow` | `(id) → ActionResult` | Clears all others, sets this one featured |
 | `clearFeaturedShow` | `() → ActionResult` | Sets all `isFeatured = false` |
 
-All show actions call `revalidatePath("/")` and `revalidatePath("/admin/shows")` on success.
+All show actions call `revalidateTag("shows")`, `revalidatePath("/")`, and `revalidatePath("/admin/shows")` on success. This purges the `unstable_cache` entry immediately so the public site reflects changes on the next request within seconds.
 
 **Albums** (`src/lib/albums/actions.ts`):
 
 | Action | Signature | Notes |
 |---|---|---|
 | `createAlbum` | `(data: AlbumFormData) → ActionResult` | No featured concept |
-| `updateAlbum` | `(id, data: AlbumFormData) → ActionResult` | — |
+| `updateAlbum` | `(id, data: AlbumFormData) → ActionResult` | Deletes old Blob image if cover changed/cleared |
 | `deleteAlbum` | `(id) → ActionResult` | Deletes Blob image first if present |
 | `toggleAlbumVisibility` | `(id) → ActionResult` | Flips `isHidden` |
 
-All album actions call `revalidatePath("/")` and `revalidatePath("/admin/albums")` on success.
+All album actions call `revalidateTag("albums")`, `revalidatePath("/")`, and `revalidatePath("/admin/albums")` on success.
 
 `ActionResult` type:
 ```ts
@@ -265,13 +279,14 @@ type ActionResult =
 
 ## Public site integration
 
-The public site reads all data server-side. There is **no static data file** for shows or albums — everything comes from the DB.
+The public site reads all data server-side via async RSC sections. Each section self-fetches from the Next.js Data Cache — there is no `Promise.all` in `page.tsx`.
 
-| Query function | Where used | Filters |
+| Query function | Where used | Caching |
 |---|---|---|
-| `getPublicShows()` | `src/app/page.tsx` → `Shows` component | `isHidden: false`, sorted ascending by date |
-| `getPublicFeaturedShow()` | `src/app/page.tsx` → `UpcomingShow` component | `isFeatured: true`, `isHidden: false` |
-| `getPublicAlbums()` | `src/app/page.tsx` → `Music` + `StructuredData` + `sitemap.ts` | `isHidden: false`, sorted descending by year |
+| `getPublicShows()` | `Shows`, `UpcomingShow`, `StructuredData` sections | `unstable_cache(tag: 'shows')` |
+| `getPublicAlbums()` | `Music`, `StructuredData` sections, `sitemap.ts` | `unstable_cache(tag: 'albums')` |
+
+Multiple sections calling the same function in the same render pass is fine — the Data Cache deduplicates the DB hit. All mutations call `revalidateTag` so the cache is purged immediately on any CMS change.
 
 **Relevant files:** `src/lib/shows/queries.ts`, `src/lib/albums/queries.ts`, `src/app/page.tsx`, `src/components/sections/Shows.tsx`, `src/components/sections/UpcomingShow.tsx`, `src/components/sections/Music.tsx`, `src/app/sitemap.ts`
 
@@ -336,7 +351,9 @@ import { prisma } from "@/lib/prisma";
 3. Add the field to `ShowSchema` in `src/lib/shows/schemas.ts`.
 4. Update `createShow` and `updateShow` in `src/lib/shows/actions.ts` to read/write the new field.
 5. Update `ShowForm.tsx` to render the new input.
-6. Update `queries.ts` return types if the public site needs the field.
+6. Update `queries.ts` return types and `PublicShow` type if the public site needs the field.
+
+**Cover metadata fields** (`coverWidth`, `coverHeight`, `coverBlurDataURL`) are already wired end-to-end and serve as a reference example for this flow.
 
 ### Add a field to Album
 
