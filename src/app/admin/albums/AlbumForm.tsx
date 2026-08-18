@@ -78,22 +78,38 @@ export default function AlbumForm({ defaultValues, onSubmit, onSuccess, onCancel
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    console.log("[album-upload] file selected:", file.name, file.type, file.size);
     setUploading(true);
     setUploadStats(null);
     try {
+      console.log("[album-upload] starting optimizeCoverImage");
       const result = await optimizeCoverImage(file, "album-cover");
+      console.log("[album-upload] optimizeCoverImage done:", {
+        name: result.file.name,
+        type: result.file.type,
+        size: result.file.size,
+        width: result.width,
+        height: result.height,
+        originalKB: result.originalKB,
+        finalKB: result.finalKB,
+      });
       setUploadStats({ originalKB: result.originalKB, finalKB: result.finalKB });
+
+      console.log("[album-upload] starting vercel blob upload");
       const blob = await upload(result.file.name, result.file, {
         access: "public",
         handleUploadUrl: "/api/admin/upload",
       });
+      console.log("[album-upload] vercel blob upload done:", blob.url);
+
       setValue("coverImage", blob.url);
       setValue("coverWidth", result.width);
       setValue("coverHeight", result.height);
       setValue("coverBlurDataURL", result.blurDataURL);
       setImagePreview(blob.url);
       toast.success(`התמונה הועלתה ✓  ${result.originalKB} KB → ${result.finalKB} KB`);
-    } catch {
+    } catch (err) {
+      console.error("[album-upload] error:", err);
       toast.error("שגיאה בהעלאת התמונה");
     } finally {
       setUploading(false);
