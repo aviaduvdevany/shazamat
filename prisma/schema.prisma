@@ -28,6 +28,15 @@ model Show {
   @@index([isHidden])
 }
 
+model PlayerVote {
+  id         String   @id @default(cuid())
+  playerId   String
+  voterToken String   @unique
+  createdAt  DateTime @default(now())
+
+  @@index([playerId])
+}
+
 model Album {
   id               String   @id @default(cuid())
   title            String
