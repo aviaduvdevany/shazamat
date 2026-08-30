@@ -1,9 +1,14 @@
 import React from "react";
 import ShowCard from "@/components/ui/ShowCard";
 import { getPublicShows } from "@/lib/shows/queries";
+import { isPastShow } from "@/lib/dates";
 
 export default async function Shows() {
   const shows = await getPublicShows();
+
+  // isPast computed fresh at render — never from the cache
+  const upcoming = shows.filter((s) => !isPastShow(s.date));
+  const past = shows.filter((s) => isPastShow(s.date));
 
   return (
     <section
@@ -40,29 +45,32 @@ export default async function Shows() {
                 style={{ clipPath: "polygon(2% 0, 98% 2%, 100% 98%, 0 100%)" }}
               />
               <div className="space-y-6 relative">
-                {shows.map((show, index) => (
-                  <div key={show.id} className="relative">
-                    <div
-                      style={{
-                        transform: index % 2 === 0 ? "rotate(0.2deg)" : "rotate(-0.15deg)",
-                      }}
-                    >
-                      <ShowCard
-                        date={show.date}
-                        city={show.city}
-                        venue={show.venue}
-                        ticketLink={show.ticketLink ?? undefined}
-                        isPast={show.isPast}
-                      />
-                    </div>
-                    {index !== shows.length - 1 && (
+                {[...upcoming, ...past].map((show, index, all) => {
+                  const isShowPast = past.includes(show);
+                  return (
+                    <div key={show.id} className="relative">
                       <div
-                        className="w-full h-[2px] bg-black opacity-10 relative mt-6"
-                        style={{ clipPath: "polygon(5% 0, 95% 0, 100% 100%, 0 100%)" }}
-                      />
-                    )}
-                  </div>
-                ))}
+                        style={{
+                          transform: index % 2 === 0 ? "rotate(0.2deg)" : "rotate(-0.15deg)",
+                        }}
+                      >
+                        <ShowCard
+                          date={show.date}
+                          city={show.city}
+                          venue={show.venue}
+                          ticketLink={show.ticketLink ?? undefined}
+                          isPast={isShowPast}
+                        />
+                      </div>
+                      {index !== all.length - 1 && (
+                        <div
+                          className="w-full h-[2px] bg-black opacity-10 relative mt-6"
+                          style={{ clipPath: "polygon(5% 0, 95% 0, 100% 100%, 0 100%)" }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

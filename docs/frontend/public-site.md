@@ -40,7 +40,7 @@ export default function Home() {
 
 ### Section order (top → bottom)
 
-1. **Hero** — brand + video/image + socials
+1. **Hero** — brand + האזין + כרטיסים CTAs + socials
 2. **UpcomingShow** — featured show only (hidden if none)
 3. **Shows** — full list (upcoming + past)
 4. **Music** — albums timeline
@@ -55,7 +55,8 @@ To reorder or toggle sections, edit `page.tsx` only.
 | Anchor / URL | Section | In Header? |
 |---|---|---|
 | `#home` | Hero | Yes (בית) |
-| `#shows` | Shows (+ scroll from Hero) | Yes (הופעות) |
+| `#upcoming-show` | UpcomingShow featured ticket block | Yes (הופעות) |
+| `#shows` | Shows full list | No — HeroScrollArrow falls back here if no featured show |
 | `#music` | Music | Yes (מוזיקה) |
 | MerchAdvice store (external) | — | Yes (מרץ׳) — opens in new tab, shows external-link icon |
 | `#album-{id}` | Per-album in Music | No (timeline / sitemap) |
@@ -71,35 +72,37 @@ Each section is a **self-fetching async RSC**. `page.tsx` does not pass data pro
 
 | Section | Data source | Fetch location |
 |---|---|---|
-| Hero | `socialPlatforms` from `@/data/social.ts` | Static import in RSC |
+| Hero (shell) | `socialPlatforms` from `@/data/social.ts` | Static import in RSC |
+| HeroCtas (Suspense island) | `getPublicAlbums()` + `getPublicShows()` | Self-fetches inside async RSC |
 | UpcomingShow | `getPublicShows()` → derives featured | Self-fetches inside component |
 | Shows | `getPublicShows()` | Self-fetches inside component |
 | Music | `getPublicAlbums()` from DB | Self-fetches inside component |
 | StructuredData | `getPublicShows()` + `getPublicAlbums()` | Self-fetches inside component |
 
-**Data Cache**: both `getPublicShows` and `getPublicAlbums` are wrapped in `unstable_cache` with their respective tags. Since the ISR boundary and the Data Cache share the same in-process memory, DB calls are made **at most once per revalidation cycle** even if multiple sections call the same function.
+**Data Cache**: both `getPublicShows` and `getPublicAlbums` are wrapped in `unstable_cache` with their respective tags. Since the ISR boundary and the Data Cache share the same in-process memory, DB calls are made **at most once per revalidation cycle** even if multiple sections call the same function. `getPublicShows` also sets `revalidate: 3600` as a time-based belt.
 
 Public queries exclude `isHidden: true`. Featured public query also requires not hidden.
 
-Past detection: `date < today` (start of local day) → `isPast`.
+**Past detection**: `isPastShow(dateString)` in `src/lib/dates.ts`, computed **at render time** (never stored in cache). Uses `Asia/Jerusalem` timezone so shows flip to past on the correct Israeli calendar day. `getPublicShows` deliberately does **not** include `isPast` in its cached payload — all callers recompute it fresh.
 
 ---
 
 ## Hero behavior (detail)
 
 - RSC shell; interactive parts are **client islands**: `HeroMedia` (video state), `HeroScrollArrow` (fade on scroll).
+- **CTAs**: `HeroCtas` is an async RSC wrapped in `Suspense` (reserved height prevents CLS). It fetches `getPublicAlbums()[0].spotify` for the האזין URL and the featured show's `ticketLink` (fallback `#upcoming-show`) for the כרטיסים URL.
 - Image always available (mobile + video-loading state) via `HeroImageFallback`.
-- Video only `md+`; uses `@vimeo/player` loaded dynamically (`ssr: false`).
+- **Video only on desktop**: `HeroMedia` uses `matchMedia("(min-width: 768px)")` on the client to conditionally mount `VideoBackground`. SSR and mobile clients never render the Vimeo iframe.
 - Dark overlay + noise for readability.
-- Social icons: static `<img>` tags (no `next/image` overhead for small SVG icons) from `data/social.ts` + `public/icons/`.
-- If you re-enable CTAs, keep brand-first hierarchy: logo remains the hero signal.
+- Social icons: static `<img>` tags (no `next/image` overhead for small SVG icons), shrunk to `w-9 h-9` secondary row below the CTAs.
+- **HeroScrollArrow** scrolls to `#upcoming-show` if that element exists in the DOM, else `#shows`.
 
 ---
 
 ## Featured show behavior
 
 - Controlled entirely in admin (`isFeatured`). At most one featured (actions clear others in a transaction).
-- `UpcomingShow` derives its featured show by filtering `getPublicShows()` (same cached call the Shows section uses — no extra DB hit).
+- `UpcomingShow` derives its featured show by filtering `getPublicShows()` (same cached call the Shows section uses — no extra DB hit). A featured show whose date has already passed is treated as absent — `UpcomingShow` returns `null`.
 - UI returns `null` when missing — homepage simply skips the block.
 - Cover image uses `next/image` with blur placeholder if `coverBlurDataURL` is populated.
 - Hover effect on the ticket button is CSS-only (`.btn-featured` in `globals.css`).
@@ -108,8 +111,9 @@ Past detection: `date < today` (start of local day) → `isPast`.
 
 ## Shows list behavior
 
-- Includes past shows (visual treatment differs: strikethrough / disabled ticket).
-- Ticket button opens `ticketLink` when present.
+- Upcoming shows rendered first. Past shows hidden inside a `<details>` **הופעות שעברו** that is collapsed by default — no JS needed, pure HTML.
+- Ticket states in `ShowCard`: `upcoming + ticketLink` → real `<a>` link; `upcoming + no ticketLink` → `בקרוב` text (never a fake button); `past` → no ticket control at all.
+- Ticket link opens `ticketLink` in a new tab.
 - Dates rendered with Hebrew month helpers.
 - `ShowCard` is a pure RSC; `.btn-ticket` CSS class handles hover without JS.
 
@@ -121,6 +125,7 @@ Past detection: `date < today` (start of local day) → `isPast`.
 - `getPublicAlbums()` is cached with `unstable_cache(tag: 'albums')`.
 - The year-filter pill row (`YearNav`) is a **client island** — smooth `scrollIntoView` requires the browser.
 - Blurred background behind each album card: a blurred, zoomed `next/image` of the cover (`blur(24px) saturate(1.4)`, `quality={35}`, expanded container `top/left/right/bottom: -60%`).
+- **Mobile titles**: a `md:hidden` caption (year + Hebrew title `h3`) is rendered below each cover on small screens. The desktop overlay year/title is `aria-hidden="true"`. The `h3` carries `id=album-title-*` referenced by the article's `aria-labelledby`.
 - Streaming platform links (Spotify, Apple Music) use static `<img>` tags for SVG icons.
 - `#album-{id}` anchors are generated from the DB album ID.
 

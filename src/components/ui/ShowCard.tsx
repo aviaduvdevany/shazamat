@@ -17,9 +17,6 @@ export default function ShowCard({
   ticketLink,
 }: ShowCardProps) {
   const { day, month } = formatDateToHebrew(date);
-  const buttonLabel = isPast
-    ? `כרטיסים להופעה ב-${venue}, ${city} - הופעה זו כבר התקיימה`
-    : `קנה כרטיסים להופעה ב-${venue}, ${city}`;
 
   const roughTextureSvg = `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='rough'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23rough)'/%3E%3C/svg%3E")`;
 
@@ -77,13 +74,16 @@ export default function ShowCard({
         </div>
       </div>
 
-      {/* Action Button */}
+      {/* Action */}
       <div className="flex-shrink-0 flex gap-2 mt-4 md:mt-0 relative z-10">
-        {ticketLink && !isPast ? (
+        {!isPast && ticketLink ? (
+          /* Upcoming + has ticket URL — real clickable link */
           <a
             href={ticketLink}
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white relative overflow-hidden rounded-xs hover:bg-black hover:text-white inline-block btn-ticket"
-            aria-label={buttonLabel}
+            aria-label={`קנה כרטיסים להופעה ב-${venue}, ${city}`}
           >
             <span className="relative z-10">כרטיסים</span>
             <div
@@ -91,26 +91,15 @@ export default function ShowCard({
               style={{ backgroundImage: roughTextureSvg, backgroundSize: "20px 20px" }}
             />
           </a>
-        ) : (
-          <button
-            disabled={isPast}
-            aria-disabled={isPast}
-            className={`px-4 py-2 text-sm font-bold border-2 border-black text-black bg-white relative overflow-hidden rounded-xs ${
-              isPast
-                ? "opacity-40 cursor-not-allowed line-through decoration-2"
-                : "hover:bg-black hover:text-white btn-ticket"
-            }`}
-            aria-label={buttonLabel}
+        ) : !isPast ? (
+          /* Upcoming + no ticket URL yet — not a button */
+          <span
+            className="px-4 py-2 text-sm font-bold text-black/35"
+            aria-label={`כרטיסים להופעה ב-${venue}, ${city} — בקרוב`}
           >
-            <span className="relative z-10">כרטיסים</span>
-            {!isPast && (
-              <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ backgroundImage: roughTextureSvg, backgroundSize: "20px 20px" }}
-              />
-            )}
-          </button>
-        )}
+            בקרוב
+          </span>
+        ) : null /* Past — no ticket control at all */}
       </div>
     </div>
   );

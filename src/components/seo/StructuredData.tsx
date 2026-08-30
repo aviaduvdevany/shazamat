@@ -2,6 +2,7 @@ import React from "react";
 import { entitySameAs } from "@/data/social";
 import { getPublicShows } from "@/lib/shows/queries";
 import { getPublicAlbums } from "@/lib/albums/queries";
+import { isPastShow } from "@/lib/dates";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://shazamat.com";
 
@@ -10,7 +11,8 @@ export default async function StructuredData() {
     getPublicShows(),
     getPublicAlbums(),
   ]);
-  const futureShows = shows.filter((s) => !s.isPast);
+  // isPast computed fresh at render — never from the cache
+  const futureShows = shows.filter((s) => !isPastShow(s.date));
 
   const musicGroupSchema = {
     "@context": "https://schema.org",
@@ -111,7 +113,7 @@ export default async function StructuredData() {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "בית", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: "הופעות", item: `${siteUrl}#shows` },
+      { "@type": "ListItem", position: 2, name: "הופעות", item: `${siteUrl}#upcoming-show` },
       { "@type": "ListItem", position: 3, name: "מוזיקה", item: `${siteUrl}#music` },
     ],
   };

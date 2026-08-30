@@ -93,12 +93,13 @@ export default async function Music() {
                 </div>
               )}
 
-              {/* Year + title overlay */}
+              {/* Year + title overlay — desktop only (aria-hidden since mobile h3 carries the id) */}
               <div className="absolute top-8 md:top-12 left-0 right-0 z-10 pointer-events-none hidden md:block">
                 <div className="container-custom">
                   <div className="flex flex-col items-center md:items-start gap-2 md:gap-3">
                     <div
                       className="text-3xl md:text-8xl font-black text-white/60"
+                      aria-hidden="true"
                       style={{
                         transform: "rotate(-1deg)",
                         textShadow: "4px 4px 0 rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.3)",
@@ -107,8 +108,8 @@ export default async function Music() {
                     >
                       {album.year}
                     </div>
-                    <h3
-                      id={`album-title-${album.id}`}
+                    <p
+                      aria-hidden="true"
                       className="text-xl md:text-3xl font-black text-white/70 text-center md:text-right"
                       style={{
                         textShadow: "2px 2px 0 rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.3)",
@@ -116,7 +117,7 @@ export default async function Music() {
                       }}
                     >
                       {album.title}
-                    </h3>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -144,6 +145,24 @@ export default async function Music() {
                     }}
                   />
                 )}
+              </div>
+
+              {/* Mobile-only title — visible on small screens; carries the aria label id */}
+              <div className="md:hidden text-center mt-5 space-y-1 relative z-10 px-4">
+                <div
+                  className="text-2xl font-black text-white/50"
+                  aria-hidden="true"
+                  style={{ letterSpacing: "-0.04em" }}
+                >
+                  {album.year}
+                </div>
+                <h3
+                  id={`album-title-${album.id}`}
+                  className="text-base font-black text-white/70"
+                  style={{ letterSpacing: "-0.01em" }}
+                >
+                  {album.title}
+                </h3>
               </div>
 
               {/* Streaming links — use <img> for SVGs (no optimization needed) */}

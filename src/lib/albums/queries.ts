@@ -19,7 +19,7 @@ export type PublicAlbum = {
 
 /** Admin: all albums, newest first — always fresh (no cache) */
 export async function getAllAlbums(): Promise<Album[]> {
-  return prisma.album.findMany({ orderBy: { year: "desc" } });
+  return prisma.album.findMany({ orderBy: [{ year: "desc" }, { createdAt: "desc" }] });
 }
 
 /** Public site: exclude hidden albums, newest first — cached with 'albums' tag */
@@ -27,7 +27,8 @@ export const getPublicAlbums = unstable_cache(
   async (): Promise<PublicAlbum[]> => {
     const albums = await prisma.album.findMany({
       where: { isHidden: false },
-      orderBy: { year: "desc" },
+      // Secondary sort on createdAt breaks ties when two albums share the same year
+      orderBy: [{ year: "desc" }, { createdAt: "desc" }],
     });
     return albums.map((a) => ({
       id: a.id,

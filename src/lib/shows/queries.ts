@@ -1,12 +1,17 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getTodayStart } from "@/lib/dates";
 import type { Show } from "@/generated/prisma/client";
 
 export type { Show };
 
 export type ShowWithStatus = Show & { isPast: boolean };
 
-/** Date as YYYY-MM-DD string — safe to serialize across Server/Client boundary */
+/**
+ * Date as YYYY-MM-DD string — safe to serialize across Server/Client boundary.
+ * `isPast` is intentionally excluded: it must be computed at render time from
+ * the date string using isPastShow() so it is never frozen inside the cache.
+ */
 export type PublicShow = {
   id: string;
   date: string;
@@ -19,14 +24,7 @@ export type PublicShow = {
   coverHeight: number | null;
   coverBlurDataURL: string | null;
   isFeatured: boolean;
-  isPast: boolean;
 };
-
-function getTodayStart(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
 
 function toDateString(d: Date): string {
   const y = d.getFullYear();
@@ -42,10 +40,14 @@ export async function getAllShows(): Promise<ShowWithStatus[]> {
   return shows.map((s) => ({ ...s, isPast: s.date < today }));
 }
 
-/** Public site: exclude hidden shows, upcoming first — cached with 'shows' tag */
+/**
+ * Public site: exclude hidden shows, upcoming first — cached with 'shows' tag.
+ * `isPast` is NOT stored in the payload; callers must compute it fresh at render
+ * via isPastShow() so past shows never appear live after the cache warms.
+ * revalidate: 3600 is a belt-and-suspenders time-based fallback.
+ */
 export const getPublicShows = unstable_cache(
   async (): Promise<PublicShow[]> => {
-    const today = getTodayStart();
     const shows = await prisma.show.findMany({
       where: { isHidden: false },
       orderBy: { date: "asc" },
@@ -62,11 +64,10 @@ export const getPublicShows = unstable_cache(
       coverHeight: s.coverHeight,
       coverBlurDataURL: s.coverBlurDataURL,
       isFeatured: s.isFeatured,
-      isPast: s.date < today,
     }));
   },
   ["public-shows"],
-  { tags: ["shows"] }
+  { tags: ["shows"], revalidate: 3600 }
 );
 
 /** Public site: featured show — derived from cached shows (no extra DB round-trip) */

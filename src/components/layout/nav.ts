@@ -6,7 +6,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { label: "בית", href: "#home" },
-  { label: "הופעות", href: "#shows" },
+  { label: "הופעות", href: "#upcoming-show" },
   { label: "מוזיקה", href: "#music" },
   {
     label: "מרץ׳",

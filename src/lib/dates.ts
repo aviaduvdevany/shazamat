@@ -5,11 +5,25 @@ export function parseShowDate(dateString: string): Date {
   return date;
 }
 
+/**
+ * Returns true when the show date is before today in Israel local time
+ * (Asia/Jerusalem). Always computed fresh — never cached.
+ *
+ * Uses Israel timezone so that a show on Aug 15 is "past" for an Israeli
+ * visitor on the evening of Aug 15, even when the Vercel runtime is UTC.
+ */
 export function isPastShow(dateString: string): boolean {
-  const showDate = parseShowDate(dateString);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return showDate < now;
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  // Today's calendar date in Israel (en-CA gives YYYY-MM-DD)
+  const israelToday = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Jerusalem",
+  });
+  const [tYear, tMonth, tDay] = israelToday.split("-").map(Number);
+
+  if (year !== tYear) return year < tYear;
+  if (month !== tMonth) return month < tMonth;
+  return day < tDay;
 }
 
 export function getTodayStart(): Date {

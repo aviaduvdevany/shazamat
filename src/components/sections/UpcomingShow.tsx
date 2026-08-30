@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { getPublicShows } from "@/lib/shows/queries";
 import type { PublicShow } from "@/lib/shows/queries";
+import { isPastShow } from "@/lib/dates";
 
 function formatDisplayDate(dateStr: string): string {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -165,7 +166,8 @@ function FeaturedContent({ featured }: { featured: PublicShow }) {
 
 export default async function UpcomingShow() {
   const shows = await getPublicShows();
-  const featured = shows.find((s) => s.isFeatured) ?? null;
+  // Only show a featured block if the show hasn't already passed
+  const featured = shows.find((s) => s.isFeatured && !isPastShow(s.date)) ?? null;
   if (!featured) return null;
   return <FeaturedContent featured={featured} />;
 }

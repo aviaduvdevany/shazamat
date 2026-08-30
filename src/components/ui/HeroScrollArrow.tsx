@@ -12,7 +12,10 @@ export default function HeroScrollArrow() {
   }, []);
 
   function handleClick() {
-    const target = document.getElementById("shows");
+    // Land on the featured ticket block if it exists, otherwise fall back to shows list
+    const target =
+      document.getElementById("upcoming-show") ??
+      document.getElementById("shows");
     if (!target) return;
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -29,7 +32,7 @@ export default function HeroScrollArrow() {
       <button
         onClick={handleClick}
         className="flex flex-col items-center gap-2 group"
-        aria-label="גלול למטה לסעיף הופעות"
+        aria-label="גלול למטה להופעה הקרובה"
       >
         <div className="relative w-6 h-6 animate-scroll-arrow">
           <svg
