@@ -401,11 +401,19 @@ Flags are an open `Record<string, string | number | boolean>`. There is no enfor
 
 | Key | Type | Set by |
 |---|---|---|
-| `hadFirstInstrument` | `boolean` | `childhood-first-instrument` |
-| `firstPerformance` | `"success" \| "fail" \| "skip"` | `childhood-talent-show` |
-| `joinedFirstBand` | `boolean` | `school-band-tryout` |
-| `armyUnit` | `"nahal" \| "golani" \| …` | army events |
-| `travelDestination` | `"india" \| "south-america" \| …` | post-army events |
-| `tookDrug` | `boolean` | specific post-army event |
+| `hometown` | `"north" \| "far-north" \| "center"` | `childhood-kookilida` |
+| `joinedFirstBand` | `boolean` | `school-haver-mevi-haver` |
+| `alwaysLate` | `boolean` | `school-hayom-ani-lo` |
+| `romantic` | `boolean` | `school-sheva-lev-adom` |
+| `seenMaIm` | `boolean` | any מה עם שאזאמאט variant |
+| `armyUnit` | `"nahal" \| "golani"` | `army-hayda-nitzhonot` |
+| `protestSeed` | `boolean` | `army-rak-litzok` |
+| `travelDestination` | `"india" \| "south-america" \| "east-asia" \| "usa" \| "australia"` | `trip-tofes-avir` |
+| `tookDrug` | `boolean` | `trip-mayim-amukim` |
+| `quitSmoking` | `boolean` | `trip-allen-carr` |
+| `didGraffiti` | `boolean` | `home-ashkenazi-betahana` |
+| `gotArrested` | `boolean` | `home-ashkenazi-betahana` (30% roll), `home-rak-litzok-payoff` |
+| `dayJob` | `"wolt" \| "hitech" \| "music-only"` | `home-shirat-hamitparnasim` |
+| `musicSchool` | `"rimon" \| "bpm" \| "academy" \| "none"` | `career-achshav-ze-hazman` |
 
 When you add a new flag, document it here.

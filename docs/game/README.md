@@ -100,6 +100,7 @@ Both should pass before and after any change.
 | **[README.md](./README.md)** (this file) | First thing to read |
 | [architecture.md](./architecture.md) | Understanding the engine, state machine, RNG, and data flow |
 | [content-authoring.md](./content-authoring.md) | Adding events, stages, sprite parts, members — the day-to-day work |
+| [content-bible.md](./content-bible.md) | **The canonical event spec** — all 7 stages, every event card with Hebrew copy drafts, flag catalog, and member routing. Start here before writing any event TypeScript. |
 | [roadmap.md](./roadmap.md) | What's built, what's next, phase definitions and progress |
 | [shazamat-life-simulator-concept.md](./shazamat-life-simulator-concept.md) | Original design document — tone, philosophy, examples |
 
@@ -286,7 +287,7 @@ Run `game:validate` after every content change. Run `game:test` after any engine
 
 These are deliberate omissions — the infrastructure supports them but they are not implemented:
 
-- More than 2 life stages (childhood + school). Army, post-army trip, early adulthood, music career, Shazamat are not yet written.
+- More than 7 life stages (all 7 stages implemented in Phase 1).
 - Real pixel-art (all sprites are placeholder colored blocks)
 - Rare and ultra-rare events
 - Song/lyric/inside-joke references in event copy

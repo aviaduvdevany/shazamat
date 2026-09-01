@@ -56,20 +56,29 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 
 ## Phase 1 — First Real Game
 
-**Goal:** A game worth sharing. Real copy, real art for the two existing stages, plus the army stage.
+**Goal:** A game worth sharing. Real copy, real art for all 7 stages.
 
-### Content
+### Content bible ✅ COMPLETE
 
-- [ ] Audit and enrich `childhood-first-instrument` event (Shazamat-specific references)
-- [ ] Audit and enrich `childhood-talent-show` event
-- [ ] Audit and enrich `school-band-tryout` and `school-music-class`
-- [ ] Add 2–4 more childhood events (total ~5)
-- [ ] Add 2–4 more school events (total ~5)
-- [ ] Add army stage (`stages.ts`) with events:
-  - [ ] `army-nahal-or-golani` (Nahal vs Golani — Shay real history)
-  - [ ] `army-base-musician` (band in the army? — affects musicianship)
-  - [ ] `army-combat-leave` (how do you spend leave?)
-  - [ ] At least one rare army event
+- [x] Full 7-stage event map written and reviewed by Aviad — [`docs/game/content-bible.md`](./content-bible.md)
+- [x] All event cards drafted with Hebrew copy, affinity routing, flags, and song lore tags
+- [x] Flag catalog documented
+- [x] Member routing spine locked
+- [x] Tone guidance written for sensitive stories (שי, גדעון, ריף)
+- [x] **Needs Aviad resolved (2026-09-01):** 5 of 6 questions answered; answer-button jokes deferred (see "Needs Aviad" in bible)
+
+### Content implementation ✅ COMPLETE
+
+- [x] Delete 4 placeholder events in `src/game/content/events/`
+- [x] Replace `src/game/content/stages.ts` with 7 real stages from the bible
+- [x] Implement childhood events: `childhood-kookilida`, `childhood-ola`
+- [x] Implement school events: `school-haver-mevi-haver`, `school-hayom-ani-lo`, `school-tahushat-beten`, `school-sheva-lev-adom`, `school-yeled-maniac`, `school-siahat-litufim` (rare)
+- [x] Implement army events: `army-hayda-nitzhonot`, `army-pesek-zman`, `army-rak-litzok`, `army-hitoreinu-meuhar`
+- [x] Implement trip events: `trip-tofes-avir`, `trip-mayim-amukim`, all 5 destination color cards, `trip-allen-carr`, `trip-mi-yachol-alay` (rare)
+- [x] Implement home events: `home-shirat-hamitparnasim`, `home-ashkenazi-betahana`, `home-rak-litzok-payoff`, `home-shum-davar-hadash`, `home-haverim-arsim`
+- [x] Implement career events: `career-achshav-ze-hazman`, `career-tohnit-halive`, `career-blaadenu-en-mishak`, `career-harry-potter` (rare)
+- [x] Implement shazamat events: `shazamat-koza-nostra`, `shazamat-toskana`, `shazamat-habayta`, `shazamat-heyterim`, `shazamat-sheva-raot-tovot`, `shazamat-lo-oto-davar`
+- [x] Implement מה עם שאזאמאט rare arc (5 variants, `seenMaIm` gate)
 
 ### Art
 
@@ -94,40 +103,27 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 
 ## Phase 2 — Full Life Arc
 
-**Goal:** All 8 life stages. Enough events that players get meaningfully different runs.
+**Goal:** Enough events per stage that players get meaningfully different runs on replay.
 
-### Stages to add (after army)
+> All 7 stages and their initial event pools are defined in [`docs/game/content-bible.md`](./content-bible.md). Phase 1 implements one pool per stage. Phase 2 deepens each pool.
 
-- [ ] `post-army-trip` — travel destinations (India, South America, East Asia, US)
-  - [ ] India-specific events (classic Shazamat)
-  - [ ] "Suspicious stranger" roll event (from concept doc)
-  - [ ] Rare: bad trip → trip ends early (advanceStage effect)
-- [ ] `early-adulthood` — coming back to Israel, what now
-- [ ] `music-career` — first gigs, recording, grinding
-- [ ] `shazamat` — the band forms; ending events that set up the final reveal
+### Deepen event pools
 
-### Target event counts
-
-| Stage | Min events | Target |
+| Stage | Phase 1 pool | Phase 2 target |
 |---|---|---|
-| childhood | 4 | 8 |
-| school | 4 | 8 |
-| army | 3 | 6 |
-| post-army-trip | 4 | 10 |
-| early-adulthood | 3 | 6 |
-| music-career | 3 | 6 |
-| shazamat | 2 | 4 |
+| childhood | 2–3 | 5 |
+| school | 5–6 | 8 |
+| army | 3–4 | 6 |
+| טיול | 4 + 5 destination cards | 6 + destination variants |
+| בחזרה לארץ | 4–5 | 7 |
+| הקריירה | 3–4 | 6 |
+| שאזאמאט | 5–6 | 8 |
 
 ### Rare/ultra events
 
-- [ ] At least 5 rare events (5–15% probability) across all stages
+- [ ] At least 5 rare events across all stages (already drafted: `trip-mi-yachol-alay`, `career-harry-potter`, `school-siahat-litufim`, מה עם שאזאמאט arc)
 - [ ] At least 2 ultra-rare events (~3%) for superfan discovery
-- [ ] Examples: "You accidentally played the right note at soundcheck", a specific lyric reference
-
-### Shazamat song lore
-
-- [ ] Identify 5–10 song/lyric references to weave into event copy
-- [ ] They should not feel like ads — just part of the universe
+- [ ] Example ultra-rare: "You accidentally played the correct note at soundcheck"
 
 ---
 

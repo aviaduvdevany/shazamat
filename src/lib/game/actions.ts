@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import type { GameState } from "@/game/schema/state";
 import type { MemberId } from "@/game/schema/members";
+import { pack } from "@/game/content/pack";
 import { z } from "zod";
 
 // ────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export async function startRun(data: {
       data: {
         subscriberId: subscriber.id,
         seed,
-        contentVersion: 1,
+        contentVersion: pack.version,
         state: {} as object,
       },
     });

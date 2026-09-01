@@ -123,6 +123,31 @@ for (const id of MEMBER_IDS) {
 }
 ok("All 7 members defined");
 
+// ── 8. gotoEvent targets exist ───────────────────────────────
+
+const allEventIds = new Set(pack.events.map((e) => e.id));
+
+function collectGotoTargets(effects: Effect[]): string[] {
+  return effects
+    .filter((e) => e.type === "gotoEvent")
+    .map((e) => (e as { type: "gotoEvent"; eventId: string }).eventId);
+}
+
+for (const ev of pack.events) {
+  for (const choice of ev.choices) {
+    const fromEffects = collectGotoTargets(choice.effects ?? []);
+    const fromRoll = (choice.roll ?? []).flatMap((r) =>
+      collectGotoTargets(r.effects)
+    );
+    for (const targetId of [...fromEffects, ...fromRoll]) {
+      if (!allEventIds.has(targetId)) {
+        fail(`Event "${ev.id}": gotoEvent targets unknown event id "${targetId}"`);
+      }
+    }
+  }
+}
+ok("All gotoEvent targets exist");
+
 // ── Result ───────────────────────────────────────────────────
 
 console.log("");
