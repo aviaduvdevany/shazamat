@@ -46,3 +46,43 @@ model Album {
   @@index([year])
   @@index([isHidden])
 }
+
+model PlayerVote {
+  id         String   @id @default(cuid())
+  playerId   String
+  voterToken String   @unique
+  createdAt  DateTime @default(now())
+
+  @@index([playerId])
+}
+
+model Subscriber {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  source          String    @default("game")
+  marketingConsent Boolean  @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  runs GameRun[]
+
+  @@index([source])
+  @@index([createdAt])
+}
+
+model GameRun {
+  id             String    @id @default(cuid())
+  subscriberId   String?
+  subscriber     Subscriber? @relation(fields: [subscriberId], references: [id])
+  seed           Int
+  contentVersion Int
+  state          Json
+  memberId       String?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([memberId])
+  @@index([completedAt])
+  @@index([subscriberId])
+}

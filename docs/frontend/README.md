@@ -29,6 +29,7 @@ For CMS/data/auth/uploads (Prisma, server actions, Blob, JWT), also read [`docs/
 | Surface | Audience | Purpose |
 |---|---|---|
 | `/` | Public | Hebrew RTL marketing site: hero, featured show, shows list, music |
+| `/life` | Public | Shazamat Life Simulator game — see [`docs/game/README.md`](../game/README.md) |
 | `/admin/*` | Band manager | CMS for shows (CRUD, feature, hide, cover upload) |
 
 There is **one homepage**. Sections are composed in `src/app/page.tsx`. Shows come from Postgres; albums and social links are still static TypeScript files.
@@ -142,6 +143,8 @@ components.json                 # shadcn config
 | `/admin/albums` | `src/app/admin/albums/page.tsx` | Albums list + create dialog |
 | `/admin/albums/[id]/edit` | `src/app/admin/albums/[id]/edit/page.tsx` | Edit album |
 | `/api/admin/upload` | `src/app/api/admin/upload/route.ts` | Vercel Blob client upload |
+| `/life` | `src/app/life/page.tsx` | Game — see [`docs/game/README.md`](../game/README.md) |
+| `/life/r/[runId]` | `src/app/life/r/[runId]/page.tsx` | Game share landing |
 | `/sitemap.xml` | `src/app/sitemap.ts` | Sitemap |
 | `/robots.txt` | `src/app/robots.ts` | Robots |
 

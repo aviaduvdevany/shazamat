@@ -1,0 +1,679 @@
+/* ─────────────────────────────────────────────────────────────
+   Shazamat Life Simulator — game.css
+   Imported ONLY by src/app/life/layout.tsx
+   Does not affect the band site.
+───────────────────────────────────────────────────────────── */
+
+/* ── Reset and base ─────────────────────────────────────── */
+.game-root {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Emulsi", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Game surface — phone-first, portrait column ─────────── */
+.game-surface {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Safe area insets (notched devices) */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── HUD (top bar) ──────────────────────────────────────── */
+.game-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+  background: #000;
+  border-bottom: 2px solid #1a1a1a;
+  flex-shrink: 0;
+  gap: 8px;
+  z-index: 10;
+}
+
+.game-hud-age {
+  font-size: 13px;
+  color: #DB7738;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.game-hud-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.game-hud-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #ccc;
+  font-weight: 700;
+  position: relative;
+}
+
+.game-hud-stat-bar {
+  width: 40px;
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.game-hud-stat-fill {
+  height: 100%;
+  background: #DB7738;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* ── Stage label ────────────────────────────────────────── */
+.game-stage-label {
+  padding: 6px 16px;
+  background: #111;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ── Viewport: scene + sprite ───────────────────────────── */
+.game-viewport {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.game-scene {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  image-rendering: pixelated;
+  opacity: 0.6;
+}
+
+/* ── Sprite compositor ──────────────────────────────────── */
+.game-sprite-wrapper {
+  position: relative;
+  width: 256px;
+  height: 256px;
+  image-rendering: pixelated;
+  z-index: 2;
+}
+
+.game-sprite-layer {
+  position: absolute;
+  inset: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  transition: opacity 0.3s ease;
+}
+
+.game-sprite-portrait {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 3px solid #DB7738;
+  border-radius: 4px;
+}
+
+/* ── Event card ─────────────────────────────────────────── */
+.game-event-area {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  border-top: 2px solid #1a1a1a;
+  max-height: 55%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.game-event-text {
+  padding: 16px 20px 8px;
+  flex-shrink: 0;
+}
+
+.game-event-kicker {
+  font-size: 11px;
+  color: #DB7738;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.game-event-headline {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.game-event-body {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.6;
+}
+
+/* ── Choices (thumb-zone, pinned bottom) ─────────────────── */
+.game-choices {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.game-choice-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  background: #111;
+  border: 2px solid #2a2a2a;
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  direction: rtl;
+}
+
+.game-choice-btn:hover,
+.game-choice-btn:focus-visible {
+  background: #1a1a1a;
+  border-color: #DB7738;
+  outline: none;
+}
+
+.game-choice-btn:active {
+  background: #DB7738;
+  color: #000;
+  border-color: #DB7738;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-choice-btn {
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  }
+  .game-choice-btn:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ── Outcome flash ──────────────────────────────────────── */
+.game-outcome {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.game-outcome-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.4;
+}
+
+.game-stat-deltas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-stat-delta {
+  font-size: 16px;
+  font-weight: 900;
+  color: #DB7738;
+  animation: game-pop 0.4s ease both;
+}
+
+.game-stat-delta.negative {
+  color: #e05555;
+}
+
+.game-continue-btn {
+  margin-top: 8px;
+  min-height: 52px;
+  padding: 14px 20px;
+  background: #DB7738;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.game-continue-btn:hover {
+  opacity: 0.9;
+}
+
+/* ── Stage clear screen ──────────────────────────────────── */
+.game-stage-clear {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.game-stage-clear-label {
+  font-size: 12px;
+  color: #DB7738;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.game-stage-clear-name {
+  font-size: 36px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+
+/* ── Title screen ────────────────────────────────────────── */
+.game-title-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.game-title-band {
+  font-size: 14px;
+  color: #DB7738;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.game-title-headline {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.game-title-subtitle {
+  font-size: 16px;
+  color: #888;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+/* ── Email gate screen ───────────────────────────────────── */
+.game-email-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.game-email-headline {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.game-email-sub {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.5;
+}
+
+.game-email-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.game-email-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #111;
+  border: 2px solid #2a2a2a;
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: right;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+.game-email-input:focus {
+  outline: none;
+  border-color: #DB7738;
+}
+
+.game-email-input::placeholder {
+  color: #555;
+  direction: rtl;
+  text-align: right;
+}
+
+.game-consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: right;
+  direction: rtl;
+}
+
+.game-consent-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: #DB7738;
+  cursor: pointer;
+}
+
+.game-consent-label {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.game-error-msg {
+  font-size: 13px;
+  color: #e05555;
+  text-align: center;
+}
+
+/* ── Ending screen ───────────────────────────────────────── */
+.game-ending-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 24px;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.game-ending-preamble {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.game-ending-member-name {
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.game-ending-member-role {
+  font-size: 18px;
+  color: #DB7738;
+  font-weight: 700;
+}
+
+.game-ending-blurb {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.game-ending-recap-title {
+  font-size: 12px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.game-ending-recap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: stretch;
+}
+
+.game-ending-recap-entry {
+  font-size: 13px;
+  color: #888;
+  text-align: right;
+}
+
+.game-ending-recap-entry span {
+  color: #DB7738;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.game-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.15s ease;
+}
+
+.game-btn:hover {
+  opacity: 0.9;
+}
+
+.game-btn-primary {
+  background: #DB7738;
+  color: #000;
+  width: 100%;
+}
+
+.game-btn-secondary {
+  background: transparent;
+  color: #fff;
+  border: 2px solid #2a2a2a;
+  width: 100%;
+}
+
+/* ── Share page ──────────────────────────────────────────── */
+.game-share-page {
+  min-height: 100dvh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  font-family: "Emulsi", system-ui, -apple-system, sans-serif;
+  direction: rtl;
+}
+
+.game-share-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 24px;
+  border: 2px solid #1a1a1a;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.game-share-band-label {
+  font-size: 12px;
+  color: #DB7738;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.game-share-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-share-you-are {
+  font-size: 16px;
+  color: #888;
+}
+
+.game-share-member-name {
+  font-size: 56px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.game-share-member-role {
+  font-size: 20px;
+  color: #DB7738;
+  font-weight: 700;
+}
+
+.game-share-stats {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.game-share-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #111;
+  border: 2px solid #1a1a1a;
+  padding: 12px 20px;
+  border-radius: 8px;
+}
+
+.game-share-stat-emoji {
+  font-size: 24px;
+}
+
+.game-share-stat-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.game-share-stat-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.game-share-blurb {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.game-share-log {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.game-share-log-title {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.game-share-log-entry {
+  font-size: 13px;
+  color: #777;
+  text-align: right;
+}
+
+.game-share-log-choice {
+  color: #DB7738;
+}
+
+.game-share-log-outcome {
+  color: #888;
+}
+
+.game-share-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes game-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.95); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes game-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-stat-delta { animation: none; }
+  .game-choice-btn { transition: none; }
+}
