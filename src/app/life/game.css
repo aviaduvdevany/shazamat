@@ -7,7 +7,7 @@
 /* ── Motion tokens (game play + share page) ────────────────
    All animation in this file must use these tokens.
    Do not add a 9th duration without a new class of moment.
-   HUD bar fill uses --g-t-hold (450ms) — timing bible calls
+   HUD bar fill uses --g-t-hold (560ms) — timing bible calls
    400ms, closest token is hold; documented here so no one
    adds a redundant 400ms token.
 ──────────────────────────────────────────────────────────── */
@@ -16,12 +16,12 @@
   /* Duration tokens */
   --g-t-instant:    0ms;
   --g-t-ack:       80ms;
-  --g-t-fast:     120ms;
-  --g-t-base:     200ms;
-  --g-t-slow:     320ms;
-  --g-t-hold:     450ms;
-  --g-t-ceremony: 700ms;
-  --g-t-drama:   1100ms;
+  --g-t-fast:     160ms;
+  --g-t-base:     260ms;
+  --g-t-slow:     400ms;
+  --g-t-hold:     560ms;
+  --g-t-ceremony: 880ms;
+  --g-t-drama:   1400ms;
 
   /* Easing tokens */
   --g-ease-out:        cubic-bezier(0.2, 0, 0, 1);
@@ -68,53 +68,53 @@
      Matched to GAME_MOOD.enterScale in useGameMotion.ts.
      Derived: delay = house_ms × enterScale (see GAME_MOOD table).
   ────────────────────────────────────────────────────────── */
-  --g-k-delay:   40ms;  /* kicker   — house: 40ms  */
-  --g-h-delay:  100ms;  /* headline — house: 100ms */
-  --g-b-delay:  180ms;  /* body     — house: 180ms */
-  --g-c-start:  260ms;  /* choices start */
-  --g-c-stride:  40ms;  /* per-choice stride */
+  --g-k-delay:   50ms;  /* kicker   — house: 50ms  */
+  --g-h-delay:  130ms;  /* headline — house: 130ms */
+  --g-b-delay:  230ms;  /* body     — house: 230ms */
+  --g-c-start:  340ms;  /* choices start */
+  --g-c-stride:  50ms;  /* per-choice stride */
 
   /* Outcome (neutral defaults) */
-  --g-delta-stride:         80ms;
+  --g-delta-stride:        100ms;
   --g-outcome-label-extra:   0ms;
 }
 
 /* Funny: 0.75× — snappy, bounce on choices */
 .game-surface[data-mood="funny"] {
-  --g-k-delay:   30ms;
-  --g-h-delay:   75ms;
-  --g-b-delay:  135ms;
-  --g-c-start:  195ms;
-  --g-c-stride:  30ms;
-  --g-delta-stride: 60ms;
+  --g-k-delay:   38ms;
+  --g-h-delay:   98ms;
+  --g-b-delay:  173ms;
+  --g-c-start:  255ms;
+  --g-c-stride:  38ms;
+  --g-delta-stride: 75ms;
 }
 
 /* Tense: 1.3× — heavy; holds before choices and outcome label */
 .game-surface[data-mood="tense"] {
-  --g-k-delay:   52ms;
-  --g-h-delay:  130ms;
-  --g-b-delay:  234ms;
-  --g-c-start:  338ms;
-  --g-c-stride:  52ms;
-  --g-outcome-label-extra: 200ms;
+  --g-k-delay:   65ms;
+  --g-h-delay:  169ms;
+  --g-b-delay:  299ms;
+  --g-c-start:  442ms;
+  --g-c-stride:  65ms;
+  --g-outcome-label-extra: 260ms;
 }
 
 /* Epic: 1.4× — expanded; tracking on headline */
 .game-surface[data-mood="epic"] {
-  --g-k-delay:   56ms;
-  --g-h-delay:  140ms;
-  --g-b-delay:  252ms;
-  --g-c-start:  364ms;
-  --g-c-stride:  56ms;
+  --g-k-delay:   70ms;
+  --g-h-delay:  182ms;
+  --g-b-delay:  322ms;
+  --g-c-start:  476ms;
+  --g-c-stride:  70ms;
 }
 
 /* Sad: 1.6× — slowest; no overshoot anywhere */
 .game-surface[data-mood="sad"] {
-  --g-k-delay:   64ms;
-  --g-h-delay:  160ms;
-  --g-b-delay:  288ms;
-  --g-c-start:  416ms;
-  --g-c-stride:  64ms;
+  --g-k-delay:   80ms;
+  --g-h-delay:  208ms;
+  --g-b-delay:  368ms;
+  --g-c-start:  544ms;
+  --g-c-stride:  80ms;
   /* Remap overshoot to standard ease — affects delta pops and kicker. */
   --g-ease-overshoot: var(--g-ease-out);
 }
@@ -122,14 +122,21 @@
 /* ── HUD (top bar) ──────────────────────────────────────── */
 .game-hud {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 8px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px 10px;
   background: #000;
   border-bottom: 2px solid #1a1a1a;
   flex-shrink: 0;
-  gap: 8px;
   z-index: 10;
+}
+
+/* Top row: age kicker + stage label */
+.game-hud-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .game-hud-age {
@@ -140,60 +147,89 @@
   flex-shrink: 0;
 }
 
+/* Stage label moved into HUD top row */
+.game-stage-label-inline {
+  font-size: 10px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Stat rows — stacked scoreboard */
 .game-hud-stats {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 5px;
 }
 
+/* Each stat: meta row above, full-width bar below */
 .game-hud-stat {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #ccc;
-  font-weight: 700;
+  flex-direction: column;
+  gap: 3px;
   position: relative;
 }
 
+.game-hud-stat-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  direction: rtl;
+}
+
+.game-hud-stat-emoji {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.game-hud-stat-label {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 600;
+  flex: 1;
+}
+
+.game-hud-stat-value {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 900;
+  flex-shrink: 0;
+  min-width: 2ch;
+  text-align: start;
+}
+
+/* Full-width pill bar */
 .game-hud-stat-bar {
   position: relative;
-  width: 40px;
-  height: 4px;
-  background: #222;
-  border-radius: 2px;
+  width: 100%;
+  height: 10px;
+  background: #1e1e1e;
+  border-radius: 5px;
   overflow: hidden;
 }
 
 .game-hud-stat-fill {
   height: 100%;
-  background: #DB7738;
-  border-radius: 2px;
+  background: linear-gradient(90deg, #c05a1a, #DB7738 60%, #f4a050);
+  border-radius: 5px;
   transition: width var(--g-t-hold) var(--g-ease-out);
 }
 
-/* Ghost bar — shown on losses; fades out over hudGhostDrain (300ms). */
+/* Ghost bar — shown on losses; fades out over hudGhostDrain. */
 .game-hud-stat-ghost {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
-  background: rgba(224, 85, 85, 0.5);
-  border-radius: 2px;
-  animation: game-ghost-drain 300ms var(--g-ease-linear) forwards;
+  background: rgba(224, 85, 85, 0.55);
+  border-radius: 5px;
+  animation: game-ghost-drain 400ms var(--g-ease-linear) forwards;
   pointer-events: none;
 }
 
-/* ── Stage label ────────────────────────────────────────── */
+/* Legacy .game-stage-label kept for any residual references */
 .game-stage-label {
-  padding: 6px 16px;
-  background: #111;
-  border-bottom: 1px solid #1a1a1a;
-  font-size: 11px;
-  color: #666;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  flex-shrink: 0;
+  display: none;
 }
 
 /* ── Viewport: scene + sprite ───────────────────────────── */
@@ -414,6 +450,9 @@
   gap: 12px;
   flex: 1;
   justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .game-outcome-label {
@@ -440,50 +479,43 @@
   color: #e05555;
 }
 
-.game-continue-btn {
-  margin-top: 8px;
-  min-height: 52px;
-  padding: 14px 20px;
-  background: #DB7738;
-  border: none;
-  border-radius: 6px;
-  color: #000;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: opacity var(--g-t-fast) var(--g-ease-out);
+/* Visually-hidden skip control — keeps autoFocus for keyboard/SR
+   but is invisible to sighted users who just tap the outcome well. */
+.game-continue-btn-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
 }
 
-.game-continue-btn:hover {
-  opacity: 0.9;
+/* Legacy selector — keep for reduced-motion twin below */
+.game-continue-btn {
+  display: none;
 }
 
 /* ── UX-1 / UX-2: Outcome choreography ──────────────────────
-   Outcome label enters at 160ms + mood outcomeLabelExtra.
-   Deltas stagger at 240ms + outcomeLabelExtra + n × deltaStride.
-   Continue fades in after last delta + 350ms.
+   Outcome label enters at 220ms + mood outcomeLabelExtra.
+   Deltas stagger at 320ms + outcomeLabelExtra + n × deltaStride.
+   Auto-advance fires at 2000ms. Tapping the well skips instantly.
    JS (runOutcomeSequence) mirrors these times for HUD sync.
 ──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .game-outcome-label {
     animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: calc(160ms + var(--g-outcome-label-extra, 0ms));
+    animation-delay: calc(220ms + var(--g-outcome-label-extra, 0ms));
   }
 
   .game-stat-delta {
     animation-delay: calc(
-      240ms + var(--g-outcome-label-extra, 0ms) +
-      var(--delta-i, 0) * var(--g-delta-stride, 80ms)
-    );
-  }
-
-  .game-continue-btn {
-    animation: game-fade-in var(--g-t-fast) var(--g-ease-out) backwards;
-    animation-delay: calc(
-      240ms + var(--g-outcome-label-extra, 0ms) +
-      var(--deltas-count, 0) * var(--g-delta-stride, 80ms) +
-      350ms
+      320ms + var(--g-outcome-label-extra, 0ms) +
+      var(--delta-i, 0) * var(--g-delta-stride, 100ms)
     );
   }
 }
@@ -1593,9 +1625,8 @@
     transform: none;
   }
 
-  /* Outcome: label and continue appear immediately. */
-  .game-outcome-label,
-  .game-continue-btn {
+  /* Outcome: label appears immediately. */
+  .game-outcome-label {
     animation: none;
     opacity: 1;
     transform: none;

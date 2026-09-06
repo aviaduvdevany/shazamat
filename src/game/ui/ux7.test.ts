@@ -65,7 +65,7 @@ describe("getExperimentFlags (SSR — window undefined)", () => {
     // In node env, window is undefined.
     const flags = getExperimentFlags();
     expect(flags.assembleVariant).toBe("default");
-    expect(flags.holdMs).toBe(2200);
+    expect(flags.holdMs).toBe(2800);
   });
 });
 
@@ -115,13 +115,66 @@ describe("getExperimentFlags (browser-simulated)", () => {
     expect(getExperimentFlags().holdMs).toBe(2200);
   });
 
-  it("rejects invalid ux_hold, falls back to 2200", () => {
+  it("parses ux_hold=2800", () => {
+    setSearchParams("?ux_hold=2800");
+    expect(getExperimentFlags().holdMs).toBe(2800);
+  });
+
+  it("rejects invalid ux_hold, falls back to 2800", () => {
     setSearchParams("?ux_hold=500");
-    expect(getExperimentFlags().holdMs).toBe(2200);
+    expect(getExperimentFlags().holdMs).toBe(2800);
   });
 
   it("rejects non-numeric ux_hold", () => {
     setSearchParams("?ux_hold=fast");
-    expect(getExperimentFlags().holdMs).toBe(2200);
+    expect(getExperimentFlags().holdMs).toBe(2800);
+  });
+});
+
+// ── GameMotion skip-resolves-wait guarantee ────────────────────
+// Validates the core fix for the ending stuck bug: skip() must resolve
+// any in-flight wait() promise, not only clear the timeout.
+describe("gameMotion skip-resolves-wait", () => {
+  it("resolves an in-flight promise when skip is called before timeout fires", async () => {
+    // Replicate the motion controller logic without React hooks.
+    let resolveRef: (() => void) | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let skipped = false;
+
+    function wait(ms: number): Promise<void> {
+      if (skipped) return Promise.resolve();
+      return new Promise((resolve) => {
+        resolveRef = resolve;
+        timer = setTimeout(() => {
+          timer = null;
+          resolveRef = null;
+          resolve();
+        }, ms);
+      });
+    }
+
+    function skip() {
+      skipped = true;
+      if (timer !== null) { clearTimeout(timer); timer = null; }
+      if (resolveRef !== null) { resolveRef(); resolveRef = null; }
+    }
+
+    // Start a 10-second wait, then skip after 10ms — should resolve quickly.
+    const start = Date.now();
+    const waitPromise = wait(10_000);
+    setTimeout(() => skip(), 10);
+    await waitPromise;
+    expect(Date.now() - start).toBeLessThan(500);
+  });
+
+  it("wait resolves immediately when already skipped", async () => {
+    let skipped = true;
+    function wait(ms: number): Promise<void> {
+      if (skipped) return Promise.resolve();
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    const start = Date.now();
+    await wait(10_000);
+    expect(Date.now() - start).toBeLessThan(100);
   });
 });

@@ -216,9 +216,16 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
   function handleSurfaceTap() {
     if (skipPhase.current === 0) return; // silence period — ignore
     if (skipPhase.current === 1) {
-      // Jump to name; post-name sequence starts from its useEffect.
-      motion.skip();
-      setBeat("name");
+      // If name isn't visible yet, jump to it and start post-name sequence.
+      // If name is already visible (tap during portrait/role/stats/…),
+      // just fast-forward the current in-flight wait — do NOT reset beat to
+      // "name" or the post-name useEffect dependency would re-fire.
+      if (!atOrAfter(beat, "name")) {
+        motion.skip();
+        setBeat("name");
+      } else {
+        motion.skip();
+      }
     }
     // Phase 2: show already complete, taps do nothing special.
   }

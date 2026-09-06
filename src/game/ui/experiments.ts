@@ -21,17 +21,17 @@ export interface ExperimentFlags {
   assembleVariant: "default" | "alt";
   /**
    * Ending silence-before-name duration (ms).
-   * Valid values: 900, 1300, 2200. Default: 2200.
+   * Valid values: 900, 1300, 2200, 2800. Default: 2800.
    * Flash fires at holdMs; name fires at holdMs + 80.
    */
-  holdMs: 900 | 1300 | 2200;
+  holdMs: 900 | 1300 | 2200 | 2800;
 }
 
-const VALID_HOLDS = new Set([900, 1300, 2200]);
+const VALID_HOLDS = new Set([900, 1300, 2200, 2800]);
 
 export function getExperimentFlags(): ExperimentFlags {
   if (typeof window === "undefined") {
-    return { assembleVariant: "default", holdMs: 2200 };
+    return { assembleVariant: "default", holdMs: 2800 };
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -41,8 +41,8 @@ export function getExperimentFlags(): ExperimentFlags {
 
   const holdRaw = parseInt(params.get("ux_hold") ?? "", 10);
   const holdMs: ExperimentFlags["holdMs"] = VALID_HOLDS.has(holdRaw)
-    ? (holdRaw as 900 | 1300 | 2200)
-    : 2200;
+    ? (holdRaw as 900 | 1300 | 2200 | 2800)
+    : 2800;
 
   return { assembleVariant, holdMs };
 }

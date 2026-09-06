@@ -9,37 +9,37 @@ import { usePrefersReducedMotion, GAME_DURATION } from "./usePrefersReducedMotio
  */
 export const GAME_SEQUENCE = {
   // Event enter (neutral/house values; mood scaling applied in GameShell)
-  kickerDelay:   40,
-  headlineDelay: 100,
-  bodyDelay:     180,
-  choicesStart:  260,
-  choiceStride:  40,
-  firstEventExtra: 200,
+  kickerDelay:   50,
+  headlineDelay: 130,
+  bodyDelay:     230,
+  choicesStart:  340,
+  choiceStride:  50,
+  firstEventExtra: 260,
 
   // Well exit
-  wellExit:      160,
+  wellExit:      200,
 
   // Outcome
-  labelIn:       160,
-  firstDeltaIn:  240,
-  deltaStride:    80,
-  continueIn:    350, // after last delta
+  labelIn:       220,
+  firstDeltaIn:  320,
+  deltaStride:   100,
+  continueIn:    450, // after last delta
 
   // Auto-advance from outcome start
-  autoAdvance:  1400,
-  autoAdvanceFlavor: 1100,
-  autoAdvanceReduced: 600,
+  autoAdvance:  2000,
+  autoAdvanceFlavor: 1600,
+  autoAdvanceReduced: 800,
 
   // HUD
   hudGhostDrain: 300,
 
   // Stage clear ceremony (UX-3)
-  stageClearKicker:       120, // t=120 — סוף · [stage]
-  stageClearBreath:       400, // t=400 — 200ms black hold starts
-  stageClearSlam:         600, // t=600 — next stage name slam
-  stageClearAge:          780, // t=780 — age range / rumble
-  stageClearAuto:        1600, // t=1600 — auto into next event
-  stageClearRumbleStride: 120, // per rumble tick (3 × 120 = 360ms < 400ms cap)
+  stageClearKicker:       150, // t=150 — סוף · [stage]
+  stageClearBreath:       500, // t=500 — 200ms black hold starts
+  stageClearSlam:         750, // t=750 — next stage name slam
+  stageClearAge:          980, // t=980 — age range / rumble
+  stageClearAuto:        2200, // t=2200 — auto into next event
+  stageClearRumbleStride: 150, // per rumble tick (3 × 150 = 450ms)
 
   // UX-4: Birth funnel
   emailLine1:      80,  // t=80ms  — first assemble line appears
@@ -49,20 +49,20 @@ export const GAME_SEQUENCE = {
   emailSmash:      80,  // smash-cut black overlay duration
 
   // UX-5: Ending show (absolute from show start)
-  endingWorld:     400, // t=400  — "החיים שלך הסתיימו." preamble
-  endingPreamble:  400, // alias — same beat
-  endingPrompt:   1300, // t=1300 — "אתה הוא..."
-  endingFlash:    2200, // t=2200 — 80ms white/orange flash
-  endingName:     2280, // t=2280 — member name slam + aria-live
-  endingPortrait: 2480, // t=2480 — portrait pop (scale 0.8 → 1.06 → 1)
-  endingRole:     2680, // t=2680 — role fade
-  endingStats:    2860, // t=2860 — stat count-up begins (400ms each)
-  endingBlurb:    3200, // t=3200 — blurb fade
-  endingRecap:    3500, // t=3500 — recap lines stagger 60ms
-  endingActions:  3800, // t=3800 — share + new life fade in
+  endingWorld:     500, // t=500  — "החיים שלך הסתיימו." preamble
+  endingPreamble:  500, // alias — same beat
+  endingPrompt:   1600, // t=1600 — "אתה הוא..."
+  endingFlash:    2800, // t=2800 — 80ms white/orange flash
+  endingName:     2880, // t=2880 — member name slam + aria-live
+  endingPortrait: 3120, // t=3120 — portrait pop (scale 0.8 → 1.06 → 1)
+  endingRole:     3360, // t=3360 — role fade
+  endingStats:    3580, // t=3580 — stat count-up begins (560ms each)
+  endingBlurb:    4000, // t=4000 — blurb fade
+  endingRecap:    4360, // t=4360 — recap lines stagger 60ms
+  endingActions:  4720, // t=4720 — share + new life fade in
 
-  endingShareGate:     400, // wait after name before Share is allowed
-  endingRecapStride:    60, // stagger stride between recap lines
+  endingShareGate:     500, // wait after name before Share is allowed
+  endingRecapStride:    80, // stagger stride between recap lines
   endingNewLifePulse: 6000, // pulse New Life once after share or 6s from actions
 } as const;
 
@@ -79,11 +79,11 @@ export const GAME_SEQUENCE = {
  * rollMs      — total duration of the dice ticker animation.
  */
 export const GAME_MOOD = {
-  neutral: { enterScale: 1.0,  choiceHold: 0,   deltaStride: 80, outcomeLabelExtra: 0,   rollMs: 550 },
-  funny:   { enterScale: 0.75, choiceHold: 0,   deltaStride: 60, outcomeLabelExtra: 0,   rollMs: 450 },
-  tense:   { enterScale: 1.3,  choiceHold: 160, deltaStride: 80, outcomeLabelExtra: 200, rollMs: 700 },
-  epic:    { enterScale: 1.4,  choiceHold: 80,  deltaStride: 80, outcomeLabelExtra: 0,   rollMs: 550 },
-  sad:     { enterScale: 1.6,  choiceHold: 120, deltaStride: 80, outcomeLabelExtra: 0,   rollMs: 550 },
+  neutral: { enterScale: 1.0,  choiceHold: 0,   deltaStride: 100, outcomeLabelExtra: 0,   rollMs: 700 },
+  funny:   { enterScale: 0.75, choiceHold: 0,   deltaStride: 75,  outcomeLabelExtra: 0,   rollMs: 550 },
+  tense:   { enterScale: 1.3,  choiceHold: 200, deltaStride: 100, outcomeLabelExtra: 260, rollMs: 900 },
+  epic:    { enterScale: 1.4,  choiceHold: 100, deltaStride: 100, outcomeLabelExtra: 0,   rollMs: 700 },
+  sad:     { enterScale: 1.6,  choiceHold: 150, deltaStride: 100, outcomeLabelExtra: 0,   rollMs: 700 },
 } as const;
 
 export type GameMood = keyof typeof GAME_MOOD;
@@ -112,8 +112,10 @@ export type GameRarity = keyof typeof GAME_RARITY;
  */
 export function useGameMotion() {
   const reduced = usePrefersReducedMotion();
-  const skippedRef = useRef(false);
-  const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skippedRef  = useRef(false);
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Store the pending resolve so skip() can unblock an in-flight wait().
+  const resolveRef  = useRef<(() => void) | null>(null);
 
   // Clear any pending wait on unmount so mid-show setState never fires.
   useEffect(() => {
@@ -121,6 +123,11 @@ export function useGameMotion() {
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
+      }
+      // Resolve any dangling promise so callers don't leak.
+      if (resolveRef.current !== null) {
+        resolveRef.current();
+        resolveRef.current = null;
       }
     };
   }, []);
@@ -135,6 +142,11 @@ export function useGameMotion() {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+    // Resolve any in-flight wait() so the awaiting async function continues.
+    if (resolveRef.current !== null) {
+      resolveRef.current();
+      resolveRef.current = null;
+    }
   }, []);
 
   /** Waits `ms` (or 0 under reduced motion unless `ignoreReduce`). */
@@ -143,8 +155,10 @@ export function useGameMotion() {
       const actual = (reduced && !ignoreReduce) ? 0 : ms;
       if (actual === 0 || skippedRef.current) return Promise.resolve();
       return new Promise((resolve) => {
+        resolveRef.current = resolve;
         timerRef.current = setTimeout(() => {
           timerRef.current = null;
+          resolveRef.current = null;
           resolve();
         }, actual);
       });

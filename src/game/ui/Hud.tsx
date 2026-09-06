@@ -25,7 +25,7 @@ interface Props {
   displayStats?: Record<string, number> | null;
   /** Per-stat pulse + ghost data driven by GameShell during outcome. */
   statDisplay?: Record<string, StatDisplay> | null;
-  /** UX-3: Increment to fire a 200ms WAAPI pulse on the age label after stage slam. */
+  /** UX-3: Increment to fire a WAAPI pulse on the age label after stage slam. */
   agePulseNonce?: number;
 }
 
@@ -33,7 +33,7 @@ export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: P
   const stage = pack.stages[state.stageIndex];
   const ageLabel = stage?.ageLabel ?? stage?.label ?? "";
 
-  // Refs to each stat container for WAAPI pulse.
+  // Refs to each stat row for WAAPI pulse.
   const statEls = useRef<Map<string, HTMLDivElement>>(new Map());
   // Track previous nonces to detect real changes (not just prop-object churns).
   const prevNonces = useRef<Record<string, number>>({});
@@ -42,7 +42,7 @@ export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: P
   const ageElRef = useRef<HTMLDivElement | null>(null);
   const prevAgePulseNonce = useRef(0);
 
-  // Fire WAAPI pulse whenever a stat's nonce increments.
+  // Fire WAAPI pulse on the stat row whenever its nonce increments.
   useEffect(() => {
     if (!statDisplay) return;
     for (const def of pack.stats) {
@@ -53,7 +53,7 @@ export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: P
           el.animate(
             [
               { transform: "scale(1)", offset: 0 },
-              { transform: "scale(1.08)", offset: 0.4 },
+              { transform: "scale(1.06)", offset: 0.4 },
               { transform: "scale(1)", offset: 1 },
             ],
             {
@@ -77,7 +77,7 @@ export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: P
         el.animate(
           [
             { transform: "scale(1)", offset: 0 },
-            { transform: "scale(1.08)", offset: 0.4 },
+            { transform: "scale(1.06)", offset: 0.4 },
             { transform: "scale(1)", offset: 1 },
           ],
           {
@@ -92,55 +92,60 @@ export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: P
   }); // same pattern as stat pulses — runs every render; ref guards double-fire
 
   return (
-    <>
-      <div className="game-hud" role="status" aria-label="סטטוס שחקן">
+    <div className="game-hud" role="status" aria-label="סטטוס שחקן">
+      {/* Age kicker — top row */}
+      <div className="game-hud-top">
         <div className="game-hud-age" ref={ageElRef}>{ageLabel}</div>
-        <div className="game-hud-stats">
-          {pack.stats.map((def) => {
-            const disp = statDisplay?.[def.id];
-            const rawVal =
-              displayStats?.[def.id] !== undefined
-                ? displayStats[def.id]!
-                : (state.stats[def.id] ?? def.initial);
-            const pct = Math.round(
-              ((rawVal - def.min) / (def.max - def.min)) * 100
-            );
-
-            return (
-              <div
-                key={def.id}
-                className="game-hud-stat"
-                title={`${def.label}: ${rawVal}`}
-                data-hud-stat={def.id}
-                ref={(el) => {
-                  if (el) statEls.current.set(def.id, el);
-                  else statEls.current.delete(def.id);
-                }}
-              >
-                <span>{def.emoji}</span>
-                <div className="game-hud-stat-bar" aria-hidden>
-                  {disp?.ghostPct !== undefined && (
-                    <div
-                      key={disp.ghostKey ?? 0}
-                      className="game-hud-stat-ghost"
-                      style={{ width: `${disp.ghostPct}%` }}
-                    />
-                  )}
-                  <div
-                    className="game-hud-stat-fill"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span>{rawVal}</span>
-              </div>
-            );
-          })}
+        <div className="game-stage-label-inline" aria-hidden>
+          {stage?.label ?? ""}
         </div>
       </div>
 
-      <div className="game-stage-label" aria-hidden>
-        {stage?.label ?? ""}
+      {/* Stat rows — stacked scoreboard */}
+      <div className="game-hud-stats">
+        {pack.stats.map((def) => {
+          const disp = statDisplay?.[def.id];
+          const rawVal =
+            displayStats?.[def.id] !== undefined
+              ? displayStats[def.id]!
+              : (state.stats[def.id] ?? def.initial);
+          const pct = Math.round(
+            ((rawVal - def.min) / (def.max - def.min)) * 100
+          );
+
+          return (
+            <div
+              key={def.id}
+              className="game-hud-stat"
+              title={`${def.label}: ${rawVal}`}
+              data-hud-stat={def.id}
+              ref={(el) => {
+                if (el) statEls.current.set(def.id, el);
+                else statEls.current.delete(def.id);
+              }}
+            >
+              <div className="game-hud-stat-meta">
+                <span className="game-hud-stat-emoji">{def.emoji}</span>
+                <span className="game-hud-stat-label">{def.label}</span>
+                <span className="game-hud-stat-value">{rawVal}</span>
+              </div>
+              <div className="game-hud-stat-bar" aria-hidden>
+                {disp?.ghostPct !== undefined && (
+                  <div
+                    key={disp.ghostKey ?? 0}
+                    className="game-hud-stat-ghost"
+                    style={{ width: `${disp.ghostPct}%` }}
+                  />
+                )}
+                <div
+                  className="game-hud-stat-fill"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }

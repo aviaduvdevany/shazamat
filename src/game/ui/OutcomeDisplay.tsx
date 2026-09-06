@@ -14,6 +14,11 @@ export function OutcomeDisplay({ outcomeLabel, statDeltas, pack, onContinue }: P
     <div
       className="game-outcome"
       style={{ "--deltas-count": statDeltas.length } as React.CSSProperties}
+      onClick={onContinue}
+      role="button"
+      aria-label="תוצאה — לחץ לדילוג"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onContinue(); } }}
     >
       {outcomeLabel && (
         <div className="game-outcome-label">{outcomeLabel}</div>
@@ -38,7 +43,14 @@ export function OutcomeDisplay({ outcomeLabel, statDeltas, pack, onContinue }: P
         </div>
       )}
 
-      <button className="game-continue-btn" onClick={onContinue} autoFocus>
+      {/* Visually-hidden skip for screen readers / keyboard users */}
+      <button
+        className="game-continue-btn-sr"
+        onClick={(e) => { e.stopPropagation(); onContinue(); }}
+        autoFocus
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         המשך
       </button>
     </div>

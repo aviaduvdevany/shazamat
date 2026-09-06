@@ -37,12 +37,12 @@ export function usePrefersReducedMotion(): boolean {
 export const GAME_DURATION = {
   instant:   0,
   ack:      80,
-  fast:    120,
-  base:    200,
-  slow:    320,
-  hold:    450,
-  ceremony: 700,
-  drama:   1100,
+  fast:    160,
+  base:    260,
+  slow:    400,
+  hold:    560,
+  ceremony: 880,
+  drama:   1400,
 } as const;
 
 export type GameDurationKey = keyof typeof GAME_DURATION;
