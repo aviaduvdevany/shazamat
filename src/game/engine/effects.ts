@@ -22,10 +22,7 @@ export function applyEffects(
   s.stats = { ...s.stats };
   s.affinities = { ...s.affinities };
   s.flags = { ...s.flags };
-  s.sprite = {
-    ...s.sprite,
-    accessories: [...(s.sprite.accessories ?? [])],
-  };
+  s.sprite = { ...s.sprite };
 
   const statDeltas: Array<{ id: string; delta: number }> = [];
   let pendingGoto: string | null = null;
@@ -53,23 +50,7 @@ export function applyEffects(
         break;
 
       case "spriteSet":
-        s.sprite = { ...s.sprite, [effect.layer]: effect.partId };
-        break;
-
-      case "spriteAddAccessory":
-        if (!s.sprite.accessories?.includes(effect.partId)) {
-          s.sprite = {
-            ...s.sprite,
-            accessories: [...(s.sprite.accessories ?? []), effect.partId],
-          };
-        }
-        break;
-
-      case "spriteRemoveAccessory":
-        s.sprite = {
-          ...s.sprite,
-          accessories: s.sprite.accessories?.filter((a) => a !== effect.partId) ?? [],
-        };
+        s.sprite = { look: effect.look };
         break;
 
       case "advanceStage":

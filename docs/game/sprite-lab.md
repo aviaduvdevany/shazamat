@@ -33,16 +33,16 @@ Legend: `○` missing · `◑` drafted · `◉` approved · `●` live
 
 ### 3. Generate variants
 
-Always start with `body-adult` — it becomes the style lock for everything else:
+Always start with `look-adult` — a complete clothed adult. It becomes the style lock / edit input for every other look:
 
 ```bash
-npm run sprites:generate -- --id body-adult --n 4
+npm run sprites:generate -- --id look-adult --n 4
 ```
 
-Once `body-adult` is approved, generate other bodies and clothing:
+Once `look-adult` is approved, generate age jumps and outfit edits:
 
 ```bash
-npm run sprites:generate -- --batch A --family body
+npm run sprites:generate -- --batch A --family look
 npm run sprites:generate -- --batch A --family scene
 ```
 
@@ -57,8 +57,8 @@ Open [http://localhost:3000/admin/game/sprites](http://localhost:3000/admin/game
 Or use the CLI for headless workflows:
 
 ```bash
-npm run sprites:approve -- --id body-adult --version <versionId>
-npm run sprites:promote -- --id body-adult
+npm run sprites:approve -- --id look-adult --version <versionId>
+npm run sprites:promote -- --id look-adult
 # promote everything approved at once:
 npm run sprites:promote -- --approved
 ```
@@ -78,7 +78,7 @@ This confirms every `part.file` and `scene.file` exists on disk.
 ## How the pipeline works
 
 ```
-inventory.ts (77-asset table from sprite-guide §8)
+inventory.ts (looks + scenes + portraits from sprite-guide)
     ↓
 generate.ts (PixelLab API call, model-specific)
     ↓
@@ -101,14 +101,14 @@ The `.sprites/` workdir is gitignored. Only promoted files enter version control
 
 ## Generation waves (Batch A)
 
-Wave order matters. Assets marked `model: style` or `model: inpaint` need their `styleRef` approved first.
+Wave order matters. Edit assets need a parent version on disk (approved if you picked one, otherwise the latest draft). The CLI generates waves in order and skips already-approved assets on a batch run.
 
 | Wave | Assets | Dependency |
 |------|--------|------------|
-| 1 | `body-adult`, expressions neutral/happy/worried, all scenes, all accessories, instruments | none |
-| 2 | `body-child`, `body-teen`, `body-soldier` | body-adult approved |
-| 3 | `hair-child`, `hair-short`, `hair-buzz` | hair-child approved for short |
-| 4 | `pants-*`, `shirt-*` | matching body approved |
+| 1 | `look-adult`, all scenes | none |
+| 2 | `look-child`, `look-teen`, `look-soldier-nahal` | look-adult |
+| 3 | `look-teen-band`, `look-soldier-golani` | look-teen / look-soldier-nahal |
+| 4 | Batch B looks (`look-trip`, `look-wolt`, `look-hitech`, `look-career`, `look-shazamat`) | look-adult |
 | 5 | Portraits (aviad, itay, nimrod, shay, reef, nir, gidon) | optional: drop `.sprites/refs/members/{id}.jpg` for photo path |
 
 ---
@@ -138,13 +138,12 @@ The lab will route those through `POST /image-to-pixelart-pro` (converts the pho
 
 | Model | Endpoint | When | ~Cost per image |
 |-------|----------|------|----------------|
-| `pixen` | `POST /create-image-pixen` | Default: parts, portraits, accessories | ~$0.007 |
+| `pixen` | `POST /create-image-pixen` | Hero look + portraits + UI | ~$0.007 |
 | `pixflux` | `POST /create-image-pixflux` | Scenes 160×144 | ~$0.008–0.013 |
-| `style` | `POST /generate-with-style-v2` | Style-locked follow-ups (teen body etc.) | ~$0.095–0.185 |
-| `inpaint` | `POST /inpaint-v3` | Layer extraction (pants, shirt, hair, face) | ~$0.095–0.185 |
+| `edit` | `POST /edit-image-pixen` | Age jumps + outfit / hair variants; **keep the full sprite** | ~$0.007 |
 | `photo` | `POST /image-to-pixelart-pro` | Portrait from photo ref | ~$0.095 |
 
-Batch A with 4 variants each: roughly $3–8 if most assets use Pixen. Style/inpaint endpoints cost ~10× more per call — use them carefully.
+Batch A with 4 variants each: roughly a few dollars if most assets use Pixen / edit. Do not extract layers from edits.
 
 ---
 
@@ -154,7 +153,7 @@ Navigate to `/admin/game/sprites` while `next dev` is running:
 
 - **Inventory grid** — all 77 assets grouped by family, filtered by batch/family/status
 - **Asset detail** — version strip with 4× `image-rendering: pixelated` preview
-- **Compositor** — candidate layer overlaid onto current live sprites (orange outline = candidate)
+- **In-scene preview** — candidate look over a 60% scene (the real game viewport)
 - **Scene preview** — scene at 60% opacity over `#0a0a0a` (the real game viewport color)
 - **Generate / Approve / Promote** buttons — all wired to server actions
 - **QA panel** — shows size mismatches, high color count warnings, etc.
@@ -167,12 +166,12 @@ Large batch generations (multiple assets at once) should use the CLI, not the ad
 
 | Path | Purpose |
 |------|---------|
-| `src/game/sprites/lab/inventory.ts` | 77-asset table (id, batch, canvas, destPath, model, promptSeed) |
+| `src/game/sprites/lab/inventory.ts` | Looks + scenes + portraits table (id, batch, canvas, destPath, model, promptSeed) |
 | `src/game/sprites/lab/client.ts` | PixelLab v2 fetch client |
 | `src/game/sprites/lab/prompts.ts` | Style-lock + negative prompts from sprite-guide §7 |
 | `src/game/sprites/lab/palette.ts` | Art-bible palette + palette.png generator |
 | `src/game/sprites/lab/process.ts` | Post-process pipeline (palette snap, correct, alpha wipe, QA) |
-| `src/game/sprites/lab/extract.ts` | Layer masks and inpaint region isolation |
+| `src/game/sprites/lab/extract.ts` | Legacy layer-mask helpers (unused by the look pipeline) |
 | `src/game/sprites/lab/store.ts` | Version store (.sprites/ reader/writer) |
 | `src/game/sprites/lab/generate.ts` | Orchestrator (picks model, calls API, post-processes, saves) |
 | `src/game/sprites/lab/promote.ts` | Copy approved → public/game/ + catalog update |
@@ -190,12 +189,10 @@ These match sprite-guide.md §11:
 - [ ] Sprite parts have transparent background (RGBA channels)
 - [ ] Scenes are fully opaque
 - [ ] No AA fringe — edges are outline or transparent
-- [ ] All four bodies share the same foot line (y=62–63) and center X
-- [ ] Pants + shirts register on the matching body
-- [ ] Hair sits on the scalp without covering the eyes
-- [ ] Expressions only touch the face box (x=22–41, y=8–18)
+- [ ] All looks share the same foot line (y=62–63) and center X
+- [ ] Every look is fully clothed with hair and a face
 - [ ] No readable letters anywhere
-- [ ] Player parts have no ginger hair, keyboard, drums, or mic
+- [ ] Player looks have no ginger hair, keyboard, drums, or mic
 - [ ] Nir's portrait is the only ginger
 - [ ] Scenes still read under 60% black overlay
 - [ ] Brand orange `#DB7738` is an accent, not a fill

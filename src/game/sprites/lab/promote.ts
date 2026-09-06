@@ -53,8 +53,8 @@ export async function promoteAsset(
       catalogUpdated = addPortraitToCatalog(asset);
     } else if (asset.family === "scene") {
       catalogUpdated = addSceneToCatalog(asset);
-    } else if (asset.layer) {
-      catalogUpdated = addPartToCatalog(asset);
+    } else if (asset.family === "look") {
+      catalogUpdated = addLookToCatalog(asset);
     }
   }
 
@@ -72,26 +72,21 @@ export async function promoteAsset(
 
 // ── Catalog updaters ──────────────────────────────────────────────────────────
 
-function addPartToCatalog(asset: LabAsset): boolean {
+function addLookToCatalog(asset: LabAsset): boolean {
   const src = fs.readFileSync(SPRITES_TS, "utf-8");
-
-  // Idempotency: check the id already appears in the file
   if (src.includes(`"${asset.id}"`)) return false;
 
   const label = hebrewLabel(asset.id);
-  const newRow = `    { id: "${asset.id}", layer: "${asset.layer}", file: "${asset.destPath}", label: "${label}" },`;
+  const newRow = `    { id: "${asset.id}", file: "${asset.destPath}", label: "${label}" },`;
 
-  // Insert before the closing ], of the parts array
   const updated = src.replace(
-    /(\s*\/\/ Expressions[\s\S]*?)(\s*\],\s*\n\s*scenes:)/,
-    (_, before, after) => `${before}\n${newRow}${after}`
+    /(\s*\{ id: "look-shazamat"[\s\S]*?\},\n)(\s*\],\s*\n\s*scenes:)/,
+    (_, before, after) => `${before}${newRow}\n${after}`
   );
 
-  // Fallback: just find "  ]," near the parts array end
   if (updated === src) {
-    // Try simpler insertion before the scenes: [ line
     const patched = src.replace(
-      /(\s*\/\/ Instruments[\s\S]*?)(\s*\],\n\n\s*scenes:)/,
+      /(\s*looks: \[[\s\S]*?)(\s*\],\n\n\s*scenes:)/,
       (_, before, after) => `${before}\n${newRow}${after}`
     );
     if (patched !== src) {
@@ -132,32 +127,17 @@ function addPortraitToCatalog(_asset: LabAsset): boolean {
 /** Very rough Hebrew-ish label for the admin UI */
 function hebrewLabel(id: string): string {
   const map: Record<string, string> = {
-    "body-soldier": "גוף חייל",
-    "body-adult": "גוף מבוגר",
-    "pants-shorts": "מכנסי קצרים",
-    "pants-army": "מכנסי צבא",
-    "pants-travel": "מכנסי טיול",
-    "pants-casual": "מכנסי קז׳ואל",
-    "pants-stage": "מכנסי במה",
-    "shirt-army-nahal": "חולצת נח״ל",
-    "shirt-army-golani": "חולצת גולני",
-    "shirt-travel": "חולצת טיול",
-    "shirt-wolt": "חולצת וולט",
-    "shirt-hitech": "חולצת הייטק",
-    "shirt-musician": "חולצת מוזיקאי",
-    "shirt-shazamat": "חולצת שאזאמאט",
-    "hair-child": "שיער ילד",
-    "hair-buzz": "שיער גוזז",
-    "hair-grown": "שיער גדול",
-    "expression-shocked": "הפתעה",
-    "expression-smug": "שביעות רצון",
-    "accessory-backpack": "תיק גב",
-    "accessory-dog-tags": "זיהוי צבאי",
-    "accessory-stupid-hat": "כובע מגוחך",
-    "accessory-sunglasses": "משקפי שמש",
-    "accessory-spray-can": "ספריי",
-    "accessory-headphones": "אוזניות",
-    "instrument-guitar": "גיטרה",
+    "look-child": "ילד",
+    "look-teen": "נוער",
+    "look-teen-band": "נוער — להקה",
+    "look-adult": "מבוגר",
+    "look-soldier-nahal": "חייל נח״ל",
+    "look-soldier-golani": "חייל גולני",
+    "look-trip": "טיול",
+    "look-wolt": "שליח",
+    "look-hitech": "הייטק",
+    "look-career": "מוזיקאי",
+    "look-shazamat": "שאזאמאט",
   };
   return map[id] ?? id;
 }

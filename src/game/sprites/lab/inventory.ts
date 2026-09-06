@@ -1,50 +1,31 @@
 /**
- * Single source of truth for every sprite asset in the art bible (sprite-guide.md §8).
+ * Single source of truth for every sprite asset in the art bible.
  *
- * "status" = disk state of the PROMOTED file in public/game/:
+ * Looks are complete 64×64 dressed characters — not paper-doll layers.
+ * Generate look-adult first (pixen). Every other look is an edit of that
+ * file (or of another look) via edit-image-pixen. Keep the full composite.
+ *
+ * "diskStatus" = disk state of the PROMOTED file in public/game/:
  *   REPLACE — a placeholder already exists; overwrite it
  *   NEW     — no file yet; promote creates it + adds a catalog row
  *
- * "batch" = generation priority (A → ship, B → scars, C → color extras)
+ * "batch" = generation priority (A → ship, B → job/stage flavor, C → extras)
  *
  * "model" = which PixelLab endpoint to use by default:
- *   pixen      — POST /create-image-pixen  (sync, fast, 64×64 / 96×96)
- *   pixflux    — POST /create-image-pixflux (sync, scenes 160×144)
- *   style      — POST /generate-with-style-v2 (async, style-locked follow-up)
- *   inpaint    — POST /inpaint-v3 (async, layer extraction from a body)
- *   photo      — POST /image-to-pixelart-pro (async, portrait from ref photo)
- *   edit-diff  — POST /edit-image-pixen (async) + pixel-diff → cleanest layers
- *   pixen-wig  — POST /create-image-pixen at layer dimensions → paste on canvas
- *   bitforge   — POST /create-image-bitforge with inpaint + style → isolateLayer
+ *   pixen   — POST /create-image-pixen (hero look, portraits, UI)
+ *   pixflux — POST /create-image-pixflux (scenes)
+ *   style   — POST /generate-with-style-v2 (kept for experiments; looks use edit)
+ *   edit    — POST /edit-image-pixen; keep the full dressed result
+ *   photo   — POST /image-to-pixelart-pro (portrait from ref photo)
  *
- * "styleRef" = id of the asset whose approved processed.png must be used as style lock.
+ * "styleRef" = id of the approved look used as the input / style lock.
  */
 
-export type AssetFamily =
-  | "body"
-  | "pants"
-  | "shirt"
-  | "hair"
-  | "expression"
-  | "accessory"
-  | "instrument"
-  | "scene"
-  | "portrait";
+export type AssetFamily = "look" | "scene" | "portrait" | "ui";
 
 export type AssetBatch = "A" | "B" | "C";
 export type AssetStatus = "REPLACE" | "NEW";
-export type AssetModel =
-  | "pixen"
-  | "pixflux"
-  | "style"
-  | "inpaint"
-  | "photo"
-  /** Approach A — edit-image-pixen + pixel diff against the base body */
-  | "edit-diff"
-  /** Approach B — pixen generates the layer at exact region dimensions, paste onto canvas */
-  | "pixen-wig"
-  /** Approach C — bitforge style-guided inpaint + transparent background */
-  | "bitforge";
+export type AssetModel = "pixen" | "pixflux" | "style" | "edit" | "photo";
 
 export interface LabAsset {
   id: string;
@@ -55,658 +36,127 @@ export interface LabAsset {
   canvas: [number, number];
   /** Destination path relative to public/ */
   destPath: string;
-  /** One-line prompt seed from sprite-guide §8 */
+  /** One-line prompt seed */
   promptSeed: string;
   model: AssetModel;
-  /** id of approved asset to use as style_image or inpaint base */
+  /** id of approved asset to use as style lock or edit input */
   styleRef?: string;
-  /** SpriteLayer from sprites schema — undefined for scenes/portraits */
-  layer?: string;
   /** If true, transparent background */
   noBackground: boolean;
 }
 
+function look(
+  id: string,
+  batch: AssetBatch,
+  diskStatus: AssetStatus,
+  promptSeed: string,
+  model: AssetModel,
+  styleRef?: string
+): LabAsset {
+  return {
+    id,
+    family: "look",
+    batch,
+    diskStatus,
+    canvas: [64, 64],
+    destPath: `game/sprites/looks/${id}.png`,
+    promptSeed,
+    model,
+    styleRef,
+    noBackground: true,
+  };
+}
+
 export const INVENTORY: LabAsset[] = [
-  // ── TEST: three method comparison for adult short hair ───────────────────
-  // Generate with: npm run sprites:generate -- --id hair-test-edit-diff
-  //                npm run sprites:generate -- --id hair-test-pixen-wig
-  //                npm run sprites:generate -- --id hair-test-bitforge
-  // Review at /admin/game/sprites — promote whichever wins, then delete these.
-  {
-    id: "hair-test-edit-diff",
-    family: "hair",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-test-edit-diff.png",
-    promptSeed:
-      "Add simple dark short hair only to the top of the head, flat dark brown pixel art hair, no changes to face or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "hair",
-    noBackground: true,
-  },
-  {
-    id: "hair-test-pixen-wig",
-    family: "hair",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-test-pixen-wig.png",
-    promptSeed:
-      "Simple dark short pixel art hair piece, top of head view, front-facing, dark brown hair only, no face no body, isolated hair shape",
-    model: "pixen-wig",
-    layer: "hair",
-    noBackground: true,
-  },
-  {
-    id: "hair-test-bitforge",
-    family: "hair",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-test-bitforge.png",
-    promptSeed:
-      "Simple dark short hair on scalp only, paint only hair pixels in the top-of-head region, dark brown pixel art hair",
-    model: "bitforge",
-    styleRef: "body-adult",
-    layer: "hair",
-    noBackground: true,
-  },
-
-  // ── 8.1 Bodies ───────────────────────────────────────────────────────────
-  {
-    id: "body-child",
-    family: "body",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/body/body-child.png",
-    promptSeed:
-      "Age 8 Israeli boy, big head, short legs, dark briefs + undershirt, cheap sneakers, bald scalp, neutral face, arms at sides",
-    model: "pixen",
-    layer: "body",
-    noBackground: true,
-  },
-  {
-    id: "body-teen",
-    family: "body",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/body/body-teen.png",
-    promptSeed:
-      "Age 16 Israeli teen, lanky, awkward, dark briefs, same sneakers worn down, bald scalp, same face aged up",
-    model: "style",
-    styleRef: "body-adult",
-    layer: "body",
-    noBackground: true,
-  },
-  {
-    id: "body-soldier",
-    family: "body",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/body/body-soldier.png",
-    promptSeed:
-      "Age 19 Israeli soldier, broader shoulders, upright, same underwear rule, combat boots olive-brown, bald scalp",
-    model: "style",
-    styleRef: "body-adult",
-    layer: "body",
-    noBackground: true,
-  },
-  {
-    id: "body-adult",
-    family: "body",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/body/body-adult.png",
-    promptSeed:
-      "Age 25-30 Israeli man, settled stance, same face, dark socks + simple black shoes, bald scalp, front facing",
-    model: "pixen",
-    layer: "body",
-    noBackground: true,
-  },
-
-  // ── 8.2 Pants ─────────────────────────────────────────────────────────────
-  {
-    id: "pants-shorts",
-    family: "pants",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-shorts.png",
-    promptSeed:
-      "Kid soccer shorts, dusty blue-gray, sitting on child hips, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-child",
-    layer: "pants",
-    noBackground: true,
-  },
-  {
-    id: "pants-jeans",
-    family: "pants",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-jeans.png",
-    promptSeed:
-      "Teen/adult blue jeans #3A4A6A, simple, slightly too long, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "pants",
-    noBackground: true,
-  },
-  {
-    id: "pants-army",
-    family: "pants",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-army.png",
-    promptSeed:
-      "IDF olive trousers, straight, bloused onto boots, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-soldier",
-    layer: "pants",
-    noBackground: true,
-  },
-  {
-    id: "pants-travel",
-    family: "pants",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-travel.png",
-    promptSeed:
-      "Ridiculous backpacker pants, faded maroon or dirty linen, one cargo pocket, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "pants",
-    noBackground: true,
-  },
-  {
-    id: "pants-casual",
-    family: "pants",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-casual.png",
-    promptSeed:
-      "Black cheap chinos, Tel Aviv bartender energy, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "pants",
-    noBackground: true,
-  },
-  {
-    id: "pants-stage",
-    family: "pants",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/pants/pants-stage.png",
-    promptSeed:
-      "Tight black stage jeans, 1px orange stitch as the only accent, transparent above waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "pants",
-    noBackground: true,
-  },
-
-  // ── 8.3 Shirts ────────────────────────────────────────────────────────────
-  {
-    id: "shirt-basic",
-    family: "shirt",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-basic.png",
-    promptSeed:
-      "Dirty-white sand tee #D4C8B8, no print, slightly too big, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-band",
-    family: "shirt",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-band.png",
-    promptSeed:
-      "Black tee, tiny unreadable white band mark not a real logo, teenage metal energy, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-army-nahal",
-    family: "shirt",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-army-nahal.png",
-    promptSeed:
-      "IDF olive shirt, small dull unit tag, no yellow, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-soldier",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-army-golani",
-    family: "shirt",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-army-golani.png",
-    promptSeed:
-      "Same IDF olive shirt as nahal, one Golani yellow #D4A01A tag on the chest, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-soldier",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-travel",
-    family: "shirt",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-travel.png",
-    promptSeed:
-      "Sun-faded tank or open shirt, backpacker, a bit stupid, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-wolt",
-    family: "shirt",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-wolt.png",
-    promptSeed:
-      "Teal-cyan courier shirt / light jacket #00C2B8, food-bag strap hint on one shoulder, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-hitech",
-    family: "shirt",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-hitech.png",
-    promptSeed:
-      "Pale button-down or navy polo, the I still have a job shirt, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-musician",
-    family: "shirt",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-musician.png",
-    promptSeed:
-      "Black faded tee, nothing printed, career musician default, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-  {
-    id: "shirt-shazamat",
-    family: "shirt",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/shirt/shirt-shazamat.png",
-    promptSeed:
-      "Black tee, tiny white shin-like mark, one orange #DB7738 hem tick, official merch energy without using real logo, transparent below waist",
-    model: "inpaint",
-    styleRef: "body-adult",
-    layer: "shirt",
-    noBackground: true,
-  },
-
-  // ── 8.4 Hair ──────────────────────────────────────────────────────────────
-  {
-    id: "hair-child",
-    family: "hair",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-child.png",
-    promptSeed:
-      "Add messy dark kid hair to the top of the head, slightly too long in front, dark brown pixel art hair only, do not change face or body",
-    model: "edit-diff",
-    styleRef: "body-child",
-    layer: "hair",
-    noBackground: true,
-  },
-  {
-    id: "hair-short",
-    family: "hair",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-short.png",
-    promptSeed:
-      "Add simple dark short hair to the top of the head, neat dark brown pixel art hair only, do not change face or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "hair",
-    noBackground: true,
-  },
-  {
-    id: "hair-buzz",
-    family: "hair",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-buzz.png",
-    promptSeed:
-      "Add an army buzz cut to the scalp, very short dark stubble 2-3 pixels, scalp shows through, do not change face or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "hair",
-    noBackground: true,
-  },
-  {
-    id: "hair-grown",
-    family: "hair",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/hair/hair-grown.png",
-    promptSeed:
-      "Add grown-out dark hair to the scalp, a bit greasy and unkempt, longer than short, do not change face or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "hair",
-    noBackground: true,
-  },
-
-  // ── 8.5 Expressions (adult) ───────────────────────────────────────────────
-  // Generated with edit-diff against body-adult. Full-canvas extraction means
-  // only the pixels that actually changed are kept — perfect alignment by math.
-  {
-    id: "expression-neutral",
-    family: "expression",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-neutral.png",
-    promptSeed:
-      "Change the face expression to calm neutral: flat closed mouth, two small calm eyes, relaxed brows, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-happy",
-    family: "expression",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-happy.png",
-    promptSeed:
-      "Change the face expression to happy: small grin mouth, squinted happy eyes, slightly raised cheeks, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-worried",
-    family: "expression",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-worried.png",
-    promptSeed:
-      "Change the face expression to worried: tight pressed mouth, inner brows raised and angled, anxious look, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-shocked",
-    family: "expression",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-shocked.png",
-    promptSeed:
-      "Change the face expression to shocked: round open mouth, wide round eyes, startled look, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-smug",
-    family: "expression",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-smug.png",
-    promptSeed:
-      "Change the face expression to smug: half-lidded eyes, tiny one-sided smirk, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-adult",
-    layer: "expression",
-    noBackground: true,
-  },
-
-  // ── 8.5b Expressions (child) ──────────────────────────────────────────────
-  // Same diff approach as adult expressions but diffed against body-child.
-  // The child face sits at a different position/scale than the adult face;
-  // diffing against body-child naturally captures the right pixels.
-  {
-    id: "expression-neutral-child",
-    family: "expression",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-neutral-child.png",
-    promptSeed:
-      "Change the face expression to calm neutral: flat closed mouth, two small calm eyes, relaxed brows, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-child",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-happy-child",
-    family: "expression",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-happy-child.png",
-    promptSeed:
-      "Change the face expression to happy: small grin mouth, squinted happy eyes, slightly raised cheeks, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-child",
-    layer: "expression",
-    noBackground: true,
-  },
-  {
-    id: "expression-worried-child",
-    family: "expression",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/expression/expression-worried-child.png",
-    promptSeed:
-      "Change the face expression to worried: tight pressed mouth, inner brows raised and angled, anxious look, do not change hair or body",
-    model: "edit-diff",
-    styleRef: "body-child",
-    layer: "expression",
-    noBackground: true,
-  },
-
-  // ── 8.6 Accessories ───────────────────────────────────────────────────────
-  {
-    id: "accessory-band-patch",
-    family: "accessory",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-band-patch.png",
-    promptSeed:
-      "Small cloth patch on the left chest / sleeve area, not a full shirt, sparse overlay only",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-drumsticks",
-    family: "accessory",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-drumsticks.png",
-    promptSeed:
-      "Pair of drumsticks in the back pocket or one hand, generic not drummer-ending, sparse overlay",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-backpack",
-    family: "accessory",
-    batch: "A",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-backpack.png",
-    promptSeed:
-      "Backpack shoulder straps + side pouches only, olive/dust, front view, not full-body redraw",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-dog-tags",
-    family: "accessory",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-dog-tags.png",
-    promptSeed: "Tiny chain + two dog tags on the chest, sparse overlay",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-stupid-hat",
-    family: "accessory",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-stupid-hat.png",
-    promptSeed:
-      "Ugly bucket hat or crooked sun hat that stays forever, sparse overlay on head",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-sunglasses",
-    family: "accessory",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-sunglasses.png",
-    promptSeed: "Cheap black wayfarers sitting on the face box, sparse overlay",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-spray-can",
-    family: "accessory",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-spray-can.png",
-    promptSeed:
-      "Mini spray can in one hand + magenta stain on the fingers, sparse overlay",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-  {
-    id: "accessory-headphones",
-    family: "accessory",
-    batch: "C",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/accessory/accessory-headphones.png",
-    promptSeed:
-      "Over-ear studio headphone cans, black, sit on hair, sparse overlay",
-    model: "pixen",
-    layer: "accessory",
-    noBackground: true,
-  },
-
-  // ── 8.7 Instruments ───────────────────────────────────────────────────────
-  {
-    id: "instrument-guitar-small",
-    family: "instrument",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/instrument/instrument-guitar-small.png",
-    promptSeed:
-      "3/4 kid acoustic guitar, too big for a child, cheap wood, held across body, silhouette readable at 64px",
-    model: "pixen",
-    layer: "instrument",
-    noBackground: true,
-  },
-  {
-    id: "instrument-guitar",
-    family: "instrument",
-    batch: "B",
-    diskStatus: "NEW",
-    canvas: [64, 64],
-    destPath: "game/sprites/instrument/instrument-guitar.png",
-    promptSeed:
-      "Adult electric or beaten acoustic guitar, generic not a famous model, held across body",
-    model: "pixen",
-    layer: "instrument",
-    noBackground: true,
-  },
-  {
-    id: "instrument-bass",
-    family: "instrument",
-    batch: "A",
-    diskStatus: "REPLACE",
-    canvas: [64, 64],
-    destPath: "game/sprites/instrument/instrument-bass.png",
-    promptSeed:
-      "Longer-neck bass silhouette, catalog / ending support only not equipped mid-run",
-    model: "pixen",
-    layer: "instrument",
-    noBackground: true,
-  },
+  // ── Looks ────────────────────────────────────────────────────────────────
+  // Wave 1: hero adult. Approve this before anything that style-locks or edits it.
+  look(
+    "look-adult",
+    "A",
+    "REPLACE",
+    "Age 25-30 Israeli man, complete dressed front-facing sprite, short dark brown hair, dirty-white sand tee #D4C8B8 slightly too big, blue jeans #3A4A6A slightly too long, dark socks and simple black shoes, Mediterranean olive-tan skin, settled stance, arms at sides, neutral Earthbound face, fully clothed, not bald, not underwear",
+    "pixen"
+  ),
+  look(
+    "look-child",
+    "A",
+    "REPLACE",
+    "Age 8 Israeli boy, same person aged down, big head, short legs, messy dark kid hair slightly too long in front, dusty blue-gray soccer shorts, dirty-white sand tee, cheap sneakers, complete dressed front-facing sprite",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-teen",
+    "A",
+    "REPLACE",
+    "Age 16 Israeli teen, same person, lanky awkward, slightly too-long arms, simple dark short hair, dirty-white sand tee, blue jeans slightly too long, worn sneakers, complete dressed front-facing sprite",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-teen-band",
+    "A",
+    "REPLACE",
+    "Same teen, change only the shirt to a black tee with a tiny unreadable white band mark, teenage metal energy, keep face hair jeans pose and shoes",
+    "edit",
+    "look-teen"
+  ),
+  look(
+    "look-soldier-nahal",
+    "A",
+    "REPLACE",
+    "Same man as an IDF soldier age 19, olive uniform shirt and trousers, army buzz cut scalp shows through, combat boots olive-brown, small dull unit tag no yellow, broader shoulders upright, keep the same face",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-soldier-golani",
+    "A",
+    "REPLACE",
+    "Same soldier, add one Golani yellow #D4A01A tag on the chest, keep everything else identical",
+    "edit",
+    "look-soldier-nahal"
+  ),
+  look(
+    "look-trip",
+    "B",
+    "REPLACE",
+    "Same man as a backpacker, sun-faded tank or open shirt, faded maroon travel pants, grown-out slightly greasy dark hair, olive backpack with visible straps, a bit stupid, keep the same face",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-wolt",
+    "B",
+    "REPLACE",
+    "Same man, teal-cyan courier shirt / light jacket #00C2B8, food-bag strap hint on one shoulder, keep jeans hair face and pose",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-hitech",
+    "B",
+    "REPLACE",
+    "Same man, pale button-down or navy polo, the I still have a job shirt, keep jeans hair face and pose",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-career",
+    "B",
+    "REPLACE",
+    "Same man, black faded musician tee nothing printed, black cheap chinos, keep short dark hair and face",
+    "edit",
+    "look-adult"
+  ),
+  look(
+    "look-shazamat",
+    "B",
+    "REPLACE",
+    "Same man on stage, black tee with tiny white shin-like mark and one orange #DB7738 hem tick, tight black stage jeans with 1px orange stitch, keep short dark hair and face",
+    "edit",
+    "look-adult"
+  ),
 
   // ── 8.8 Scenes ────────────────────────────────────────────────────────────
   {
@@ -1132,22 +582,21 @@ export const INVENTORY: LabAsset[] = [
     noBackground: true,
   },
 
-  // ── 8.10 HUD icons (Batch C) ──────────────────────────────────────────────
+  // ── HUD icons (Batch C) ───────────────────────────────────────────────────
   {
     id: "stat-musicianship",
-    family: "accessory",
+    family: "ui",
     batch: "C",
     diskStatus: "NEW",
     canvas: [16, 16],
     destPath: "game/ui/stat-musicianship.png",
-    promptSeed:
-      "Tiny pixel guitar, orange #DB7738 on transparency, 16x16",
+    promptSeed: "Tiny pixel guitar, orange #DB7738 on transparency, 16x16",
     model: "pixen",
     noBackground: true,
   },
   {
     id: "stat-swag",
-    family: "accessory",
+    family: "ui",
     batch: "C",
     diskStatus: "NEW",
     canvas: [16, 16],
@@ -1158,7 +607,7 @@ export const INVENTORY: LabAsset[] = [
   },
   {
     id: "dice",
-    family: "accessory",
+    family: "ui",
     batch: "C",
     diskStatus: "NEW",
     canvas: [16, 16],

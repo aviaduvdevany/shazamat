@@ -15,10 +15,10 @@
  * Examples:
  *   npm run sprites:balance
  *   npm run sprites:status
- *   npm run sprites:generate -- --id body-adult --n 4
- *   npm run sprites:generate -- --batch A --family body
- *   npm run sprites:approve  -- --id body-adult --version <ver>
- *   npm run sprites:promote  -- --id body-adult
+ *   npm run sprites:generate -- --id look-adult --n 4
+ *   npm run sprites:generate -- --batch A --family look
+ *   npm run sprites:approve  -- --id look-adult --version <ver>
+ *   npm run sprites:promote  -- --id look-adult
  *   npm run sprites:promote  -- --approved
  */
 
@@ -27,7 +27,7 @@ import { parseArgs } from "util";
 import { INVENTORY, getBatch, getAsset, type AssetBatch, type AssetFamily } from "../src/game/sprites/lab/inventory";
 import { PixelLabClient } from "../src/game/sprites/lab/client";
 import { generateN } from "../src/game/sprites/lab/generate";
-import { approveVersion, buildStatusTable, getApprovedBuffer } from "../src/game/sprites/lab/store";
+import { approveVersion, buildStatusTable, getRecord } from "../src/game/sprites/lab/store";
 import { promoteAsset, promoteAllApproved } from "../src/game/sprites/lab/promote";
 
 // ── Parse CLI arguments ───────────────────────────────────────────────────────
@@ -83,6 +83,33 @@ async function withConcurrency<T>(
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+}
+
+/** Generate parents before children that styleRef them. */
+function generationWaves(assets: typeof INVENTORY): (typeof INVENTORY)[] {
+  const inBatch = new Set(assets.map((a) => a.id));
+  const remaining = [...assets];
+  const waves: (typeof INVENTORY)[] = [];
+  const done = new Set<string>();
+
+  while (remaining.length) {
+    const wave = remaining.filter(
+      (a) => !a.styleRef || !inBatch.has(a.styleRef) || done.has(a.styleRef)
+    );
+    if (wave.length === 0) {
+      waves.push(remaining);
+      break;
+    }
+    waves.push(wave);
+    for (const a of wave) done.add(a.id);
+    const waveIds = new Set(wave.map((a) => a.id));
+    remaining.splice(
+      0,
+      remaining.length,
+      ...remaining.filter((a) => !waveIds.has(a.id))
+    );
+  }
+  return waves;
 }
 
 // ── Commands ──────────────────────────────────────────────────────────────────
@@ -171,28 +198,46 @@ async function cmdGenerate() {
     die("Provide --id <id> or --batch <A|B|C> [--family <family>]");
   }
 
+  // Batch runs skip already-approved assets so we don't burn credits redoing
+  // look-adult. `--id` always generates, even if approved.
+  if (values["batch"]) {
+    const skipped = targets.filter((a) => getRecord(a.id)?.approvedVersionId);
+    targets = targets.filter((a) => !getRecord(a.id)?.approvedVersionId);
+    for (const a of skipped) info(`Skipping ${a.id} (already approved)`);
+    if (targets.length === 0) {
+      console.log("\nNothing to generate — every target is already approved.\n");
+      return;
+    }
+  }
+
   const n = Math.max(1, parseInt(values["n"] ?? "1", 10));
   const seed = values["seed"] != null ? parseInt(values["seed"]!, 10) : undefined;
+  const waves = generationWaves(targets);
 
   console.log(`\nGenerating ${n} variant(s) for ${targets.length} asset(s)...\n`);
 
   const errors: string[] = [];
 
-  await withConcurrency(targets, async (asset) => {
-    try {
-      info(`Generating ${asset.id} (model: ${asset.model}, n=${n})...`);
-      const results = await generateN(asset, client, n, { seed });
-      for (const r of results) {
-        const qaStr = r.qaIssues.length ? ` ⚠ ${r.qaIssues.join("; ")}` : "";
-        const cost = r.costUsd != null ? ` $${r.costUsd.toFixed(4)}` : "";
-        ok(`${asset.id} → ${r.versionId}${cost}${qaStr}`);
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`  ✗ ${asset.id}: ${msg}`);
-      errors.push(`${asset.id}: ${msg}`);
+  for (const [waveIdx, wave] of waves.entries()) {
+    if (waves.length > 1) {
+      info(`Wave ${waveIdx + 1}/${waves.length}: ${wave.map((a) => a.id).join(", ")}`);
     }
-  });
+    await withConcurrency(wave, async (asset) => {
+      try {
+        info(`Generating ${asset.id} (model: ${asset.model}, n=${n})...`);
+        const results = await generateN(asset, client, n, { seed });
+        for (const r of results) {
+          const qaStr = r.qaIssues.length ? ` ⚠ ${r.qaIssues.join("; ")}` : "";
+          const cost = r.costUsd != null ? ` $${r.costUsd.toFixed(4)}` : "";
+          ok(`${asset.id} → ${r.versionId}${cost}${qaStr}`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`  ✗ ${asset.id}: ${msg}`);
+        errors.push(`${asset.id}: ${msg}`);
+      }
+    });
+  }
 
   if (errors.length) {
     console.log(`\n${errors.length} error(s):`);

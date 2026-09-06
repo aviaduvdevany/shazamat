@@ -50,11 +50,31 @@ for (const stage of pack.stages) {
 
 // ── 3. Sprite/scene file refs exist on disk ─────────────────
 
-for (const part of pack.sprites.parts) {
-  const p = join(WORKSPACE, part.file);
-  if (!existsSync(p)) fail(`Sprite part "${part.id}" file not found: ${part.file}`);
+for (const look of pack.sprites.looks) {
+  const p = join(WORKSPACE, look.file);
+  if (!existsSync(p)) fail(`Sprite look "${look.id}" file not found: ${look.file}`);
 }
-ok(`${pack.sprites.parts.length} sprite parts checked`);
+ok(`${pack.sprites.looks.length} sprite looks checked`);
+
+const lookIds = new Set(pack.sprites.looks.map((l) => l.id));
+function collectLookIds(effects: Effect[]): string[] {
+  return effects.filter((e) => e.type === "spriteSet").map((e) => e.look);
+}
+for (const stage of pack.stages) {
+  for (const lookId of collectLookIds(stage.onEnter ?? [])) {
+    if (!lookIds.has(lookId)) fail(`Stage "${stage.id}" spriteSet unknown look "${lookId}"`);
+  }
+}
+for (const ev of pack.events) {
+  for (const choice of ev.choices) {
+    const fromEffects = collectLookIds(choice.effects ?? []);
+    const fromRoll = (choice.roll ?? []).flatMap((r) => collectLookIds(r.effects));
+    for (const lookId of [...fromEffects, ...fromRoll]) {
+      if (!lookIds.has(lookId)) fail(`Event "${ev.id}" spriteSet unknown look "${lookId}"`);
+    }
+  }
+}
+ok("All spriteSet looks exist in the catalog");
 
 for (const scene of pack.sprites.scenes) {
   const p = join(WORKSPACE, scene.file);

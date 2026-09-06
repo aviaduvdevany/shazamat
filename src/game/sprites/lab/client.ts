@@ -361,3 +361,40 @@ export function bufferToPixelLabImage(buf: Buffer): PixelLabImage {
 export function pixelLabImageToBuffer(img: PixelLabImage): Buffer {
   return Buffer.from(img.base64, "base64");
 }
+
+function asPixelLabImage(value: unknown): PixelLabImage | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const img = value as Record<string, unknown>;
+  if (typeof img.base64 === "string" && img.base64.length > 0) {
+    return img as unknown as PixelLabImage;
+  }
+  return undefined;
+}
+
+/**
+ * Async jobs don't all return `{ image }`. Style-lock returns `{ images: [...] }`
+ * (a grid of variants at 64×64). Edit / inpaint usually return `{ image }`.
+ */
+export function extractJobImage(
+  result: Record<string, unknown>,
+  jobId: string
+): PixelLabImage {
+  const direct = asPixelLabImage(result.image);
+  if (direct) return direct;
+
+  const images = result.images;
+  if (Array.isArray(images) && images.length > 0) {
+    const first = asPixelLabImage(images[0]);
+    if (first) return first;
+    const nested =
+      images[0] && typeof images[0] === "object"
+        ? asPixelLabImage((images[0] as Record<string, unknown>).image)
+        : undefined;
+    if (nested) return nested;
+  }
+
+  const keys = Object.keys(result);
+  throw new Error(
+    `job ${jobId} returned no image (keys: ${keys.join(", ") || "none"})`
+  );
+}

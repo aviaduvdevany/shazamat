@@ -103,7 +103,7 @@ Both should pass before and after any change.
 | [content-bible.md](./content-bible.md) | **The canonical event spec** — all 7 stages, every event card with Hebrew copy drafts, flag catalog, and member routing. Start here before writing any event TypeScript. |
 | [roadmap.md](./roadmap.md) | What's built, what's next, phase definitions and progress |
 | [ux-plan.md](./ux-plan.md) | **UI, motion, timing, and feel** — phased UX plan. Not sprites. Read before adding transitions or animations. |
-| [sprite-guide.md](./sprite-guide.md) | **Art bible** — sizes, palette, layer grid, and the full file list for generating every sprite. Hand this to an external art/generation agent. |
+| [sprite-guide.md](./sprite-guide.md) | **Art bible** — sizes, palette, complete looks, and the full file list for generating every sprite. Hand this to an external art/generation agent. |
 | [sprite-lab.md](./sprite-lab.md) | **Sprite Lab operator guide** — how to generate, review, and promote sprites with PixelLab. Env setup, CLI commands, wave order, cost breakdown. |
 | [shazamat-life-simulator-concept.md](./shazamat-life-simulator-concept.md) | Original design document — tone, philosophy, examples |
 
@@ -116,9 +116,9 @@ src/game/
 ├── schema/
 │   ├── members.ts       # MemberId union, MemberSchema, MEMBER_IDS const
 │   ├── stats.ts         # StatDef (id, label, emoji, min/max/initial)
-│   ├── sprites.ts       # SpriteLayer, SpritePart, Scene, SpriteLoadout, SpriteCatalog
+│   ├── sprites.ts       # SpriteLook, Scene, SpriteLoadout, SpriteCatalog
 │   ├── conditions.ts    # Condition (all/any/not/flag/stat/affinity/stage/seenEvent)
-│   ├── effects.ts       # Effect (stat/affinity/setFlag/spriteSet/spriteAdd/goto/…)
+│   ├── effects.ts       # Effect (stat/affinity/setFlag/spriteSet/goto/…)
 │   ├── events.ts        # GameEvent, Choice, RollOutcome — the card unit
 │   ├── stages.ts        # Stage (id, label, ageLabel, eventCount, onEnter effects)
 │   ├── pack.ts          # ContentPack — the assembled game data

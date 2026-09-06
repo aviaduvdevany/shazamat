@@ -182,6 +182,26 @@ export function getApprovedBuffer(id: string): Buffer {
   return fs.readFileSync(p);
 }
 
+/**
+ * Style / edit input: approved version if one exists, otherwise the latest draft.
+ * Batch generate uses this so wave 2 can run off a just-generated parent.
+ */
+export function getReferenceBuffer(id: string): Buffer {
+  const index = readIndex();
+  const record = index[id];
+  const versionId = record?.approvedVersionId ?? record?.versions.at(-1)?.versionId;
+  if (!versionId) {
+    throw new Error(
+      `No generated version for "${id}". Generate it first: npm run sprites:generate -- --id ${id}`
+    );
+  }
+  const p = processedPngPath(id, versionId);
+  if (!fs.existsSync(p)) {
+    throw new Error(`Reference processed PNG not found on disk: ${p}`);
+  }
+  return fs.readFileSync(p);
+}
+
 /** List all versions for an asset with their meta */
 export function listVersions(id: string): VersionMeta[] {
   const index = readIndex();

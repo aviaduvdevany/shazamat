@@ -41,7 +41,7 @@ const mockPack: ContentPack = {
             { type: "stat", id: "musicianship", delta: 5 },
             { type: "affinity", memberId: "aviad", delta: 3 },
             { type: "setFlag", key: "hadFirstInstrument", value: true },
-            { type: "spriteSet", layer: "shirt", partId: "band-shirt" },
+            { type: "spriteSet", look: "look-teen-band" },
           ],
         },
         {
@@ -234,7 +234,7 @@ describe("Engine: applyChoice", () => {
     const rng = stateRng(state);
     const event = mockPack.events.find((e) => e.id === "first-instrument")!;
     const { state: next } = applyChoice(state, event, "pick-up", rng, mockPack);
-    expect(next.sprite.shirt).toBe("band-shirt");
+    expect(next.sprite.look).toBe("look-teen-band");
   });
 
   it("adds the event to seenEventIds", () => {

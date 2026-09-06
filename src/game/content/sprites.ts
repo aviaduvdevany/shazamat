@@ -5,34 +5,18 @@ export const spriteCatalog: SpriteCatalog = {
   gridSize: 64,
   scale: 4,
 
-  parts: [
-    // Bodies
-    { id: "body-child", layer: "body", file: "game/sprites/body/body-child.png", label: "גוף ילד" },
-    { id: "body-teen", layer: "body", file: "game/sprites/body/body-teen.png", label: "גוף נוער" },
-    // Pants
-    { id: "pants-jeans", layer: "pants", file: "game/sprites/pants/pants-jeans.png", label: "ג׳ינס" },
-    // Shirts
-    { id: "shirt-basic", layer: "shirt", file: "game/sprites/shirt/shirt-basic.png", label: "חולצה בסיסית" },
-    { id: "shirt-band", layer: "shirt", file: "game/sprites/shirt/shirt-band.png", label: "חולצת להקה" },
-    // Hair
-    { id: "hair-short", layer: "hair", file: "game/sprites/hair/hair-short.png", label: "שיער קצר" },
-    // Accessories
-    { id: "accessory-band-patch", layer: "accessory", file: "game/sprites/accessory/accessory-band-patch.png", label: "טלאי להקה" },
-    { id: "accessory-drumsticks", layer: "accessory", file: "game/sprites/accessory/accessory-drumsticks.png", label: "מקלות תופים" },
-    // Instruments
-    { id: "instrument-guitar-small", layer: "instrument", file: "game/sprites/instrument/instrument-guitar-small.png", label: "גיטרה קטנה" },
-    { id: "instrument-bass", layer: "instrument", file: "game/sprites/instrument/instrument-bass.png", label: "בס" },
-    // Expressions — adult (diffed against body-adult)
-    { id: "expression-neutral", layer: "expression", file: "game/sprites/expression/expression-neutral.png", label: "ניטרלי" },
-    { id: "expression-happy", layer: "expression", file: "game/sprites/expression/expression-happy.png", label: "שמח" },
-    { id: "expression-worried", layer: "expression", file: "game/sprites/expression/expression-worried.png", label: "מוטרד" },
-    // Expressions — child (diffed against body-child, face at child proportions)
-    { id: "expression-neutral-child", layer: "expression", file: "game/sprites/expression/expression-neutral-child.png", label: "ניטרלי (ילד)" },
-    { id: "expression-happy-child", layer: "expression", file: "game/sprites/expression/expression-happy-child.png", label: "שמח (ילד)" },
-    { id: "expression-worried-child", layer: "expression", file: "game/sprites/expression/expression-worried-child.png", label: "מוטרד (ילד)" },
-    { id: "body-adult", layer: "body", file: "game/sprites/body/body-adult.png", label: "גוף מבוגר" },
-    { id: "hair-buzz", layer: "hair", file: "game/sprites/hair/hair-buzz.png", label: "שיער גוזז" },
-    { id: "hair-child", layer: "hair", file: "game/sprites/hair/hair-child.png", label: "שיער ילד" },
+  looks: [
+    { id: "look-child", file: "game/sprites/looks/look-child.png", label: "ילד" },
+    { id: "look-teen", file: "game/sprites/looks/look-teen.png", label: "נוער" },
+    { id: "look-teen-band", file: "game/sprites/looks/look-teen-band.png", label: "נוער — להקה" },
+    { id: "look-adult", file: "game/sprites/looks/look-adult.png", label: "מבוגר" },
+    { id: "look-soldier-nahal", file: "game/sprites/looks/look-soldier-nahal.png", label: "חייל נח״ל" },
+    { id: "look-soldier-golani", file: "game/sprites/looks/look-soldier-golani.png", label: "חייל גולני" },
+    { id: "look-trip", file: "game/sprites/looks/look-trip.png", label: "טיול" },
+    { id: "look-wolt", file: "game/sprites/looks/look-wolt.png", label: "שליח" },
+    { id: "look-hitech", file: "game/sprites/looks/look-hitech.png", label: "הייטק" },
+    { id: "look-career", file: "game/sprites/looks/look-career.png", label: "מוזיקאי" },
+    { id: "look-shazamat", file: "game/sprites/looks/look-shazamat.png", label: "שאזאמאט" },
   ],
 
   scenes: [

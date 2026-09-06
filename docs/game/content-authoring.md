@@ -49,7 +49,7 @@ export const nahalOrGolaniEvent: GameEvent = {
         { type: "affinity", memberId: "nimrod", delta: 4 },
         { type: "affinity", memberId: "itay", delta: 4 },
         { type: "setFlag", key: "armyUnit", value: "nahal" },
-        { type: "spriteSet", layer: "shirt", partId: "shirt-army-nahal" },
+        { type: "spriteSet", look: "look-soldier-nahal" },
       ],
     },
     {
@@ -58,7 +58,7 @@ export const nahalOrGolaniEvent: GameEvent = {
       effects: [
         { type: "affinity", memberId: "shay", delta: 8 },
         { type: "setFlag", key: "armyUnit", value: "golani" },
-        { type: "spriteSet", layer: "shirt", partId: "shirt-army-golani" },
+        { type: "spriteSet", look: "look-soldier-golani" },
       ],
     },
   ],
@@ -195,15 +195,9 @@ Effects are what a choice does to the game state.
 { type: "setFlag", key: "travelDestination", value: "india" }
 { type: "setFlag", key: "tookDrug", value: true }
 
-// Sprite: set a single layer
-{ type: "spriteSet", layer: "body", partId: "body-soldier" }
-{ type: "spriteSet", layer: "shirt", partId: "shirt-army-nahal" }
-
-// Sprite: add an accessory (stacks, persists for the rest of the run)
-{ type: "spriteAddAccessory", partId: "accessory-stupid-hat" }
-
-// Sprite: remove an accessory
-{ type: "spriteRemoveAccessory", partId: "accessory-stupid-hat" }
+// Sprite: swap the complete look
+{ type: "spriteSet", look: "look-soldier-nahal" }
+{ type: "spriteSet", look: "look-soldier-golani" }
 
 // Advance stage immediately (useful for "trip ended early" events)
 { type: "advanceStage" }
@@ -283,8 +277,7 @@ In `src/game/content/stages.ts`:
   ageLabel: "גילאי 18–21",
   eventCount: 3,           // how many events to play before stage-clear
   onEnter: [
-    { type: "spriteSet", layer: "body", partId: "body-soldier" },
-    { type: "spriteSet", layer: "shirt", partId: "shirt-army-nahal" }, // default
+    { type: "spriteSet", look: "look-soldier-nahal" },
   ],
 },
 ```
@@ -295,9 +288,9 @@ Stages are played in array order. Insert the new stage at the correct position.
 
 At least one event with `stage: "army"` must exist or the validator will fail.
 
-### 3. Add sprite parts for the new life phase
+### 3. Add a look for the new life phase
 
-See [Adding sprite parts](#adding-sprite-parts) below.
+See [Adding looks](#adding-looks) below.
 
 ### 4. Validate
 
@@ -307,22 +300,24 @@ npm run game:validate
 
 ---
 
-## Adding sprite parts
+## Adding looks
+
+Looks are complete 64×64 dressed characters. Do not add hair/shirt/pants overlays.
 
 ### 1. Create the PNG
 
-- Sprite parts: **64×64 px** (or 128×128 for @2x)
+- Looks: **64×64 px**, fully clothed, with hair and face
 - Scene backgrounds: **160×144 px**
 - Member portraits: **96×96 px**
 - Format: PNG with transparency
-- Tool: Aseprite, Photoshop, or any pixel editor
+- Prefer PixelLab: generate `look-adult`, then `edit-image-pixen` / style-lock for variants
 
-Name the file with the layer prefix for clarity: `body-soldier.png`, `shirt-army-nahal.png`, `accessory-stupid-hat.png`.
+Name the file `look-[stage-or-job].png`. Example: `look-soldier-nahal.png`.
 
 ### 2. Place the file
 
 ```
-public/game/sprites/[layer]/[filename].png
+public/game/sprites/looks/[id].png
 public/game/scenes/[filename].png
 public/game/members/[memberId]-portrait.png
 ```
@@ -332,13 +327,12 @@ public/game/members/[memberId]-portrait.png
 Open `src/game/content/sprites.ts` and add one entry:
 
 ```ts
-parts: [
-  // … existing parts …
+looks: [
+  // … existing looks …
   {
-    id: "body-soldier",
-    layer: "body",
-    file: "game/sprites/body/body-soldier.png",
-    label: "גוף חייל",   // optional, for admin UI later
+    id: "look-soldier-nahal",
+    file: "game/sprites/looks/look-soldier-nahal.png",
+    label: "חייל נח״ל",
   },
 ],
 ```
@@ -355,7 +349,7 @@ scenes: [
 ### 4. Reference from an event
 
 ```ts
-{ type: "spriteSet", layer: "body", partId: "body-soldier" }
+{ type: "spriteSet", look: "look-soldier-nahal" }
 // or as a scene:
 scene: "army-base"
 ```
@@ -366,7 +360,7 @@ scene: "army-base"
 npm run game:validate
 ```
 
-The validator checks every `part.file` and `scene.file` exists on disk at build time. Missing files fail the build.
+The validator checks every `look.file` and `scene.file` exists on disk at build time. Missing files fail the build.
 
 ---
 

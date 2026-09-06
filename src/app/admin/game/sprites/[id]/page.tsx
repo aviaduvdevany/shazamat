@@ -56,7 +56,6 @@ export default async function AssetPage({ params }: Props) {
           canvas: asset.canvas,
           model: asset.model,
           styleRef: asset.styleRef,
-          layer: asset.layer,
           promptSeed: asset.promptSeed,
           noBackground: asset.noBackground,
         }}

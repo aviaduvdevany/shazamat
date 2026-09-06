@@ -58,7 +58,7 @@ GameState {
   affinities: Record<string, number>  // aviad, itay, nimrod, shay, reef, nir, gidon
   flags: Record<string, string|number|boolean>  // open; use Flags catalog for autocomplete
 
-  sprite: SpriteLoadout    // which part is active per layer
+  sprite: SpriteLoadout    // which complete look PNG is showing
   seenEventIds: string[]   // enforces oncePerRun
 
   log: LogEntry[]          // choice + outcome per event; drives recap text
@@ -80,7 +80,7 @@ All in `src/game/engine/engine.ts`. All are pure.
 
 ### `createRun({ runId, seed, contentVersion }, pack) → GameState`
 
-Initialises stats from `pack.stats[].initial`, sets all affinities to 0, applies `pack.stages[0].onEnter` effects (e.g. sets the child body sprite).
+Initialises stats from `pack.stats[].initial`, sets all affinities to 0, applies `pack.stages[0].onEnter` effects (e.g. sets the child look).
 
 ### `selectNextEvent(state, pack, rng) → SelectResult`
 
@@ -110,7 +110,7 @@ Selection algorithm:
 
 ### `advanceStage(state, pack) → GameState`
 
-Increments `stageIndex`. If beyond last stage → `phase: "ending"`. Applies `onEnter` effects for the new stage (sprite body swap, etc.).
+Increments `stageIndex`. If beyond last stage → `phase: "ending"`. Applies `onEnter` effects for the new stage (look swap, etc.).
 
 ### `resolveEnding(state, pack) → MemberId`
 
@@ -165,9 +165,7 @@ Events use `requires` to gate their appearance. Choices can also use `requires` 
 | `stat` | `stats[id] += delta` (clamped to min/max) |
 | `affinity` | `affinities[memberId] += delta` (floor 0) |
 | `setFlag` | `flags[key] = value` |
-| `spriteSet` | Sets one sprite layer (body, shirt, etc.) |
-| `spriteAddAccessory` | Appends to `sprite.accessories` (stacks, persists) |
-| `spriteRemoveAccessory` | Removes one accessory by id |
+| `spriteSet` | Swaps the complete player look (`look-child`, `look-soldier-golani`, …) |
 | `advanceStage` | Triggers stage advance immediately after this event |
 | `gotoEvent` | Forces a specific event next (sets `pendingEventId`) |
 
@@ -175,17 +173,11 @@ Events use `requires` to gate their appearance. Choices can also use `requires` 
 
 ## Sprite compositor
 
-`src/game/ui/SpritePortrait.tsx` renders layers in order:
+`src/game/ui/SpritePortrait.tsx` draws **one complete 64×64 look** over the scene. No paper-doll layers.
 
-```
-body → pants → shirt → hair → accessories[] → instrument → expression
-```
+Grid contract: every look PNG is **64×64 px**. Displayed at **4× scale** via CSS (`width: 256px`, `image-rendering: pixelated`). Scene backgrounds are **160×144 px**.
 
-Each layer is a `position: absolute` div with `background-image` set to the part's PNG path. The scene background is behind all layers.
-
-Grid contract: every part PNG is **64×64 px** (or 128×128 for @2x). Displayed at **4× scale** via CSS (`width: 256px`, `image-rendering: pixelated`). Scene backgrounds are **160×144 px**.
-
-The `SpriteCatalog` in `src/game/content/sprites.ts` maps every part id to a file path under `public/game/`. The validator checks that every referenced file exists.
+The `SpriteCatalog` in `src/game/content/sprites.ts` maps every look id to a file path under `public/game/sprites/looks/`. The validator checks that every referenced file exists.
 
 ---
 

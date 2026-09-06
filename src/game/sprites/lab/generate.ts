@@ -3,15 +3,14 @@
  * Called by both the CLI (scripts/sprites.ts) and the admin server actions.
  *
  * Flow per asset:
- *   1. Determine model (pixen / pixflux / style / inpaint / photo)
+ *   1. Determine model (pixen / pixflux / style / edit / photo)
  *   2. Call PixelLab API
  *   3. Post-process (palette snap, correct, alpha wipe)
  *   4. QA check
  *   5. Save to .sprites/ store
  *
- * Layer extraction (inpaint) assets also need:
- *   - The approved processed PNG of their styleRef body
- *   - A generated white mask for the target layer region
+ * Edit assets (model=edit) need a processed PNG of styleRef (approved, or
+ * the latest draft). The full edited composite is the sprite.
  */
 
 import path from "path";
@@ -22,20 +21,13 @@ import {
   PixelLabClient,
   bufferToPixelLabImage,
   pixelLabImageToBuffer,
-  type PixelLabImage,
+  extractJobImage,
 } from "./client";
 import { composePrompt } from "./prompts";
 import { processSprite, qaCheck } from "./process";
 import {
-  buildMaskPng,
-  isolateLayer,
-  toInpaintImage,
-  extractLayerByDiff,
-  pasteOntoCanvas,
-} from "./extract";
-import {
   saveVersion,
-  getApprovedBuffer,
+  getReferenceBuffer,
   type VersionMeta,
 } from "./store";
 import { ensurePalettePng, palettePngToBase64 } from "./palette";
@@ -107,7 +99,7 @@ export async function generateOne(
       if (!asset.styleRef) {
         throw new Error(`Asset "${asset.id}" has model=style but no styleRef`);
       }
-      const styleBuffer = getApprovedBuffer(asset.styleRef);
+      const styleBuffer = getReferenceBuffer(asset.styleRef);
       const styleRefAsset = getAsset(asset.styleRef);
       const [styleW, styleH] = styleRefAsset?.canvas ?? [64, 64];
       const job = await client.generateWithStyle({
@@ -120,146 +112,28 @@ export async function generateOne(
       });
       jobId = job.background_job_id;
       const result = await client.waitForJob(jobId);
-      const imgData = result.image as PixelLabImage | undefined;
-      if (!imgData?.base64) {
-        throw new Error(`generateWithStyle job ${jobId} returned no image`);
-      }
-      rawBuffer = pixelLabImageToBuffer(imgData);
+      rawBuffer = pixelLabImageToBuffer(extractJobImage(result, jobId));
       break;
     }
 
-    case "inpaint": {
-      if (!asset.styleRef || !asset.layer) {
-        throw new Error(`Asset "${asset.id}" has model=inpaint but missing styleRef or layer`);
+    // Instruction edit that keeps the full dressed sprite. 500-char limit —
+    // use promptSeed directly, not the composed style preamble.
+    case "edit": {
+      if (!asset.styleRef) {
+        throw new Error(`Asset "${asset.id}" has model=edit but no styleRef`);
       }
-      const bodyBuffer = getApprovedBuffer(asset.styleRef);
-      const maskBuffer = await buildMaskPng(
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-
-      const job = await client.inpaintV3({
-        description,
-        inpainting_image: toInpaintImage(bodyBuffer, { width: 64, height: 64 }),
-        mask_image: toInpaintImage(maskBuffer, { width: 64, height: 64 }),
-        no_background: true,
-        crop_to_mask: false,
-        seed,
-      });
-      jobId = job.background_job_id;
-      const result = await client.waitForJob(jobId);
-      const imgData = result.image as PixelLabImage | undefined;
-      if (!imgData?.base64) {
-        throw new Error(`inpaintV3 job ${jobId} returned no image`);
-      }
-      // Isolate only the layer region — everything outside becomes transparent
-      const inpaintFull = pixelLabImageToBuffer(imgData);
-      rawBuffer = await isolateLayer(
-        inpaintFull,
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-      break;
-    }
-
-    // ── Approach A: edit-image-pixen + pixel diff ─────────────────────────────
-    // Sends the approved body PNG to edit-image-pixen with a hair instruction.
-    // Because the model preserves unchanged pixels verbatim, diffing edited vs
-    // original yields clean hair-only pixels with no face contamination.
-    // NOTE: edit-image-pixen has a 500-char description limit — use promptSeed
-    // directly (not the full composed description with the style preamble).
-    case "edit-diff": {
-      if (!asset.styleRef || !asset.layer) {
-        throw new Error(`Asset "${asset.id}" has model=edit-diff but missing styleRef or layer`);
-      }
-      const bodyBuffer = getApprovedBuffer(asset.styleRef);
+      const baseBuffer = getReferenceBuffer(asset.styleRef);
       const job = await client.editImagePixen({
-        image: bufferToPixelLabImage(bodyBuffer),
-        description: asset.promptSeed, // 500-char limit — skip style preamble
+        image: bufferToPixelLabImage(baseBuffer),
+        description: asset.promptSeed,
         width: w,
         height: h,
+        no_background: asset.noBackground,
         seed,
       });
       jobId = job.background_job_id;
       const result = await client.waitForJob(jobId);
-      const imgData = result.image as PixelLabImage | undefined;
-      if (!imgData?.base64) {
-        throw new Error(`editImagePixen job ${jobId} returned no image`);
-      }
-      const editedBuffer = pixelLabImageToBuffer(imgData);
-      rawBuffer = await extractLayerByDiff(
-        editedBuffer,
-        bodyBuffer,
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-      break;
-    }
-
-    // ── Approach B: pixen-wig (standalone hair piece, exact layer size) ───────
-    // Generates a transparent hair piece at the hair-region dimensions (rounded
-    // up to the nearest multiple of 4, as required by pixen), then pastes it
-    // onto a 64×64 transparent canvas at the correct layer position.
-    case "pixen-wig": {
-      if (!asset.layer) {
-        throw new Error(`Asset "${asset.id}" has model=pixen-wig but missing layer`);
-      }
-      const { LAYER_BOXES: boxes } = await import("./extract");
-      const box = boxes[asset.layer as keyof typeof boxes];
-      // pixen requires: divisible by 4, and square when either side < 32
-      let wigW = Math.ceil(box.w / 4) * 4;
-      let wigH = Math.ceil(box.h / 4) * 4;
-      if (wigW < 32 || wigH < 32) {
-        const sq = Math.max(wigW, wigH, 32);
-        wigW = sq;
-        wigH = sq;
-      }
-      const wigRes = await client.createImagePixen({
-        description,
-        image_size: { width: wigW, height: wigH },
-        outline: "single color black outline",
-        detail: "highly detailed",
-        direction: "south",
-        no_background: true,
-        background_removal_task: "remove_complex_background",
-        seed,
-      });
-      const wigBuffer = pixelLabImageToBuffer(wigRes.image);
-      rawBuffer = await pasteOntoCanvas(
-        wigBuffer,
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-      costUsd = wigRes.usage?.usd ?? undefined;
-      break;
-    }
-
-    // ── Approach C: bitforge — style-guided inpaint with no_background ────────
-    // Uses /create-image-bitforge which supports style_image + inpainting +
-    // transparent background in a single cheap (~$0.007) synchronous call.
-    // Result still needs isolateLayer because the body background isn't
-    // fully transparent — but cheaper than inpaint-v3 and no Tier-1 needed.
-    case "bitforge": {
-      if (!asset.styleRef || !asset.layer) {
-        throw new Error(`Asset "${asset.id}" has model=bitforge but missing styleRef or layer`);
-      }
-      const bodyBuffer = getApprovedBuffer(asset.styleRef);
-      const maskBuffer = await buildMaskPng(
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-      const res = await client.createImageBitforge({
-        description,
-        image_size: { width: w, height: h },
-        style_image: bufferToPixelLabImage(bodyBuffer),
-        inpainting_image: bufferToPixelLabImage(bodyBuffer),
-        mask_image: bufferToPixelLabImage(maskBuffer),
-        no_background: true,
-        outline: "single color black outline",
-        detail: "highly detailed",
-        seed,
-      });
-      const bitBuffer = pixelLabImageToBuffer(res.image);
-      rawBuffer = await isolateLayer(
-        bitBuffer,
-        asset.layer as keyof typeof import("./extract").LAYER_BOXES
-      );
-      costUsd = res.usage?.usd ?? undefined;
+      rawBuffer = pixelLabImageToBuffer(extractJobImage(result, jobId));
       break;
     }
 
@@ -295,11 +169,7 @@ export async function generateOne(
         });
         jobId = job.background_job_id;
         const result = await client.waitForJob(jobId);
-        const imgData = result.image as PixelLabImage | undefined;
-        if (!imgData?.base64) {
-          throw new Error(`imageToPixelartPro job ${jobId} returned no image`);
-        }
-        rawBuffer = pixelLabImageToBuffer(imgData);
+        rawBuffer = pixelLabImageToBuffer(extractJobImage(result, jobId));
       }
       break;
     }

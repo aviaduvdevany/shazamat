@@ -21,10 +21,7 @@ const BATCH_COLORS: Record<AssetBatch, string> = {
   C: "text-cyan-400 border-cyan-400/30 bg-cyan-400/5",
 };
 
-const FAMILIES: AssetFamily[] = [
-  "body", "pants", "shirt", "hair", "expression",
-  "accessory", "instrument", "scene", "portrait",
-];
+const FAMILIES: AssetFamily[] = ["look", "scene", "portrait", "ui"];
 
 export function InventoryGrid({ rows }: Props) {
   const [batchFilter, setBatchFilter] = useState<AssetBatch | "all">("all");

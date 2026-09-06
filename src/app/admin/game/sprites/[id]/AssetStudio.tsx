@@ -15,7 +15,6 @@ interface AssetInfo {
   canvas: [number, number];
   model: string;
   styleRef?: string;
-  layer?: string;
   promptSeed: string;
   noBackground: boolean;
 }
@@ -250,17 +249,12 @@ export function AssetStudio({ asset, versions: initVersions, approvedVersionId: 
           </div>
 
           {/* Compositor playground */}
-          {(asset.family === "body" || asset.family === "pants" || asset.family === "shirt" || asset.family === "hair" || asset.family === "expression" || asset.family === "accessory" || asset.family === "instrument") && selectedVersion && (
+          {asset.family === "look" && selectedVersion && (
             <div className="space-y-2">
               <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
-                Compositor
+                In scene
               </h3>
-              <CompositorPreview
-                assetId={asset.id}
-                family={asset.family}
-                layer={asset.layer}
-                processedPngUrl={selectedVersion.processedPngUrl}
-              />
+              <CompositorPreview processedPngUrl={selectedVersion.processedPngUrl} />
             </div>
           )}
 

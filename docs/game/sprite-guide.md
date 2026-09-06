@@ -27,7 +27,7 @@ This doc is the art track. Motion and timing live in [`ux-plan.md`](./ux-plan.md
 
 ## 1. What you are making
 
-**שאזאמאט: החיים** is a 5-minute Hebrew life simulator. The player lives from childhood to joining the band Shazamat. Choices mutate a layered paper-doll sprite. At the end they discover which of the seven real members they became.
+**שאזאמאט: החיים** is a 5-minute Hebrew life simulator. The player lives from childhood to joining the band Shazamat. Choices swap a complete dressed look — one 64×64 PNG, not stacked hair/shirt overlays. At the end they discover which of the seven real members they became.
 
 Today every PNG is a solid-color placeholder. Your job is to replace those files and add the missing ones so a full run looks like a real pixel-art game.
 
@@ -35,7 +35,7 @@ Three asset families:
 
 | Family | Role | Size | Count in this pack |
 |---|---|---|---|
-| **Sprite parts** | Modular layers composited into the player | 64×64 | 39 |
+| **Looks** | Complete dressed characters (hair, clothes, face) | 64×64 | 11 |
 | **Scenes** | Event backgrounds behind the player | 160×144 | 28 |
 | **Member portraits** | Ending reveal busts of the real seven | 96×96 | 7 |
 
@@ -53,7 +53,7 @@ Violate any of these and the asset will not drop into the game.
 
 | Asset | Canvas | Displayed at | Notes |
 |---|---|---|---|
-| Sprite part | **64×64 px** | 256×256 (4× CSS scale) | `image-rendering: pixelated` |
+| Look | **64×64 px** | 256×256 (4× CSS scale) | `image-rendering: pixelated` |
 | Scene | **160×144 px** | `background-size: cover` on a tall phone viewport | Literal Game Boy resolution |
 | Member portrait | **96×96 px** | 120×120 with a 3px `#DB7738` border | Ending + share page |
 | HUD icon (optional) | **16×16 px** | 16–20 CSS px | Replaces emoji later |
@@ -63,7 +63,7 @@ Do **not** deliver 128×128 @2x unless asked. One size per file.
 ### File format
 
 - PNG-24 (or indexed PNG) with a **real alpha channel**
-- Sprite parts and portraits: transparent background, no matte, no drop-shadow halo
+- Looks and portraits: transparent background, no matte, no drop-shadow halo
 - Scenes: **fully opaque**, no transparency
 - sRGB, no weird ICC that shifts `#DB7738`
 - No JPEG, no WebP, no SVG
@@ -74,46 +74,29 @@ Do **not** deliver 128×128 @2x unless asked. One size per file.
 Overwrite placeholders in place. New files use the same pattern.
 
 ```
-public/game/sprites/body/{id}.png
-public/game/sprites/pants/{id}.png
-public/game/sprites/shirt/{id}.png
-public/game/sprites/hair/{id}.png
-public/game/sprites/accessory/{id}.png
-public/game/sprites/instrument/{id}.png
-public/game/sprites/expression/{id}.png
+public/game/sprites/looks/{id}.png
 public/game/scenes/{id}.png
 public/game/members/{memberId}-portrait.png
 public/game/ui/{id}.png
 ```
 
-`id` is the exact string in the inventory tables. Example: `body-child` → `public/game/sprites/body/body-child.png`.
+`id` is the exact string in the inventory tables. Example: `look-child` → `public/game/sprites/looks/look-child.png`.
 
 Existing placeholders you must overwrite (same path, same size, real art):
 
 ```
-body-child  body-teen
-pants-jeans
-shirt-basic  shirt-band
-hair-short
-accessory-band-patch  accessory-drumsticks
-instrument-guitar-small  instrument-bass
-expression-neutral  expression-happy  expression-worried
+look-child  look-teen  look-teen-band  look-adult
+look-soldier-nahal  look-soldier-golani
 childhood-bedroom  school-stage  school-practice-room  school-classroom
 aviad-portrait  itay-portrait  nimrod-portrait  shay-portrait
 reef-portrait  nir-portrait  gidon-portrait
 ```
 
-### Compositor (how layers stack)
+### Compositor (one PNG)
 
-The game stacks PNGs, all aligned to the same 64×64 canvas, in this order (bottom → top):
+The game draws **one look** over the scene. Hair, clothes, face, and shoes live in the same file.
 
-```
-body → pants → shirt → hair → instrument → expression → accessories[]
-```
-
-Accessories stack on top of everything and persist for the rest of the run. Design them as **sparse overlays** (hat crown, shoulder straps, glasses) — never a full-body redraw.
-
-Because accessories draw last, a backpack cannot sit behind the torso. Draw only **straps on the shoulders + pouches peeking on the left/right edges**.
+Do **not** deliver bald bodies, isolated hair wigs, shirt cutouts, or expression overlays. PixelLab cannot register those at 64×64. Generate a complete adult, then edit that image into the other looks.
 
 ### Scene dimming (critical)
 
@@ -158,9 +141,7 @@ All parts share this skeleton. Feet on the bottom. Centered on X.
 | Feet contact | y=62–63, no floating | same |
 
 - Front-facing only. No walk cycle, no side view, no sprite sheet.
-- Body includes **skin + simple dark underwear** so a missing shirt/pants layer never looks nude.
-- Body head is a **bald scalp** (skin-tone dome). Hair is a separate layer.
-- Body face is a **neutral base** (simple eyes + mouth). Expression layers redraw the face pixels only.
+- Every look is **fully clothed** with hair and a face. Never deliver a bald underwear mannequin.
 - 1px outline in `#1A120C`. No second outline. No glow.
 - Keep a 1px transparent margin on the canvas edges except the shoes, which may touch y=63.
 
@@ -189,7 +170,7 @@ Pixel translation:
 ### Steal from
 
 - Earthbound / Mother 3 overworld sprites (proportion, ugliness, clarity)
-- Recettear / Stardew **layering method only** (paper-doll), not their pastoral look
+- Recettear / Stardew **silhouette clarity only**, not their paper-doll layering and not their pastoral look
 - The Friends of Ringo Ishikawa (street grit at low res)
 - Game Boy Color screens (160×144 discipline)
 - Habbo silhouette clarity — then make it dirtier
@@ -283,62 +264,54 @@ Nir's portrait only may use ginger: `#C45A2A` / `#E07A3A` / `#8A3A18`.
 
 ## 5. Character system
 
-### Layer jobs
+### Looks, not layers
 
-| Layer | Job | Persistence |
+The player is one complete PNG at a time. Stage enter (and a few choices) swap the look.
+
+Generate **`look-adult` first** — fully dressed, short dark hair, dirty-white tee, jeans, black shoes, Mediterranean skin, Earthbound face. Every other look is an edit of that file (or of another look).
+
+PixelLab routes:
+
+1. `create-image-pixen` → `look-adult`
+2. `edit-image-pixen` → every other look (age jumps and outfit / hair variants). **Keep the full result.** Do not cut layers out of it.
+
+### Look progression
+
+Same person aging. Same face structure. Mediterranean skin.
+
+| id | Age | What is in the file |
 |---|---|---|
-| `body` | Skin, head dome, arms, legs, underwear, shoes | Swaps on stage enter |
-| `pants` | From hips to shoes, covers body legs | Stage or job |
-| `shirt` | Torso + sleeves. Must not hide the neck seam | Stage, army unit, day job, band |
-| `hair` | Scalp + bangs + sides. Overflow into y=2–5 is allowed | Stage (buzz in army) |
-| `instrument` | Held in front of torso | Only if they joined a band — **generic guitar**, never the ending instrument |
-| `expression` | Redraws eyes, brows, mouth inside the face box | Swaps on outcome (happy / worried) |
-| `accessory` | Sparse overlay, stacks, lasts the rest of the run | Choice scars |
+| `look-child` | 6–12 | Big head, messy kid hair, soccer shorts, sand tee, sneakers |
+| `look-teen` | 13–18 | Lanky, short dark hair, sand tee, jeans, worn sneakers |
+| `look-teen-band` | 13–18 | Same teen, black band tee |
+| `look-soldier-nahal` | 18–21 | Olive uniform, buzz, combat boots, dull tag, no yellow |
+| `look-soldier-golani` | 18–21 | Same soldier + one Golani yellow `#D4A01A` chest tag |
+| `look-adult` | 21+ | Settled adult, short hair, sand tee, jeans, black shoes |
+| `look-trip` | 21–23 | Grown hair, travel clothes, backpack |
+| `look-wolt` | 23–27 | Teal courier shirt `#00C2B8` |
+| `look-hitech` | 23–27 | Pale button-down or navy polo |
+| `look-career` | 27–30 | Black musician tee, cheap chinos |
+| `look-shazamat` | now | Black merch tee + stage jeans, no ending instrument |
 
-### Body progression
-
-Four bodies. Same skeleton, different proportions.
-
-| id | Age | Proportions | Notes |
-|---|---|---|---|
-| `body-child` | 6–12 | Big head, short legs, rounder belly, sneakers | Soft, not baby-chibi |
-| `body-teen` | 13–18 | Lanky, slightly too-long arms, awkward stance | Adam's apple optional as 1px |
-| `body-soldier` | 18–21 | Adult, broader shoulders, more upright | Still bald scalp — hair-buzz goes on top |
-| `body-adult` | 21+ | Settled adult, same height as soldier, looser stance | Used from trip through Shazamat |
-
-All four: Mediterranean skin, same face structure so the player feels like one person aging.
-
-### Expression language
-
-Tiny. 2–3 pixels of mouth, 2-pixel eyes. Earthbound, not anime.
-
-| id | Face | When the UI will use it |
-|---|---|---|
-| `expression-neutral` | Flat mouth, open eyes | Default |
-| `expression-happy` | Small open grin, squinted eyes | Good stat hits |
-| `expression-worried` | Tight mouth, raised inner brows | Bad outcomes, tense cards |
-| `expression-shocked` | Round mouth, white-round eyes | Bad trip, rare punch |
-| `expression-smug` | Half-smile, half-lidded | High-swag beats |
-
-Expression files are **face pixels only** + transparency. Do not redraw hair or ears.
+Copy and the scene carry mood. Do not ship separate expression overlays.
 
 ---
 
 ## 6. How the player looks per stage
 
-This is the visual story. Generate parts so these loadouts work.
+This is the visual story. Each row is one file.
 
-| Stage | body | pants | shirt | hair | typical accessory | instrument |
-|---|---|---|---|---|---|---|
-| ילדות (6–12) | `body-child` | `pants-shorts` | `shirt-basic` | `hair-child` | — | — |
-| בית ספר (13–18) | `body-teen` | `pants-jeans` | `shirt-basic` or `shirt-band` | `hair-short` | `accessory-band-patch` if they joined | `instrument-guitar-small` if they joined |
-| צבא (18–21) | `body-soldier` | `pants-army` | `shirt-army-nahal` or `shirt-army-golani` | `hair-buzz` | `accessory-dog-tags` | — |
-| טיול (21–23) | `body-adult` | `pants-travel` | `shirt-travel` | `hair-grown` | `accessory-backpack` | — |
-| בחזרה לארץ (23–27) | `body-adult` | `pants-jeans` | `shirt-basic` / `shirt-wolt` / `shirt-hitech` | `hair-short` | spray stain if graffiti | — |
-| הקריירה (27–30) | `body-adult` | `pants-casual` | `shirt-musician` | `hair-short` | `accessory-headphones` optional | `instrument-guitar` if music-only path |
-| שאזאמאט (now) | `body-adult` | `pants-stage` | `shirt-shazamat` (or `shirt-band`) | `hair-short` | — | **none** — ending portrait carries the instrument |
+| Stage | look |
+|---|---|
+| ילדות (6–12) | `look-child` |
+| בית ספר (13–18) | `look-teen` (choice may swap `look-teen-band`) |
+| צבא (18–21) | `look-soldier-nahal` or `look-soldier-golani` |
+| טיול (21–23) | `look-trip` |
+| בחזרה לארץ (23–27) | `look-adult` / `look-wolt` / `look-hitech` |
+| הקריירה (27–30) | `look-career` |
+| שאזאמאט (now) | `look-shazamat` — **no instrument**; the ending portrait carries it |
 
-Default starting loadout the engine already sets: `body-child` + `expression-neutral`. Clothes beyond that are new files the content pack will wire after art lands.
+Default starting look the engine already sets: `look-child`.
 
 ---
 
@@ -390,7 +363,7 @@ sprite sheet, animation frames, multiple poses, side view
 1. Generate at the **exact canvas size**. Do not generate 1024 and downscale with bicubic. If the tool only exports large, downscale with **nearest neighbor** to the target.
 2. After downscale: posterize to the shared palette, wipe any semi-transparent edge pixels to full transparent or full outline.
 3. Verify canvas size with a script (`64×64`, `160×144`, `96×96`) before delivery.
-4. Parts that must align (body/pants/shirt/hair/expression) should be generated as a **set from one base pose**. Best workflow: draw or generate `body-adult` first, then paint clothes on copies. If using a model, generate the body, then inpaint clothes in the torso/leg boxes.
+4. Looks that must feel like one person should be generated as a **set from `look-adult`**. Best workflow: generate the complete adult, then edit clothes/age on copies. Never generate bald bodies or isolated hair.
 5. Deliver a contact sheet PNG per batch (optional) plus the individual files.
 
 ---
@@ -401,93 +374,23 @@ sprite sheet, animation frames, multiple poses, side view
 
 **Batch:** `A` = ship the game looking real (do this first). `B` = scars + stage identity. `C` = destination color + extras.
 
-### 8.1 Bodies — `public/game/sprites/body/` — 64×64
+### 8.1 Looks — `public/game/sprites/looks/` — 64×64
+
+Complete dressed sprites. Generate `look-adult` first, then style/edit the rest.
 
 | id | batch | status | Prompt seed |
 |---|---|---|---|
-| `body-child` | A | REPLACE | Age 8 Israeli boy, big head, short legs, dark briefs + undershirt, cheap sneakers, bald scalp, neutral face, arms at sides |
-| `body-teen` | A | REPLACE | Age 16 Israeli teen, lanky, awkward, dark briefs, same sneakers worn down, bald scalp, same face aged up |
-| `body-soldier` | A | NEW | Age 19, broader shoulders, upright, same underwear rule, combat boots in olive-brown, bald scalp |
-| `body-adult` | A | NEW | Age 25–30, settled stance, same face, dark socks + simple black shoes, bald scalp |
-
-### 8.2 Pants — `public/game/sprites/pants/` — 64×64
-
-Cover y=42–63. Transparent above the waist. Must match the body they sit on (generate adult pants against `body-adult`; child shorts against `body-child`).
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `pants-shorts` | A | NEW | Kid soccer shorts, dusty blue-gray, sitting on child hips |
-| `pants-jeans` | A | REPLACE | Teen/adult blue jeans `#3A4A6A`, simple, slightly too long |
-| `pants-army` | A | NEW | IDF olive trousers, straight, bloused onto boots |
-| `pants-travel` | B | NEW | Ridiculous backpacker pants — faded maroon or dirty linen, one cargo pocket |
-| `pants-casual` | B | NEW | Black cheap chinos, Tel Aviv bartender energy |
-| `pants-stage` | B | NEW | Tight black stage jeans, 1px orange stitch as the only accent |
-
-### 8.3 Shirts — `public/game/sprites/shirt/` — 64×64
-
-Cover y=24–44. Neck hole shows body skin. Short sleeves unless noted.
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `shirt-basic` | A | REPLACE | Dirty-white / sand tee `#D4C8B8`, no print, slightly too big |
-| `shirt-band` | A | REPLACE | Black tee, tiny unreadable white band mark (not a real logo), teenage metal energy |
-| `shirt-army-nahal` | A | NEW | IDF olive shirt, small dull unit tag, **no** yellow |
-| `shirt-army-golani` | A | NEW | Same olive shirt, **one** Golani yellow `#D4A01A` tag on the chest — this is the only visual difference from Nahal |
-| `shirt-travel` | B | NEW | Sun-faded tank or open shirt, backpacker, a bit stupid |
-| `shirt-wolt` | B | NEW | Teal-cyan courier shirt / light jacket `#00C2B8`, food-bag strap hint on one shoulder |
-| `shirt-hitech` | B | NEW | Pale button-down or navy polo, the "I still have a job" shirt |
-| `shirt-musician` | B | NEW | Black faded tee, nothing printed, career musician default |
-| `shirt-shazamat` | B | NEW | Black tee, tiny white shin-like mark, one orange `#DB7738` hem tick — official merch energy without using the real logo |
-
-### 8.4 Hair — `public/game/sprites/hair/` — 64×64
-
-Sits on the bald scalp. May overlap the top of the shirt by 1–2px. No face pixels.
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `hair-child` | A | NEW | Messy dark kid hair, slightly too long in front |
-| `hair-short` | A | REPLACE | Simple dark short hair, teen/adult default |
-| `hair-buzz` | A | NEW | Army buzz, scalp shows through, 2–3 pixel stubble |
-| `hair-grown` | B | NEW | Grown-out trip hair, a bit greasy, still dark |
-
-### 8.5 Expressions — `public/game/sprites/expression/` — 64×64
-
-Face box only. Must register on both child and adult heads (keep features in the overlapping face rectangle: x=22–41, y=8–18).
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `expression-neutral` | A | REPLACE | Flat mouth, two-pixel eyes, calm |
-| `expression-happy` | A | REPLACE | Small grin, squinted eyes |
-| `expression-worried` | A | REPLACE | Tight mouth, inner brows up |
-| `expression-shocked` | B | NEW | Round mouth, white round eyes, one-frame cartoon — still tiny |
-| `expression-smug` | B | NEW | Half-lidded, tiny smirk |
-
-### 8.6 Accessories — `public/game/sprites/accessory/` — 64×64
-
-Sparse. Transparent everywhere that is not the prop. Remember: drawn **on top** of face and instrument.
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `accessory-band-patch` | A | REPLACE | Small cloth patch on the left chest / sleeve area, not a full shirt |
-| `accessory-drumsticks` | A | REPLACE | Pair of sticks in the back pocket or one hand — do **not** imply this is the drummer ending; keep generic |
-| `accessory-backpack` | A | NEW | Shoulder straps + side pouches only, olive/dust, front view |
-| `accessory-dog-tags` | B | NEW | Tiny chain + two tags on the chest |
-| `accessory-stupid-hat` | B | NEW | Ugly bucket hat or crooked sun hat that stays forever — the scar |
-| `accessory-sunglasses` | B | NEW | Cheap black wayfarers sitting on the face box |
-| `accessory-spray-can` | B | NEW | Mini spray can in one hand + magenta stain on the fingers |
-| `accessory-headphones` | C | NEW | Over-ear cans, studio black, sit on hair |
-
-### 8.7 Instruments — `public/game/sprites/instrument/` — 64×64
-
-Held across the body, viewer's left (character's right). Silhouette must read at 64px.
-
-**Do not generate drums, keys, or a mic for the player.** Those reveal the ending.
-
-| id | batch | status | Prompt seed |
-|---|---|---|---|
-| `instrument-guitar-small` | A | REPLACE | 3/4 kid acoustic, too big for a child, cheap wood |
-| `instrument-guitar` | B | NEW | Adult electric or beaten acoustic, generic, not a famous model |
-| `instrument-bass` | A | REPLACE | Longer-neck bass silhouette — **catalog only / ending support**, not equipped mid-run |
+| `look-adult` | A | REPLACE | Age 25–30 Israeli man, complete, short dark hair, dirty-white tee `#D4C8B8`, jeans `#3A4A6A`, black shoes, Mediterranean skin, Earthbound face |
+| `look-child` | A | REPLACE | Age 8, same person, big head, messy dark kid hair, soccer shorts, sand tee, sneakers |
+| `look-teen` | A | REPLACE | Age 16, same person, lanky, short dark hair, sand tee, jeans, worn sneakers |
+| `look-teen-band` | A | REPLACE | Same teen, black tee with tiny unreadable white band mark |
+| `look-soldier-nahal` | A | REPLACE | Same man, IDF olive, buzz, combat boots, dull tag, no yellow |
+| `look-soldier-golani` | A | REPLACE | Same soldier + one Golani yellow `#D4A01A` chest tag |
+| `look-trip` | B | REPLACE | Same man, travel clothes, grown hair, backpack |
+| `look-wolt` | B | REPLACE | Same man, teal courier shirt `#00C2B8` |
+| `look-hitech` | B | REPLACE | Same man, pale button-down or navy polo |
+| `look-career` | B | REPLACE | Same man, black musician tee, cheap chinos |
+| `look-shazamat` | B | REPLACE | Same man, black merch tee + orange hem tick, stage jeans, no instrument |
 
 ### 8.8 Scenes — `public/game/scenes/` — 160×144, opaque
 
@@ -669,13 +572,7 @@ orange #DB7738 may appear as a 1px rim light only
 Deliver a zip that unpacks **directly** onto `public/game/`:
 
 ```
-sprites/body/*.png
-sprites/pants/*.png
-sprites/shirt/*.png
-sprites/hair/*.png
-sprites/accessory/*.png
-sprites/instrument/*.png
-sprites/expression/*.png
+sprites/looks/*.png
 scenes/*.png
 members/*-portrait.png
 ui/*.png                 # only if Batch C icons are included
@@ -685,23 +582,18 @@ No nested `game/` prefix inside the zip. No `IMG_0231.png`. No spaces.
 
 ### Counts
 
-| Batch | Parts | Scenes | Portraits | UI | Total |
+| Batch | Looks | Scenes | Portraits | UI | Total |
 |---|---|---|---|---|---|
-| **A — ship** | 22 | 16 | 7 | 0 | **45** |
-| **B — scars** | 16 | 6 | 0 | 0 | **22** |
-| **C — color** | 1 | 6 | 0 | 3 | **10** |
-| **Full pack** | 39 | 28 | 7 | 3 | **77** |
+| **A — ship** | 6 | 16 | 7 | 0 | **29** |
+| **B — jobs** | 5 | 6 | 0 | 0 | **11** |
+| **C — color** | 0 | 6 | 0 | 3 | **9** |
+| **Full pack** | 11 | 28 | 7 | 3 | **49** |
 
-**Batch A files (45):**
+**Batch A files (29):**
 
 ```
-body:        body-child, body-teen, body-soldier, body-adult
-pants:       pants-shorts, pants-jeans, pants-army
-shirt:       shirt-basic, shirt-band, shirt-army-nahal, shirt-army-golani
-hair:        hair-child, hair-short, hair-buzz
-expression:  expression-neutral, expression-happy, expression-worried
-accessory:   accessory-band-patch, accessory-drumsticks, accessory-backpack
-instrument:  instrument-guitar-small, instrument-bass
+looks:       look-adult, look-child, look-teen, look-teen-band,
+             look-soldier-nahal, look-soldier-golani
 scenes:      childhood-bedroom, childhood-kiosk, school-classroom,
              school-practice-room, school-stage, school-yard, school-bedroom,
              army-base, army-recruitment, trip-airport, trip-hostel,
@@ -713,18 +605,16 @@ portraits:   aviad, itay, nimrod, shay, reef, nir, gidon
 ### QA checklist (agent must pass before handoff)
 
 - [ ] Every file is the exact size in the contract
-- [ ] Every sprite part has a fully transparent background (no `#000` matte, no white matte)
+- [ ] Every look has a fully transparent background (no `#000` matte, no white matte)
+- [ ] Every look is fully clothed with hair and a face — no bald underwear mannequin
 - [ ] Every scene is fully opaque 160×144
 - [ ] No anti-aliased edge (no 50% alpha fringe). Edges are outline or transparent
-- [ ] All four bodies share the same foot line (y=62–63) and center X
-- [ ] Pants + shirts register on the matching body without a halo gap
-- [ ] Hair sits on the scalp without covering the eyes
-- [ ] Expressions only touch the face box
-- [ ] Accessories are sparse — overlaying all of them at once still reads as a person
-- [ ] Nahal vs Golani shirts differ only by the yellow tag
+- [ ] All looks share the same foot line (y=62–63) and center X
+- [ ] Child / teen / adult read as the same person aging
+- [ ] Nahal vs Golani differ only by the yellow tag
 - [ ] No readable letters anywhere
 - [ ] No official Shazamat wordmark, no orange logo
-- [ ] Player parts do not include ginger hair, a keyboard, drums, or a mic
+- [ ] Player looks do not include ginger hair, a keyboard, drums, or a mic
 - [ ] Nir's portrait is the only ginger
 - [ ] Scenes still read when you drop a 60% black overlay on them
 - [ ] Brand orange `#DB7738` appears as an accent, not a fill
@@ -735,10 +625,10 @@ portraits:   aviad, itay, nimrod, shay, reef, nir, gidon
 
 1. Overwrite / add files under `public/game/`.
 2. Register every **NEW** id in `src/game/content/sprites.ts`.
-3. Wire stage `onEnter` loadouts (body-soldier, army shirts, backpack, etc.).
+3. Wire stage `onEnter` looks (`look-soldier-nahal`, `look-trip`, etc.).
 4. Repoint event `scene:` fields per [§9](#9-event--scene-map).
 5. Run `npm run game:validate`.
-6. Play `/life` and confirm layers sit on each other at 4×.
+6. Play `/life` and confirm the look reads at 4×.
 
 ---
 
@@ -750,7 +640,7 @@ portraits:   aviad, itay, nimrod, shay, reef, nir, gidon
 - WhatsApp/Instagram story cards (1080×1920) — later, not this pack
 - Title-screen key art, OG images (those are Satori / HTML)
 - Sound, UI chrome, buttons, Hebrew lettering
-- Separate child/teen/adult versions of every shirt — one adult shirt should fit `body-teen` and `body-adult` well enough; only shorts are child-specific
+- Bald bodies, isolated hair wigs, shirt/pants cutouts, or expression overlays
 - Photoreal portraits or illustrated album-cover recreations
 - Female or androgynous player variants (endings are the seven men)
 - Extra members, extra instruments that spoil the reveal
@@ -763,15 +653,11 @@ portraits:   aviad, itay, nimrod, shay, reef, nir, gidon
 These ids already exist in `src/game/content/sprites.ts`. Reuse them. Do not rename.
 
 ```
-body-child  body-teen
-pants-jeans
-shirt-basic  shirt-band
-hair-short
-accessory-band-patch  accessory-drumsticks
-instrument-guitar-small  instrument-bass
-expression-neutral  expression-happy  expression-worried
+looks: look-child  look-teen  look-teen-band  look-adult
+       look-soldier-nahal  look-soldier-golani
+       look-trip  look-wolt  look-hitech  look-career  look-shazamat
 scenes: childhood-bedroom  school-stage  school-practice-room  school-classroom
 portraits: aviad itay nimrod shay reef nir gidon
 ```
 
-New ids in this guide are proposed and stable — the implementing agent will add them to the catalog when the PNGs land. Do not freelance alternate slugs (`body_kid`, `ArmyBase`, `kiosk.png`).
+Do not freelance alternate slugs (`body_kid`, `ArmyBase`, `kiosk.png`).

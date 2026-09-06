@@ -16,7 +16,7 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 - [x] Pure seeded engine: `createRun`, `selectNextEvent`, `applyChoice`, `advanceStage`, `resolveEnding`
 - [x] Mulberry32 seeded RNG — no `Math.random()` in the engine
 - [x] Condition evaluator: `all` / `any` / `not` / flag / stat / affinity / stage / seenEvent
-- [x] Effect system: stat, affinity, setFlag, spriteSet, spriteAddAccessory, spriteRemoveAccessory, advanceStage, gotoEvent
+- [x] Effect system: stat, affinity, setFlag, spriteSet, advanceStage, gotoEvent
 - [x] 14 Vitest unit tests (`npm run game:test`)
 - [x] Content integrity validator (`npm run game:validate`): unique ids, file refs, copy, canonical member ids
 - [x] Content pack: 7 members with Hebrew copy, 2 stats (מוזיקליות + סוואג), 2 stages (ילדות + בית ספר)
@@ -84,7 +84,7 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 
 Brief and full file list: [`docs/game/sprite-guide.md`](./sprite-guide.md).
 
-- [ ] Commission/create real 64×64 pixel-art sprite parts for: body-child, body-teen, body-soldier
+- [ ] Generate real 64×64 looks from `look-adult` (child, teen, soldiers, trip, jobs)
 - [ ] Real scene backgrounds for: childhood-bedroom, school-stage, school-practice-room, school-classroom, army-base
 - [ ] Real member portraits (96×96) for all 7 members
 

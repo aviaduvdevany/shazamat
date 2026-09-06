@@ -20,18 +20,7 @@ export const SetFlagSchema = z.object({
 
 export const SpriteSetSchema = z.object({
   type: z.literal("spriteSet"),
-  layer: z.string(),
-  partId: z.string(),
-});
-
-export const SpriteAddAccessorySchema = z.object({
-  type: z.literal("spriteAddAccessory"),
-  partId: z.string(),
-});
-
-export const SpriteRemoveAccessorySchema = z.object({
-  type: z.literal("spriteRemoveAccessory"),
-  partId: z.string(),
+  look: z.string(),
 });
 
 export const AdvanceStageSchema = z.object({
@@ -48,8 +37,6 @@ export const EffectSchema = z.discriminatedUnion("type", [
   AffinityDeltaSchema,
   SetFlagSchema,
   SpriteSetSchema,
-  SpriteAddAccessorySchema,
-  SpriteRemoveAccessorySchema,
   AdvanceStageSchema,
   GotoEventSchema,
 ]);

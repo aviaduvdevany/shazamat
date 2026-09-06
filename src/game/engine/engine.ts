@@ -22,15 +22,7 @@ export function createRun(
   for (const m of pack.members) affinities[m.id] = 0;
 
   const firstStage = pack.stages[0];
-  let sprite = {
-    body: undefined as string | undefined,
-    pants: undefined as string | undefined,
-    shirt: undefined as string | undefined,
-    hair: undefined as string | undefined,
-    accessories: [] as string[],
-    instrument: undefined as string | undefined,
-    expression: undefined as string | undefined,
-  };
+  let sprite = { look: undefined as string | undefined };
 
   // Apply onEnter effects for the first stage
   let state: GameState = {
