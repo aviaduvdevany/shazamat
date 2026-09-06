@@ -372,6 +372,8 @@ The validator checks every `part.file` and `scene.file` exists on disk at build 
 
 ## Replacing placeholder art
 
+The full art brief — sizes, palette, alignment grid, prompts, and every filename — is [`docs/game/sprite-guide.md`](./sprite-guide.md). Hand that file to an external artist or generation agent.
+
 Phase 0 shipped with colored block placeholders. Replacing them does not require any engine or code changes.
 
 1. Create the real PNG at the exact dimensions (64×64 for parts, 160×144 for scenes, 96×96 for portraits).

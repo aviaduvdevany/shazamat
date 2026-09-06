@@ -180,7 +180,14 @@ export function GameShell() {
 
   return (
     <div className="game-root">
-      <div className="game-surface" role="main" aria-label="שאזאמאט: החיים">
+      <div
+        className="game-surface"
+        role="main"
+        aria-label="שאזאמאט: החיים"
+        data-screen={screen}
+        data-mood={currentEvent?.mood ?? "neutral"}
+        data-rarity={currentEvent?.rarity ?? "common"}
+      >
         {/* Screens that don't show the game HUD */}
         {screen === "title" && <TitleScreen onStart={handleTitleStart} />}
 

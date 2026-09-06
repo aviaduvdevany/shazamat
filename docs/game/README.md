@@ -102,6 +102,8 @@ Both should pass before and after any change.
 | [content-authoring.md](./content-authoring.md) | Adding events, stages, sprite parts, members — the day-to-day work |
 | [content-bible.md](./content-bible.md) | **The canonical event spec** — all 7 stages, every event card with Hebrew copy drafts, flag catalog, and member routing. Start here before writing any event TypeScript. |
 | [roadmap.md](./roadmap.md) | What's built, what's next, phase definitions and progress |
+| [ux-plan.md](./ux-plan.md) | **UI, motion, timing, and feel** — phased UX plan. Not sprites. Read before adding transitions or animations. |
+| [sprite-guide.md](./sprite-guide.md) | **Art bible** — sizes, palette, layer grid, and the full file list for generating every sprite. Hand this to an external art/generation agent. |
 | [shazamat-life-simulator-concept.md](./shazamat-life-simulator-concept.md) | Original design document — tone, philosophy, examples |
 
 ---

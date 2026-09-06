@@ -486,9 +486,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  /* Kill all site animations — .game-root and .game-share-page are exempt;
+     game.css manages its own motion contract via token remapping. */
+  *:not(.game-root):not(.game-root *):not(.game-share-page):not(.game-share-page *),
+  *:not(.game-root):not(.game-root *):not(.game-share-page):not(.game-share-page *)::before,
+  *:not(.game-root):not(.game-root *):not(.game-share-page):not(.game-share-page *)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

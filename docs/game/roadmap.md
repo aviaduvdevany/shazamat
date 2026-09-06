@@ -82,6 +82,8 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 
 ### Art
 
+Brief and full file list: [`docs/game/sprite-guide.md`](./sprite-guide.md).
+
 - [ ] Commission/create real 64×64 pixel-art sprite parts for: body-child, body-teen, body-soldier
 - [ ] Real scene backgrounds for: childhood-bedroom, school-stage, school-practice-room, school-classroom, army-base
 - [ ] Real member portraits (96×96) for all 7 members
@@ -93,6 +95,8 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 - [ ] Drop files in `public/game/sfx/`
 
 ### Polish
+
+Motion, timing, and feel are specified in [`docs/game/ux-plan.md`](./ux-plan.md). Do not invent new durations — use that document's tokens and phase checklists.
 
 - [ ] Screen-shake CSS animation for bad outcomes
 - [ ] Sprite expression swap on outcome (happy/worried face)

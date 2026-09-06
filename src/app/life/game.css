@@ -4,6 +4,33 @@
    Does not affect the band site.
 ───────────────────────────────────────────────────────────── */
 
+/* ── Motion tokens (game play + share page) ────────────────
+   All animation in this file must use these tokens.
+   Do not add a 9th duration without a new class of moment.
+   HUD bar fill uses --g-t-hold (450ms) — timing bible calls
+   400ms, closest token is hold; documented here so no one
+   adds a redundant 400ms token.
+──────────────────────────────────────────────────────────── */
+.game-root,
+.game-share-page {
+  /* Duration tokens */
+  --g-t-instant:    0ms;
+  --g-t-ack:       80ms;
+  --g-t-fast:     120ms;
+  --g-t-base:     200ms;
+  --g-t-slow:     320ms;
+  --g-t-hold:     450ms;
+  --g-t-ceremony: 700ms;
+  --g-t-drama:   1100ms;
+
+  /* Easing tokens */
+  --g-ease-out:        cubic-bezier(0.2, 0, 0, 1);
+  --g-ease-emphasize:  cubic-bezier(0.2, 0.8, 0.2, 1);
+  --g-ease-overshoot:  cubic-bezier(0.34, 1.4, 0.64, 1);
+  --g-ease-exit:       cubic-bezier(0.4, 0, 1, 1);
+  --g-ease-linear:     linear;
+}
+
 /* ── Reset and base ─────────────────────────────────────── */
 .game-root {
   position: fixed;
@@ -81,7 +108,7 @@
   height: 100%;
   background: #DB7738;
   border-radius: 2px;
-  transition: width 0.4s ease;
+  transition: width var(--g-t-hold) var(--g-ease-out);
 }
 
 /* ── Stage label ────────────────────────────────────────── */
@@ -132,7 +159,7 @@
   background-repeat: no-repeat;
   background-position: center;
   image-rendering: pixelated;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--g-t-slow) var(--g-ease-out);
 }
 
 .game-sprite-portrait {
@@ -208,7 +235,7 @@
   font-weight: 700;
   text-align: right;
   cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background var(--g-t-fast) var(--g-ease-out), border-color var(--g-t-fast) var(--g-ease-out);
   direction: rtl;
 }
 
@@ -227,10 +254,10 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .game-choice-btn {
-    transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+    transition: background var(--g-t-fast) var(--g-ease-out), border-color var(--g-t-fast) var(--g-ease-out), transform var(--g-t-ack) var(--g-ease-out);
   }
   .game-choice-btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 }
 
@@ -261,7 +288,7 @@
   font-size: 16px;
   font-weight: 900;
   color: #DB7738;
-  animation: game-pop 0.4s ease both;
+  animation: game-pop var(--g-t-hold) var(--g-ease-overshoot) both;
 }
 
 .game-stat-delta.negative {
@@ -280,7 +307,7 @@
   font-size: 15px;
   font-weight: 900;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--g-t-fast) var(--g-ease-out);
 }
 
 .game-continue-btn:hover {
@@ -510,7 +537,7 @@
   cursor: pointer;
   text-decoration: none;
   border: none;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--g-t-fast) var(--g-ease-out);
 }
 
 .game-btn:hover {
@@ -673,7 +700,28 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Reduced-motion contract (single source of truth) ──────
+   Remap all travel tokens to instant. Meaning stays (deltas
+   still appear, name still appears, aria-live still fires).
+   UX-1+ must include a reduce twin for every new animation.
+──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  .game-root,
+  .game-share-page {
+    --g-t-ack:          var(--g-t-instant);
+    --g-t-fast:         var(--g-t-instant);
+    --g-t-base:         var(--g-t-instant);
+    --g-t-slow:         var(--g-t-instant);
+    --g-t-hold:         var(--g-t-instant);
+    --g-t-ceremony:     var(--g-t-instant);
+    --g-t-drama:        var(--g-t-instant);
+    --g-ease-overshoot: var(--g-ease-out);
+  }
+
+  /* Kill travel on known movers */
   .game-stat-delta { animation: none; }
-  .game-choice-btn { transition: none; }
+
+  /* Forward-looking stubs: UX-1+ cannot ship these without a reduce twin */
+  .game-shake          { animation: none !important; transform: none !important; }
+  .game-stagger > *    { animation: none; }
 }
