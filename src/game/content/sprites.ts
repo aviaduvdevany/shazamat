@@ -26,6 +26,7 @@ export const spriteCatalog: SpriteCatalog = {
     { id: "expression-neutral", layer: "expression", file: "game/sprites/expression/expression-neutral.png", label: "ניטרלי" },
     { id: "expression-happy", layer: "expression", file: "game/sprites/expression/expression-happy.png", label: "שמח" },
     { id: "expression-worried", layer: "expression", file: "game/sprites/expression/expression-worried.png", label: "מוטרד" },
+    { id: "body-adult", layer: "body", file: "game/sprites/body/body-adult.png", label: "גוף מבוגר" },
   ],
 
   scenes: [

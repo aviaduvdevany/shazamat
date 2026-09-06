@@ -31,6 +31,13 @@
   --g-ease-linear:     linear;
 }
 
+/* ── UX-7: Global focus rings — 3px orange (brand rule) ─── */
+.game-root :focus-visible,
+.game-share-page :focus-visible {
+  outline: 3px solid #DB7738;
+  outline-offset: 2px;
+}
+
 /* ── Reset and base ─────────────────────────────────────── */
 .game-root {
   position: fixed;
@@ -56,6 +63,60 @@
   /* Safe area insets (notched devices) */
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* ── UX-2: Mood tempo variables (neutral / house defaults) ──
+     Matched to GAME_MOOD.enterScale in useGameMotion.ts.
+     Derived: delay = house_ms × enterScale (see GAME_MOOD table).
+  ────────────────────────────────────────────────────────── */
+  --g-k-delay:   40ms;  /* kicker   — house: 40ms  */
+  --g-h-delay:  100ms;  /* headline — house: 100ms */
+  --g-b-delay:  180ms;  /* body     — house: 180ms */
+  --g-c-start:  260ms;  /* choices start */
+  --g-c-stride:  40ms;  /* per-choice stride */
+
+  /* Outcome (neutral defaults) */
+  --g-delta-stride:         80ms;
+  --g-outcome-label-extra:   0ms;
+}
+
+/* Funny: 0.75× — snappy, bounce on choices */
+.game-surface[data-mood="funny"] {
+  --g-k-delay:   30ms;
+  --g-h-delay:   75ms;
+  --g-b-delay:  135ms;
+  --g-c-start:  195ms;
+  --g-c-stride:  30ms;
+  --g-delta-stride: 60ms;
+}
+
+/* Tense: 1.3× — heavy; holds before choices and outcome label */
+.game-surface[data-mood="tense"] {
+  --g-k-delay:   52ms;
+  --g-h-delay:  130ms;
+  --g-b-delay:  234ms;
+  --g-c-start:  338ms;
+  --g-c-stride:  52ms;
+  --g-outcome-label-extra: 200ms;
+}
+
+/* Epic: 1.4× — expanded; tracking on headline */
+.game-surface[data-mood="epic"] {
+  --g-k-delay:   56ms;
+  --g-h-delay:  140ms;
+  --g-b-delay:  252ms;
+  --g-c-start:  364ms;
+  --g-c-stride:  56ms;
+}
+
+/* Sad: 1.6× — slowest; no overshoot anywhere */
+.game-surface[data-mood="sad"] {
+  --g-k-delay:   64ms;
+  --g-h-delay:  160ms;
+  --g-b-delay:  288ms;
+  --g-c-start:  416ms;
+  --g-c-stride:  64ms;
+  /* Remap overshoot to standard ease — affects delta pops and kicker. */
+  --g-ease-overshoot: var(--g-ease-out);
 }
 
 /* ── HUD (top bar) ──────────────────────────────────────── */
@@ -144,15 +205,29 @@
   justify-content: center;
   overflow: hidden;
   background: #0a0a0a;
+  transition: opacity var(--g-t-base) var(--g-ease-out);
 }
 
+/* UX-3: Dim viewport to 20% during stage-clear ceremony. */
+.game-surface[data-screen="stage-clear"] .game-viewport {
+  opacity: 0.2;
+}
+
+/* UX-3: Scene crossfade — incoming scene fades in. */
 .game-scene {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
   image-rendering: pixelated;
+  opacity: 0;
+  animation: game-scene-fade-in var(--g-t-slow) var(--g-ease-out) forwards;
+}
+
+/* UX-3: Outgoing scene fades out. */
+.game-scene.is-exiting {
   opacity: 0.6;
+  animation: game-scene-fade-out var(--g-t-slow) var(--g-ease-out) forwards;
 }
 
 /* ── Sprite compositor ──────────────────────────────────── */
@@ -221,44 +296,50 @@
 
 .game-event-body {
   font-size: 14px;
-  color: #aaa;
+  color: #ccc;
   line-height: 1.6;
 }
 
-/* ── UX-1: Event enter choreography (reduced-motion: no-preference) ─
-   Elements animate in on mount; delays are hard-coded ms (not tokens)
-   because they are bible offsets, not durations. game-event-first adds
-   a 200ms breath after the headline (first event of the run only).
+/* ── UX-1 / UX-2: Event enter choreography ──────────────────
+   Elements animate in on mount. Delays are driven by per-mood
+   CSS variables (--g-k-delay etc.) defined on .game-surface above
+   so that mood tempo overrides arrive from a single place.
+   game-event-first adds an unscaled 200ms breath after the body.
 ──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .game-event-kicker {
     animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: 40ms;
+    animation-delay: var(--g-k-delay, 40ms);
   }
 
   .game-event-headline {
     animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: 100ms;
+    animation-delay: var(--g-h-delay, 100ms);
   }
 
   .game-event-body {
     animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: 180ms;
+    animation-delay: var(--g-b-delay, 180ms);
   }
 
-  /* First event of the run: extra 200ms hold after headline. */
+  /* First event: +200ms hold (unscaled) stacked on the body delay. */
   .game-event-first .game-event-body {
-    animation-delay: 380ms;
+    animation-delay: calc(var(--g-b-delay, 180ms) + 200ms);
   }
 
-  /* Choice stagger: enter from below, staggered via --choice-i. */
+  /* Choice stagger: enter from below via --choice-i and mood-scaled stride. */
   .game-choice-btn {
     animation: game-choice-enter var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: calc(260ms + var(--choice-i, 0) * 40ms);
+    animation-delay: calc(var(--g-c-start, 260ms) + var(--choice-i, 0) * var(--g-c-stride, 40ms));
   }
 
   .game-event-first ~ .game-choices .game-choice-btn {
-    animation-delay: calc(460ms + var(--choice-i, 0) * 40ms);
+    animation-delay: calc(var(--g-c-start, 260ms) + 200ms + var(--choice-i, 0) * var(--g-c-stride, 40ms));
+  }
+
+  /* UX-2: Funny — choices bounce in (overshoot) instead of plain ease-out. */
+  .game-surface[data-mood="funny"] .game-choice-btn {
+    animation-timing-function: var(--g-ease-overshoot);
   }
 }
 
@@ -292,7 +373,6 @@
 .game-choice-btn:focus-visible {
   background: #1a1a1a;
   border-color: #DB7738;
-  outline: none;
 }
 
 .game-choice-btn:active {
@@ -379,56 +459,263 @@
   opacity: 0.9;
 }
 
-/* ── UX-1: Outcome choreography (reduced-motion: no-preference) ──
-   Outcome label enters 160ms after mount (read-before-numbers beat).
-   Each delta staggered via --delta-i (240ms + n×80ms from mount).
+/* ── UX-1 / UX-2: Outcome choreography ──────────────────────
+   Outcome label enters at 160ms + mood outcomeLabelExtra.
+   Deltas stagger at 240ms + outcomeLabelExtra + n × deltaStride.
    Continue fades in after last delta + 350ms.
+   JS (runOutcomeSequence) mirrors these times for HUD sync.
 ──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   .game-outcome-label {
     animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
-    animation-delay: 160ms;
+    animation-delay: calc(160ms + var(--g-outcome-label-extra, 0ms));
   }
 
   .game-stat-delta {
-    animation-delay: calc(240ms + var(--delta-i, 0) * 80ms);
+    animation-delay: calc(
+      240ms + var(--g-outcome-label-extra, 0ms) +
+      var(--delta-i, 0) * var(--g-delta-stride, 80ms)
+    );
   }
 
   .game-continue-btn {
     animation: game-fade-in var(--g-t-fast) var(--g-ease-out) backwards;
-    animation-delay: calc(240ms + var(--deltas-count, 0) * 80ms + 350ms);
+    animation-delay: calc(
+      240ms + var(--g-outcome-label-extra, 0ms) +
+      var(--deltas-count, 0) * var(--g-delta-stride, 80ms) +
+      350ms
+    );
   }
 }
 
-/* ── Stage clear screen ──────────────────────────────────── */
-.game-stage-clear {
-  flex: 1;
+/* ── Stage-clear ceremony overlay (UX-3) ──────────────────
+   Full-surface overlay rendered as a sibling of .game-viewport.
+   z-index 20 puts it above everything except the HUD (z-index 10
+   is the HUD; overlay goes above the viewport but the HUD stays
+   on top via normal document order).
+──────────────────────────────────────────────────────────── */
+.game-stage-clear-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
   padding: 32px;
   text-align: center;
+  z-index: 20;
+  cursor: pointer;
+  /* No background: the dimmed viewport shows through. */
 }
 
-.game-stage-clear-label {
+/* Kicker: "סוף · ילדות" — fades in at beat="kicker" */
+.game-stage-clear-kicker {
   font-size: 12px;
   color: #DB7738;
   letter-spacing: 2px;
   text-transform: uppercase;
+  opacity: 0;
+}
+.game-stage-clear-kicker.is-visible {
+  animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
 }
 
+/* Next stage name — slams at beat="slam" */
 .game-stage-clear-name {
-  font-size: 36px;
+  font-size: 42px;
   font-weight: 900;
   color: #fff;
   line-height: 1.1;
+  opacity: 0;
+}
+.game-stage-clear-name.is-slam {
+  animation: game-slam var(--g-t-slow) var(--g-ease-emphasize) both;
+}
+
+/* Age label / rumble — fades in at beat="age" */
+.game-stage-clear-age {
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  min-height: 1.4em; /* reserve space so layout doesn't shift during rumble */
+}
+.game-stage-clear-age.is-visible {
+  animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+}
+
+/* Skip / keyboard continue button */
+.game-stage-clear-skip {
+  margin-top: 16px;
+  opacity: 0.5;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+}
+.game-stage-clear-skip:focus-visible {
+  outline: 3px solid #DB7738;
+  outline-offset: 2px;
+}
+
+/* Hide event area during ceremony — viewport dims instead. */
+.game-surface[data-screen="stage-clear"] .game-event-area {
+  display: none;
+}
+
+/* ── UX-2: Mood grade ────────────────────────────────────────
+   Grade effects applied via existing surfaces. No new elements.
+   Reduced-motion: grade (color/filter) stays; motion cancels in reduce block.
+──────────────────────────────────────────────────────────── */
+
+/* Funny: subtle orange warmth in the event well. */
+.game-surface[data-mood="funny"] .game-event-area {
+  background: color-mix(in srgb, #000 96%, #DB7738);
+}
+
+/* Tense: slightly cooler event well. */
+.game-surface[data-mood="tense"] .game-event-area {
+  background: color-mix(in srgb, #000 94%, #223344);
+}
+
+/* Tense: vignette overlay on viewport — darkness closes in. */
+.game-surface[data-mood="tense"] .game-viewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Epic: slight contrast boost on viewport. */
+.game-surface[data-mood="epic"] .game-viewport {
+  filter: contrast(1.08);
+}
+
+/* Epic: expanded letter-spacing on headline (tracking). */
+.game-surface[data-mood="epic"] .game-event-headline {
+  letter-spacing: 0.04em;
+}
+
+/* Sad: desaturate scene background. */
+.game-surface[data-mood="sad"] .game-scene {
+  filter: saturate(0.8);
+}
+
+/* ── UX-2: Headline slam (weight ≥ 10 or epic mood) ─────────
+   .is-slam added by EventCard. Replaces fade-in with a scale slam.
+   Uses the same mood-scaled delay as the headline (--g-h-delay).
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .game-event-headline.is-slam {
+    animation: game-slam var(--g-t-slow) var(--g-ease-emphasize) both;
+    animation-delay: var(--g-h-delay, 100ms);
+  }
+}
+
+/* ── UX-2: Rarity — whisper, not a banner ───────────────────
+   Rare: kicker overshoot + 80ms orange flash on event-text
+         (event-text remounts per event, so animation retriggers).
+   Ultra: same as rare. Whisper shake is JS-applied via .game-shake-whisper.
+   No badge copy — superfans feel it, others think this card is cooler.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .game-surface[data-rarity="rare"][data-screen="playing"] .game-event-kicker,
+  .game-surface[data-rarity="ultra"][data-screen="playing"] .game-event-kicker {
+    animation-timing-function: var(--g-ease-overshoot);
+  }
+
+  .game-surface[data-rarity="rare"][data-screen="playing"] .game-event-text,
+  .game-surface[data-rarity="ultra"][data-screen="playing"] .game-event-text {
+    animation: game-rare-flash var(--g-t-ack) var(--g-ease-out) both;
+    animation-delay: 40ms;
+  }
+}
+
+/* ── UX-2: Epic outcome flash ────────────────────────────────
+   80ms warm flash as the outcome mounts on epic cards.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .game-surface[data-mood="epic"] .game-outcome {
+    animation: game-epic-flash var(--g-t-ack) var(--g-ease-out) both;
+  }
+}
+
+/* ── UX-2: Roll ticker ───────────────────────────────────────
+   Replaces the event well content while the dice animates.
+   Tap anywhere on the ticker to skip to outcome immediately.
+   animation-duration on .game-roll-die overridden by style prop
+   (rollMs / 4 per tick) so tempo matches the event mood.
+──────────────────────────────────────────────────────────── */
+.game-roll-ticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 12px;
+  cursor: pointer;
+  padding: 24px;
+  min-height: 180px;
+  user-select: none;
+}
+
+.game-roll-die {
+  font-size: 72px;
+  display: block;
+  line-height: 1;
+}
+
+.game-roll-hint {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: inherit;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-roll-die {
+    /* Duration overridden via style prop; 4 iterations ease-in → faster at end */
+    animation: game-roll-spin 137ms ease-in 4 both;
+    animation-iteration-count: 4;
+  }
+}
+
+/* ── Has-roll die badge on choice buttons ────────────────────
+   🎲 visible before press — risk is honest, outcome is not.
+──────────────────────────────────────────────────────────── */
+.game-choice-btn.has-roll {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.game-roll-badge {
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ── Birth funnel — shared wrapper for title + email overlap ── */
+.game-funnel {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* ── Title screen ────────────────────────────────────────── */
 .game-title-screen {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -436,6 +723,7 @@
   gap: 24px;
   padding: 48px 32px;
   text-align: center;
+  overflow-y: auto;
 }
 
 .game-title-band {
@@ -459,9 +747,15 @@
   max-width: 280px;
 }
 
+.game-title-meta {
+  font-size: 11px;
+  color: #444;
+}
+
 /* ── Email gate screen ───────────────────────────────────── */
 .game-email-screen {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -469,6 +763,7 @@
   gap: 20px;
   padding: 48px 24px;
   text-align: center;
+  overflow-y: auto;
 }
 
 .game-email-headline {
@@ -506,7 +801,6 @@
 }
 
 .game-email-input:focus {
-  outline: none;
   border-color: #DB7738;
 }
 
@@ -546,29 +840,162 @@
   text-align: center;
 }
 
-/* ── Ending screen ───────────────────────────────────────── */
+/* ── UX-4: Title + email enter / exit animations ──────────
+   All scoped to no-preference. Reduced-motion twins are in the
+   reduce block at the bottom of this file.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Title element enters — each child staggered */
+  .game-title-band {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) 0ms both;
+  }
+  .game-title-headline {
+    /* Enter slam + persistent idle breath loop (starts after slam settles). */
+    animation-name: game-title-slam, game-title-breathe;
+    animation-duration: var(--g-t-slow), 6s;
+    animation-timing-function: var(--g-ease-overshoot), ease-in-out;
+    animation-delay: 80ms, 1200ms;
+    animation-fill-mode: both, none;
+    animation-iteration-count: 1, infinite;
+  }
+  .game-title-subtitle {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) 200ms both;
+  }
+  .game-title-cta {
+    /* Fade in at t=320ms; single gentle pulse at t=900ms. */
+    animation-name: game-fade-in, game-title-pulse;
+    animation-duration: var(--g-t-base), 400ms;
+    animation-timing-function: var(--g-ease-out), var(--g-ease-emphasize);
+    animation-delay: 320ms, 900ms;
+    animation-fill-mode: both, both;
+    animation-iteration-count: 1, 1;
+  }
+  .game-title-meta {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) 400ms both;
+  }
+
+  /* Title exit — overlapping with email enter during the 200ms transition. */
+  .game-title-screen.is-exiting {
+    animation: game-exit-up var(--g-t-base) var(--g-ease-exit) forwards;
+  }
+
+  /* Email screen enter (plays on every mount). */
+  .game-email-screen {
+    animation: game-email-enter var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Assemble line enter — class added by JS at the right offset. */
+  .game-assemble-line.is-visible {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) forwards;
+  }
+
+  /* Ticking indicator on last line while server is pending. */
+  .game-assemble-line.is-ticking::after {
+    animation: game-assemble-tick 800ms ease-in-out infinite;
+  }
+
+  /* Form shake — class toggled by JS; replays on force-reflow. */
+  .game-email-form.is-shake {
+    animation: game-form-shake 180ms linear;
+  }
+}
+
+/* ── UX-4: Assemble theater ─────────────────────────────── */
+.game-assemble-well {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: right;
+  direction: rtl;
+}
+
+.game-assemble-line {
+  font-size: 15px;
+  color: #bbb;
+  letter-spacing: 0.02em;
+  opacity: 0;
+}
+
+.game-assemble-line.is-visible {
+  opacity: 1;
+}
+
+.game-assemble-line.is-ticking::after {
+  content: " ░";
+  display: inline;
+}
+
+/* ── UX-4: Smash-cut overlay ────────────────────────────── */
+.game-smash-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ── UX-5: HUD fade during ending ──────────────────────────── */
+.game-surface[data-screen="ending"] .game-hud {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--g-t-hold) var(--g-ease-out);
+}
+
+/* ── UX-5: Ending screen ────────────────────────────────────── */
 .game-ending-screen {
-  flex: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 32px 24px;
+  padding: 40px 24px 32px;
   overflow-y: auto;
   text-align: center;
+  z-index: 5;
 }
 
+/* Flash overlay — full-bleed, 80ms, very subtle orange-white burst. */
+.game-ending-flash-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 200, 120, 0.08);
+  pointer-events: none;
+  z-index: 90;
+}
+
+/* Preamble and prompt start invisible, slide in via .is-visible. */
 .game-ending-preamble {
   font-size: 14px;
   color: #888;
   letter-spacing: 1px;
+  opacity: 0;
 }
 
+.game-ending-preamble.is-visible {
+  opacity: 1;
+}
+
+.game-ending-prompt {
+  font-size: 16px;
+  color: #888;
+  letter-spacing: 2px;
+  opacity: 0;
+}
+
+.game-ending-prompt.is-visible {
+  opacity: 1;
+}
+
+/* Name: invisible until .is-slam plays the overshoot slam. */
 .game-ending-member-name {
   font-size: 52px;
   font-weight: 900;
   color: #fff;
   line-height: 1;
+  opacity: 0;
+  min-height: 1.2em; /* reserve space so layout doesn't jump */
 }
 
 .game-ending-member-role {
@@ -579,9 +1006,16 @@
 
 .game-ending-blurb {
   font-size: 14px;
-  color: #aaa;
+  color: #ccc;
   line-height: 1.7;
   max-width: 320px;
+}
+
+.game-ending-recap-section {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .game-ending-recap-title {
@@ -589,7 +1023,7 @@
   color: #555;
   letter-spacing: 1px;
   text-transform: uppercase;
-  align-self: flex-start;
+  text-align: right;
 }
 
 .game-ending-recap {
@@ -601,12 +1035,144 @@
 
 .game-ending-recap-entry {
   font-size: 13px;
-  color: #888;
+  color: #bbb;
   text-align: right;
 }
 
 .game-ending-recap-entry span {
   color: #DB7738;
+}
+
+/* Shuni slot — empty; Phase 3 fills this. */
+.game-ending-shuni-slot {
+  min-height: 0;
+}
+
+/* ── UX-7: LifeRecap — stage-dot strip + one line per stage ── */
+.game-life-recap {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-life-recap-dots {
+  display: flex;
+  flex-direction: row-reverse; /* RTL: rightmost = first stage */
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.game-life-recap-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2a2a2a;
+  flex-shrink: 0;
+  transition: background var(--g-t-fast) var(--g-ease-out);
+}
+
+.game-life-recap-dot.is-played {
+  background: #DB7738;
+}
+
+.game-life-recap-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-self: stretch;
+}
+
+.game-life-recap-entry {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 13px;
+  text-align: right;
+}
+
+.game-life-recap-stage {
+  color: #DB7738;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.game-life-recap-text {
+  color: #bbb;
+}
+
+/* Animated stagger (ending screen) */
+@media (prefers-reduced-motion: no-preference) {
+  .game-life-recap-entry.is-animated {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: calc(var(--recap-i, 0) * var(--g-t-fast, 120ms));
+  }
+}
+
+/* ── Flying stat number overlay — UX-7 ──────────────────── */
+/* .game-stat-flyer is placed directly in JS; no base CSS needed.
+   Reduced-motion: spawning is skipped entirely in JS. */
+
+/* ── UX-5: Ending enter animations ─────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  /* Preamble: fade in */
+  .game-ending-preamble.is-visible {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Prompt: fade in */
+  .game-ending-prompt.is-visible {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Flash overlay: 80ms flash then gone */
+  .game-ending-flash-overlay {
+    animation: game-ending-flash var(--g-t-ack) var(--g-ease-out) both;
+  }
+
+  /* Name: full slam overshoot */
+  .game-ending-member-name.is-slam {
+    animation: game-slam var(--g-t-slow) var(--g-ease-overshoot) both;
+  }
+
+  /* Portrait pop: 0.8 → 1.06 → 1 */
+  .game-ending-portrait-pop {
+    animation: game-ending-portrait var(--g-t-slow) var(--g-ease-overshoot) both;
+  }
+
+  /* Role */
+  .game-ending-role-enter {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Stats block */
+  .game-ending-stats-enter {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Blurb */
+  .game-ending-blurb-enter {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* Recap entries: stagger via --recap-i */
+  .game-ending-recap-entry {
+    opacity: 0;
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: calc(var(--recap-i, 0) * 60ms);
+  }
+
+  /* Actions */
+  .game-ending-actions-enter {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+  }
+
+  /* New Life pulse — one-shot when .is-pulse is added */
+  .game-btn-secondary.is-pulse {
+    animation: game-title-pulse var(--g-t-hold) var(--g-ease-emphasize) both;
+  }
 }
 
 /* ── Buttons ─────────────────────────────────────────────── */
@@ -733,7 +1299,7 @@
 
 .game-share-blurb {
   font-size: 14px;
-  color: #aaa;
+  color: #ccc;
   line-height: 1.7;
   max-width: 320px;
 }
@@ -764,7 +1330,7 @@
 }
 
 .game-share-log-outcome {
-  color: #888;
+  color: #bbb;
 }
 
 .game-share-actions {
@@ -774,7 +1340,114 @@
   gap: 10px;
 }
 
+/* UX-6: Dare line — "מה אתה תהיה?" */
+.game-share-dare {
+  font-size: 20px;
+  font-weight: 700;
+  color: #bbb;
+  letter-spacing: 1px;
+}
+
+/* UX-6: Collapsed recap — friend should reach CTA without scrolling. */
+.game-share-recap-details {
+  align-self: stretch;
+}
+
+.game-share-recap-summary {
+  font-size: 12px;
+  color: #555;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: right;
+  padding: 4px 0;
+  list-style: none;
+  user-select: none;
+}
+
+.game-share-recap-summary::-webkit-details-marker {
+  display: none;
+}
+
+.game-share-recap-details[open] .game-share-recap-summary {
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* UX-6: Share landing mini-reveal enter animations.
+   CSS-only stagger (no JS beat machine). Animation delays match the
+   timing table in ux-plan.md §8 Share landing (t=0/80/160/360/500/600).
+   All use animation-fill-mode: both so opacity:0 holds during the delay. */
+@media (prefers-reduced-motion: no-preference) {
+  /* t=0 — band */
+  .game-sl-band    { animation: game-fade-in var(--g-t-base) var(--g-ease-out) 0ms both; }
+  /* t=80 — "אתה הוא" */
+  .game-sl-you-are { animation: game-fade-in var(--g-t-base) var(--g-ease-out) 80ms both; }
+  /* t=160 — name slam (--g-t-base per timing bible, overshoot easing) */
+  .game-sl-name    { animation: game-slam var(--g-t-base) var(--g-ease-overshoot) 160ms both; }
+  /* t=360 — portrait + role + stats + blurb + recap together */
+  .game-sl-reveal  { animation: game-fade-in var(--g-t-base) var(--g-ease-out) 360ms both; }
+  /* t=500 — dare */
+  .game-sl-dare    { animation: game-fade-in var(--g-t-base) var(--g-ease-out) 500ms both; }
+  /* t=600 — CTA */
+  .game-sl-cta     { animation: game-fade-in var(--g-t-base) var(--g-ease-out) 600ms both; }
+}
+
+/* UX-6: Ending → title crossfade (200ms). */
+.game-ending-screen.is-exiting {
+  animation: game-exit-up var(--g-t-base) var(--g-ease-exit) both;
+  pointer-events: none;
+}
+
 /* ── Animations ──────────────────────────────────────────── */
+
+/* UX-4: Title headline slam — gentler than UX-2 game-slam (0.9→1.04 vs 0.86→1.06). */
+@keyframes game-title-slam {
+  0%   { opacity: 0; transform: scale(0.9); }
+  70%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* UX-4: Title headline idle breath — very subtle ±2% opacity, 6s loop. */
+@keyframes game-title-breathe {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.98; }
+}
+
+/* UX-4: CTA single gentle pulse. */
+@keyframes game-title-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* UX-4: Title exit — slides block-start (up) and fades. */
+@keyframes game-exit-up {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-24px); }
+}
+
+/* UX-4: Email screen enter — rises from slightly below. */
+@keyframes game-email-enter {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* UX-4: Form shake — 4px lateral, 180ms. */
+@keyframes game-form-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-4px); }
+  45%  { transform: translateX(4px); }
+  65%  { transform: translateX(-3px); }
+  82%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+/* UX-4: Assemble tick — pulsing last character. */
+@keyframes game-assemble-tick {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+
 @keyframes game-pop {
   0%   { opacity: 0; transform: translateY(6px) scale(0.95); }
   60%  { opacity: 1; transform: translateY(-2px) scale(1.04); }
@@ -784,6 +1457,17 @@
 @keyframes game-fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* UX-3: Scene crossfade keyframes. */
+@keyframes game-scene-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 0.6; }
+}
+
+@keyframes game-scene-fade-out {
+  from { opacity: 0.6; }
+  to   { opacity: 0; }
 }
 
 /* Choice enter: rises from below (block-end → block-start direction). */
@@ -796,6 +1480,59 @@
 @keyframes game-ghost-drain {
   from { opacity: 0.8; }
   to   { opacity: 0; }
+}
+
+/* UX-2: Headline slam — scale overshoot on keystone / epic cards. */
+@keyframes game-slam {
+  0%   { opacity: 0; transform: scale(0.86); }
+  70%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* UX-2: Rare enter — subtle orange flash on event-text mount. */
+@keyframes game-rare-flash {
+  0%   { background-color: transparent; }
+  40%  { background-color: rgba(219, 119, 56, 0.12); }
+  100% { background-color: transparent; }
+}
+
+/* UX-2: Epic outcome — warm flash as outcome mounts. */
+@keyframes game-epic-flash {
+  0%   { background-color: transparent; }
+  50%  { background-color: rgba(219, 119, 56, 0.08); }
+  100% { background-color: transparent; }
+}
+
+/* UX-2: Roll dice spin — 4 iterations at mood-scaled per-tick duration. */
+@keyframes game-roll-spin {
+  0%   { transform: rotate(-12deg) scale(0.88); }
+  30%  { transform: rotate(14deg)  scale(1.22); }
+  60%  { transform: rotate(-10deg) scale(0.92); }
+  80%  { transform: rotate(9deg)   scale(1.12); }
+  100% { transform: rotate(0deg)   scale(1); }
+}
+
+/* UX-2: Ultra rarity whisper shake — 2px, 180ms (distinct from UX-1 4–6px bad-outcome). */
+@keyframes game-shake-whisper {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-2px); }
+  60%  { transform: translateX(2px); }
+  80%  { transform: translateX(-1px); }
+  100% { transform: translateX(0); }
+}
+
+/* UX-5: Ending flash — 80ms subtle warm burst at the name reveal. */
+@keyframes game-ending-flash {
+  0%   { opacity: 0; }
+  40%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* UX-5: Portrait pop — scale 0.8 → 1.06 → 1. */
+@keyframes game-ending-portrait {
+  0%   { opacity: 0; transform: scale(0.8); }
+  70%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 /* ── UX-1: Screen shake — bad outcomes / large negative deltas ──────
@@ -818,15 +1555,16 @@
   animation: game-shake 220ms var(--g-ease-linear);
 }
 
-/* ── Reduced-motion contract (single source of truth) ──────
-   Remap all travel tokens to instant. Meaning stays (deltas
-   still appear, name still appears, aria-live still fires).
-   UX-1+ must include a reduce twin for every new animation.
-──────────────────────────────────────────────────────────── */
+/* UX-2: Ultra rarity whisper shake — applied via JS state, same frame as enter. */
+.game-shake-whisper {
+  animation: game-shake-whisper 180ms var(--g-ease-linear);
+}
+
 /* ── Reduced-motion contract (single source of truth) ──────
    Remap all travel tokens to instant. Meaning stays: deltas
    still appear, name still appears, aria-live still fires.
    UX-1 twins below cancel every new animation added above.
+   UX-2 twins follow.
 ──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .game-root,
@@ -871,4 +1609,123 @@
 
   /* Stagger stub from UX-0. */
   .game-stagger > *    { animation: none; }
+
+  /* ── UX-2 twins ──────────────────────────────────────────── */
+  /* Slam: headline appears immediately without scale travel. */
+  .game-event-headline.is-slam { animation: none; opacity: 1; transform: none; }
+
+  /* Rare flash and epic flash: colour meaning stays; travel cancels. */
+  .game-surface[data-rarity="rare"][data-screen="playing"] .game-event-text,
+  .game-surface[data-rarity="ultra"][data-screen="playing"] .game-event-text { animation: none; }
+  .game-surface[data-mood="epic"] .game-outcome { animation: none; }
+
+  /* Whisper shake: skip. */
+  .game-shake-whisper  { animation: none !important; transform: none !important; }
+
+  /* Roll die: no spin (die emoji still visible). */
+  .game-roll-die       { animation: none; }
+
+  /* Funny choice bounce: collapse to standard ease under reduce. */
+  .game-surface[data-mood="funny"] .game-choice-btn { animation-timing-function: var(--g-ease-out); }
+
+  /* Mood tempo variables collapse — all token remaps to instant above cover this,
+     but explicitly reset the per-mood delay vars for safety. */
+  .game-surface[data-mood="funny"],
+  .game-surface[data-mood="tense"],
+  .game-surface[data-mood="epic"],
+  .game-surface[data-mood="sad"] {
+    --g-k-delay:   0ms;
+    --g-h-delay:   0ms;
+    --g-b-delay:   0ms;
+    --g-c-start:   0ms;
+    --g-c-stride:  0ms;
+    --g-outcome-label-extra: 0ms;
+  }
+
+  /* ── UX-3 twins ──────────────────────────────────────────── */
+  /* Viewport dim: instant (--g-t-base already collapses to 0). */
+  .game-surface[data-screen="stage-clear"] .game-viewport { transition: none; opacity: 0.2; }
+
+  /* Scene crossfade: skip travel; scene appears immediately at target opacity. */
+  .game-scene           { animation: none; opacity: 0.6; }
+  .game-scene.is-exiting { animation: none; opacity: 0; }
+
+  /* Ceremony copy: kicker, name, age appear immediately without scale/fade travel. */
+  .game-stage-clear-kicker.is-visible { animation: none; opacity: 1; }
+  .game-stage-clear-name.is-slam      { animation: none; opacity: 1; transform: none; }
+  .game-stage-clear-age.is-visible    { animation: none; opacity: 1; }
+  .game-stage-clear-skip              { animation: none; opacity: 0.5; }
+
+  /* ── UX-4 twins ──────────────────────────────────────────── */
+  /* Title elements: appear immediately, no travel or scale. */
+  .game-title-band,
+  .game-title-headline,
+  .game-title-subtitle,
+  .game-title-cta,
+  .game-title-meta {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Title exit: hide instantly (200ms wait collapses to 0ms under reduced). */
+  .game-title-screen.is-exiting { animation: none; opacity: 0; pointer-events: none; }
+
+  /* Email screen enter: appear immediately. */
+  .game-email-screen { animation: none; }
+
+  /* Assemble lines: appear immediately, no tick. */
+  .game-assemble-line.is-visible { animation: none; opacity: 1; }
+  .game-assemble-line.is-ticking::after { animation: none; opacity: 1; }
+
+  /* Form shake: no travel; message still visible. */
+  .game-email-form.is-shake { animation: none; }
+
+  /* ── UX-5 twins ──────────────────────────────────────────── */
+  /* HUD fade: instant hide, no transition travel. */
+  .game-surface[data-screen="ending"] .game-hud { transition: none; opacity: 0; }
+
+  /* Flash: skip entirely. */
+  .game-ending-flash-overlay { display: none; }
+
+  /* Preamble, prompt: appear immediately. */
+  .game-ending-preamble.is-visible { animation: none; opacity: 1; }
+  .game-ending-prompt.is-visible   { animation: none; opacity: 1; }
+
+  /* Name: appear immediately without slam travel. */
+  .game-ending-member-name.is-slam { animation: none; opacity: 1; transform: none; }
+
+  /* Portrait: appear immediately without pop. */
+  .game-ending-portrait-pop { animation: none; opacity: 1; transform: none; }
+
+  /* Role, stats, blurb, actions: appear immediately. */
+  .game-ending-role-enter,
+  .game-ending-stats-enter,
+  .game-ending-blurb-enter,
+  .game-ending-actions-enter { animation: none; opacity: 1; transform: none; }
+
+  /* Recap stagger: all appear at once. */
+  .game-ending-recap-entry { animation: none; opacity: 1; }
+
+  /* UX-7 LifeRecap stagger: appear immediately. */
+  .game-life-recap-entry.is-animated { animation: none; opacity: 1; }
+
+  /* New Life pulse: skip scale travel. */
+  .game-btn-secondary.is-pulse { animation: none; }
+
+  /* ── UX-6 twins ──────────────────────────────────────────── */
+  /* Share landing: all elements appear immediately, no stagger. */
+  .game-sl-band,
+  .game-sl-you-are,
+  .game-sl-name,
+  .game-sl-reveal,
+  .game-sl-dare,
+  .game-sl-cta {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Ending exit: hide instantly on restart. */
+  .game-ending-screen.is-exiting { animation: none; opacity: 0; pointer-events: none; }
 }

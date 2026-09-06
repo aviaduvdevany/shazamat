@@ -98,10 +98,10 @@ Brief and full file list: [`docs/game/sprite-guide.md`](./sprite-guide.md).
 
 Motion, timing, and feel are specified in [`docs/game/ux-plan.md`](./ux-plan.md). Do not invent new durations — use that document's tokens and phase checklists.
 
-- [ ] Screen-shake CSS animation for bad outcomes
+- [x] Screen-shake CSS animation for bad outcomes (UX-1: `.game-shake` on `.game-surface`, decaying 220ms, fires on delta ≤ −8)
 - [ ] Sprite expression swap on outcome (happy/worried face)
-- [ ] Loading state for email gate → prettier spinner
-- [ ] Better ending screen animation (member portrait appears with a pop)
+- [x] Loading state for email gate → replaced by UX-4 assemble theater (900ms three-line sequence, never a spinner)
+- [x] Better ending screen animation (member portrait appears with a pop) — full UX-5 ending show: beat ceremony, name slam, portrait pop, count-up, gated Share, New Life pulse
 
 ---
 
@@ -140,7 +140,7 @@ Motion, timing, and feel are specified in [`docs/game/ux-plan.md`](./ux-plan.md)
 - [ ] Auto-generate a beautiful share image (beyond the current Satori OG)
 - [ ] WhatsApp story card format (1080×1920)
 - [ ] Instagram stories export button
-- [ ] The share text should feel like the punchline: "חייתי חיים שלמים והפכתי ל[name]. מה הפכת?"
+- [x] The share text should feel like the punchline: "חייתי חיים שלמים והפכתי ל[name]. מה הפכת?"
 
 ### Shuni CTA
 

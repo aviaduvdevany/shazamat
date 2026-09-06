@@ -41,18 +41,18 @@ Honest audit of `src/game/ui/` + `src/app/life/game.css` as of this writing.
 
 | Surface | What the player gets | What's missing |
 |---|---|---|
-| Title | Static headline + CTA | No idle life, no entrance, no exit |
-| Email gate | Form + "טוען..." | The "life is being created" copy is a label, not a moment |
-| Event card | All copy and buttons appear at once | No enter choreography, no reading beat |
-| Choice press | 80ms squash, orange fill | Other buttons stay live; no commit lock; no risk cue |
-| Outcome | Label + deltas pop 400ms + Continue | Instant dump; HUD bar tweens but does not announce; no roll drama |
+| Title | Staggered enter (band → slam headline → subtitle → CTA pulse → meta); idle breath loop on headline; overlapping 200ms exit to email | No idle life beyond breath |
+| Email gate | Assemble theater (3 theater lines stagger over 900ms min, parallel with `startRun`); button → "יוצרים את החיים…"; error shake (4px/180ms); smash-cut into first event | — |
+| Event card | Staggered enter: kicker 40ms → headline 100ms → body 180ms → choices 260ms+40n; first event gets 200ms extra breath; choices locked during stagger | No roll drama (UX-2), no mood-driven tempo (UX-2) |
+| Choice press | 80ms squash, commit lock: chosen fills orange, unchosen fade to 35%, 120ms hold | No risk cue (🎲 in UX-2) |
+| Outcome | Label enters at 160ms; deltas stagger 240ms+80n with overshoot pop; HUD pulses + fill sweeps (WAAPI + CSS transition) on same frame as each delta; ghost drain on losses; flying number travels from delta chip to HUD stat (WAAPI, 450ms); SFX (`stat-up`/`stat-down`) + haptic (20ms/30ms) fire on same frame; auto-advance 1400ms / 1100ms flavor / 600ms reduced; Continue is skip from 160ms | — |
 | Stage clear | Static title + Continue | No chapter ceremony, no age tick, no breath |
-| Ending | Everything on screen at once | No anticipation, no name slam, no count-up |
-| Share page | Static recap card | No theater for the friend; CTA is just a link |
+| Ending | Beat ceremony: silence → "החיים שלך הסתיימו." → "אתה הוא..." → 80ms flash → name slam (aria-live) → portrait pop → role → stat count-up → blurb → recap stagger → Share (gated 400ms after name) + New Life (pulses once after share or 6s); HUD fades on entry; tap-to-skip-to-name; reduced motion: all waits instant, count snaps, Share immediate | — |
+| Share page | CSS-only 600ms mini-reveal (band → "אתה הוא" → name slam → portrait/role/stats → dare → CTA); recap collapsed in `<details>`; CTA "התחל חיים"; returning player: softer email copy + prefilled email | Stories/WhatsApp image formats (Phase 3) |
 | Mood field | Authored on every event (`neutral` / `tense` / `funny` / `epic` / `sad`) | Unused by UI |
 | Rarity | `common` / `rare` / `ultra` in schema | Unused by UI |
 | Audio | Stub exists | No-op — define sync points now, files later |
-| Reduced motion | Stat pop + button squash disabled | Centralized contract live (UX-0): tokens remap to instant in game.css; `usePrefersReducedMotion` hook in `src/game/ui/`; shake/stagger stubs forward-declared |
+| Reduced motion | All travel cancelled; deltas still appear; choices immediately ready; auto-advance 600ms; no shake/ghost/pulse/stagger | Centralized contract live (UX-0 + UX-1): tokens remap to instant; `usePrefersReducedMotion` + `GAME_SEQUENCE.autoAdvanceReduced` for JS sequences; all UX-1 animations have reduce twins |
 
 A full run is roughly **title → email → ~18 events × (choice + continue) → 6 stage clears → ending**. That is ~45 taps. The current loop is readable and legal. It does not yet feel like a life passing.
 
@@ -480,125 +480,225 @@ Suggested order is **felt impact per day**, not narrative order.
 
 ---
 
-### UX-1 — The decision loop
+### UX-1 — The decision loop ✅ COMPLETE (2026-09-06)
 
 **Goal:** the 90% of play time feels like a game. Highest New Life leverage after the ending.
 
 **Player-visible change:** cards arrive, choices commit, numbers hit the body.
 
-- [ ] Event enter choreography (kicker → headline → body → staggered choices)
-- [ ] Disable choices until enter completes
-- [ ] Choice commit lock (unchosen fade, chosen holds)
-- [ ] Outcome well transition (old exits up, new enters)
-- [ ] Stat delta stagger + existing pop, wired to tokens
-- [ ] HUD: pulse + fill + ghost-on-loss, same frame as the matching delta
-- [ ] Auto-advance outcome at 1400ms; Continue is a skip (`autoFocus` kept)
-- [ ] First-event extra 200ms hold
-- [ ] Screen-shake token class for negative deltas ≥ 8 (roadmap already lists this)
+- [x] Event enter choreography (kicker → headline → body → staggered choices)
+- [x] Disable choices until enter completes
+- [x] Choice commit lock (unchosen fade, chosen holds)
+- [x] Outcome well transition (lock hold + 80ms exit beat before outcome mount)
+- [x] Stat delta stagger + existing pop, wired to tokens
+- [x] HUD: pulse (WAAPI) + fill + ghost-on-loss, same frame as the matching delta
+- [x] Auto-advance outcome at 1400ms; Continue is a skip (`autoFocus` kept)
+- [x] First-event extra 200ms hold
+- [x] Screen-shake token class for negative deltas ≥ 8 (roadmap already lists this)
 
-**Done when:** playing three events with eyes on the HUD, the player can tell what changed without reading the well.
+**Done when:** playing three events with eyes on the HUD, the player can tell what changed without reading the well. ✓
 
 **Maps to:** roadmap Phase 1 polish (shake, delta pop).
 
+**Implementation notes:**
+- New file: `src/game/ui/useGameMotion.ts` — `GAME_SEQUENCE` constants for bible offsets not in the token set; `useGameMotion()` returns a `wait(ms)` helper (resolves at 0 under reduced motion) plus skip/reset primitives.
+- `GameShell` orchestrates the full sequence: lock hold (120ms via `GAME_DURATION.fast`) → engine apply → 80ms exit beat (`GAME_DURATION.ack`) → `screen="outcome"` → `runOutcomeSequence` (parallel, not awaited).
+- `displayStats` starts as `prevStats` at apply time; each delta reveal calls `setDisplayStats` per-stat to sync the HUD bar with the CSS animation-delay (240ms + n×80ms). Prevents the HUD from jumping before the delta pop.
+- WAAPI pulse: `Hud.tsx` fires `element.animate(...)` inside `useEffect` whenever `statDisplay[id].pulseNonce` increments. A `prevNonces` ref tracks changes across renders. This avoids the `key`-remount trick that would reset the fill-bar transition.
+- Ghost bar: `.game-hud-stat-ghost` is positioned absolute inside `.game-hud-stat-bar` (which is now `position: relative`). Ghost uses `key={ghostKey}` on the element so it remounts and replays `game-ghost-drain` (300ms fade) on each loss.
+- Screen shake: `.game-shake` class toggled on `.game-surface` (via `shaking` state) fires `game-shake` at 220ms. Fires only on `delta ≤ −8` and only when `!reduced`. Cleanup timeout at 340ms.
+- Auto-advance guard: `continueFireRef` prevents double-fire from simultaneous timer + Continue tap. `hudSequenceAbortRef` bails out the per-delta setTimeout chain when continue is pressed early.
+- Well "exit" is a lock-hold visual (chosen orange 120ms) + 80ms ack gap before outcome mounts. No two-element overlap needed; the outcome label's 160ms delay provides the reading beat.
+- CSS enter animations are scoped to `@media (prefers-reduced-motion: no-preference)`. Reduced-motion twins cancel enter, outcome label, continue, and ghost animations; `game-shake` and `.game-stagger > *` were already stubbed in UX-0.
+- `EventCard` gains `choicesReady`, `lockedChoiceId`, `isFirstEvent` props. `OutcomeDisplay` gains `--delta-i` and `--deltas-count` CSS variables. `Hud` gains `displayStats` and `statDisplay` props. All stay presentational.
+- `data-beat` attribute was not added to `.game-surface`; enter choreography is driven by CSS mount animation + `is-chosen`/`is-unchosen` classes directly.
+
 ---
 
-### UX-2 — Mood, risk, rarity
+### UX-2 — Mood, risk, rarity ✅ COMPLETE (2026-09-06)
 
 **Goal:** the content's personality reaches the thumb.
 
-- [ ] `data-mood` drives tempo + grade table above
-- [ ] 🎲 on roll choices
-- [ ] Roll ticker template (450–700ms, mood-scaled, skippable)
-- [ ] Rare / ultra enter whisper (no badge)
-- [ ] `weight >= 10` uses epic headline slam
-- [ ] Sad path: no overshoot, no shake on small losses
+- [x] `data-mood` drives tempo + grade table above
+- [x] 🎲 on roll choices
+- [x] Roll ticker template (450–700ms, mood-scaled, skippable)
+- [x] Rare / ultra enter whisper (no badge)
+- [x] `weight >= 10` uses epic headline slam
+- [x] Sad path: no overshoot, no shake on small losses
 
 **Done when:** `trip-mayim-amukim` (tense + roll) and `school-hayom-ani-lo` (funny) feel like different games without different layouts.
 
 **Maps to:** unused schema fields finally earning their keep.
 
+**Implementation notes:**
+- `GAME_MOOD` and `GAME_RARITY` added to `src/game/ui/useGameMotion.ts` alongside `GAME_SEQUENCE`. Each mood entry has `enterScale`, `choiceHold`, `deltaStride`, `outcomeLabelExtra`, and `rollMs`. Rarity entries have `extraHoldMs`.
+- Enter delay CSS variables (`--g-k-delay`, `--g-h-delay`, `--g-b-delay`, `--g-c-start`, `--g-c-stride`) set per-mood on `.game-surface[data-mood=...]`. UX-1 enter animation delays now reference these vars. First-event +200ms unscaled extra remains stacked on top: `calc(var(--g-b-delay) + 200ms)`.
+- Outcome timing: `--g-delta-stride` and `--g-outcome-label-extra` on `.game-surface`. All three outcome selectors (label, delta, continue) use these vars. JS `runOutcomeSequence` now accepts a `mood` parameter and reads `GAME_MOOD[mood].deltaStride` / `outcomeLabelExtra` to keep HUD reveal in sync with CSS.
+- **Grade effects** are CSS-only on existing elements: funny → `color-mix(in srgb, #000 96%, #DB7738)` on `.game-event-area`; tense → cooler mix + `::after` vignette on `.game-viewport`; epic → `contrast(1.08)` filter on `.game-viewport` + `letter-spacing: 0.04em` on headline; sad → `saturate(0.8)` on `.game-scene` + `--g-ease-overshoot` remapped to `--g-ease-out`.
+- **Funny bounce**: `.game-surface[data-mood="funny"] .game-choice-btn` overrides `animation-timing-function` to `--g-ease-overshoot`. Reduce-motion twin restores `--g-ease-out`.
+- **Choice-enable timer** in `enterPlaying()` now computes `scaledChoicesStart` and `scaledStride` from `GAME_MOOD[mood].enterScale`, adds `moodConfig.choiceHold` and `rarityConfig.extraHoldMs`. Ultra-rarity cards trigger a 180ms `whisperShaking` state that adds `.game-shake-whisper` to `.game-surface`.
+- **Roll ticker** (`src/game/ui/RollTicker.tsx`): rendered inside `.game-event-area` while `isRolling` is true. Replaces `<EventCard>` during the dice beat. Die emoji spins 4 iterations at `rollMs/4` ms per tick via `style.animationDuration`. Tap (`onClick`) calls `rollMotion.skip()` which resolves the `rollMotion.wait(rollMs)` in `handleChoicePress`. `useGameMotion()` is called once in `GameShell` as `rollMotion` and used only for this sequence. Engine's `applyChoice()` still runs synchronously before the ticker starts — the outcome is already known; the ticker is pure theater.
+- **Dice badge**: `choice.roll?.length > 0` renders `<span class="game-roll-badge">🎲</span>` inside `.game-choice-btn.has-roll` (flex, `justify-content: space-between`). Always visible before press. `aria-label="סיכון"` on the span. Never peeks roll branches.
+- **Keystone slam**: `isKeystone = (event.weight >= 10 || event.mood === "epic")` computed in `GameShell`, passed as `isKeystone` prop to `EventCard`. Headline gets class `is-slam` which plays `game-slam` keyframe (scale `0.86 → 1.06 → 1`, `--g-t-slow`, `--g-ease-emphasize`). Reduce-motion twin: `animation: none; opacity: 1; transform: none`.
+- **Sad shake guard**: `revealHudStat` checks `currentEvent?.mood === "sad"` before setting `shaking`; sad cards never shake even on `delta ≤ −8`.
+- **Rare enter whisper**: `[data-rarity="rare"][data-screen="playing"]` and `[data-rarity="ultra"][data-screen="playing"]` — kicker overrides to `--g-ease-overshoot`; `.game-event-text` plays `game-rare-flash` (80ms orange flash, delay 40ms). `game-event-text` is inside `EventCard` which remounts per event, so the animation retriggers correctly.
+- **Epic outcome flash**: `.game-surface[data-mood="epic"] .game-outcome` plays `game-epic-flash` (80ms warm flash) on mount.
+- **`data-beat`** attribute added: `"enter"` on `enterPlaying`, `"lock"` on commit, `"roll"` during ticker, `"deltas"` after outcome mounts. Enables future CSS selectors without a full `playBeat` rewrite.
+- All new animations have reduce-motion twins in the single `@media (prefers-reduced-motion: reduce)` block. Mood tempo delay variables also collapse to `0ms` under reduce so the house-beat enter resets to instant. Grade (color/filter) effects are intentionally kept under reduce — meaning stays, travel cancels.
+
 ---
 
-### UX-3 — Chapter ceremony
+### UX-3 — Chapter ceremony ✅ COMPLETE (2026-09-06)
 
 **Goal:** seven stages feel like a life, not a playlist.
 
-- [ ] Full-surface stage-clear sequence (dim → סוף X → hold → slam next → auto)
-- [ ] Age label on the HUD updates *after* the slam, with a 200ms pulse
-- [ ] Scene crossfade when `event.scene` changes (320ms)
-- [ ] Last stage does not use this template — it hands off to the ending
-- [ ] Optional: a 3-tick age rumble (`13 · 16 · 18`) only if it stays under 400ms. Cut if it feels like a slot.
+- [x] Full-surface stage-clear sequence (dim → סוף X → hold → slam next → auto)
+- [x] Age label on the HUD updates *after* the slam, with a 200ms pulse
+- [x] Scene crossfade when `event.scene` changes (320ms)
+- [x] Last stage does not use this template — it hands off to the ending
+- [x] Optional: a 3-tick age rumble (`13 · 16 · 18`) — included (360ms, under 400ms cap); cut in QA if it feels like a slot.
 
-**Done when:** a player asked "what stage are you in?" can answer from memory of the slam, not the tiny uppercase strip.
+**Done when:** a player asked "what stage are you in?" can answer from memory of the slam, not the tiny uppercase strip. ✓
 
 **Maps to:** the BitLife "Age" ritual.
 
+**Implementation notes:**
+- `GAME_SEQUENCE` gains six ceremony offsets in `useGameMotion.ts`: `stageClearKicker` (120), `stageClearBreath` (400), `stageClearSlam` (600), `stageClearAge` (780), `stageClearAuto` (1600), `stageClearRumbleStride` (120).
+- `GameShell` gets a second `useGameMotion()` instance (`clearMotion`) + `stageClearFireRef` guard. When `selectNextEvent` returns `stage-clear`, `runStageClearCeremony()` runs the timed beat sequence using `clearMotion.wait()`. `advanceStage` is deferred until the slam beat (t=600) so the HUD shows the old age during the kicker/breath.
+- `StageClear.tsx` rewritten as a full-surface absolute overlay (z-index 20, outside `.game-event-area`). Props: `currentStage`, `nextStage`, `beat`, `onSkip`. Copy: kicker `סוף · [current]`, name slam, age/rumble. Age rumble parses `gילאי N–N` range and ticks three frames at 120ms each. `aria-live="polite"` on the name; keyboard skip button with `autoFocus` at `beat="age"`.
+- `Hud.tsx` gains `agePulseNonce?: number`. When it increments a WAAPI 200ms scale 1→1.08→1 pulse fires on `.game-hud-age` via a ref, matching the stat-container pulse recipe.
+- `SpritePortrait.tsx` adds dual-layer crossfade: outgoing scene gets `.is-exiting` (fades from 0.6→0 over `--g-t-slow`) while the incoming scene key-remounts and fades in (0→0.6). The exiting layer clears after 400ms.
+- Engine fix: `selectNextEvent` now checks `stageIndex >= pack.stages.length - 1` **before** the generic `stage-clear` return, so the last stage exhausts directly to `ending`. Same guard applied to the empty-candidates early-clear path. Covered by new vitest (`test-5b`).
+- `game.css`: `.game-stage-clear-overlay` (absolute, full-surface), kicker/name/age animation classes, `.game-scene` fade-in/out keyframes, viewport dim `[data-screen="stage-clear"] .game-viewport { opacity: 0.2 }`, `.game-event-area` hidden during stage-clear. Reduced-motion twins cancel all travel; copy still visible.
+
 ---
 
-### UX-4 — Birth (title + email)
+### UX-4 — Birth (title + email) ✅ COMPLETE (2026-09-06)
 
 **Goal:** the funnel feels like the opening cutscene.
 
-- [ ] Title enter / idle breath / exit to email
-- [ ] Email assemble sequence on successful submit
-- [ ] Hold assemble if `startRun` is slow; never a lonely spinner
-- [ ] Error shake + existing message
-- [ ] Smash cut into first event (pairs with UX-1 first-event hold)
+- [x] Title enter / idle breath / exit to email
+- [x] Email assemble sequence on successful submit
+- [x] Hold assemble if `startRun` is slow; never a lonely spinner
+- [x] Error shake + existing message
+- [x] Smash cut into first event (pairs with UX-1 first-event hold)
 
-**Done when:** a playtester describes the email step as "the game starting," not "a signup form."
+**Done when:** a playtester describes the email step as "the game starting," not "a signup form." ✓
 
 **Maps to:** concept doc email framing; roadmap "prettier spinner" — replaced by this sequence.
 
+**Implementation notes:**
+- `GameShell` gains a third `useGameMotion()` instance (`birthMotion`) for the 200ms title→email overlap and the 80ms smash wait.
+- `GAME_SEQUENCE` gains five new offsets: `emailLine1` (80), `emailLine2` (350), `emailLine3` (600), `emailAssemble` (900), `emailSmash` (80).
+- `.game-funnel` is a `position: relative; flex: 1` wrapper that mounts both `TitleScreen` and `EmailGate` simultaneously during the 200ms transition. Both children are `position: absolute; inset: 0`.
+- `TitleScreen` gains an `exiting?: boolean` prop; when true, `.game-title-screen.is-exiting` plays `game-exit-up` (translateY 0→-24px, fade, `--g-t-base`). CTA is `disabled` during exit.
+- Title element enter animations (band, headline, subtitle, CTA, meta) all play on mount via CSS `animation-delay` + `both` fill-mode, scoped to `@media (prefers-reduced-motion: no-preference)`. The headline chains `game-title-slam` (80ms delay, `--g-t-slow`) into `game-title-breathe` (6s loop starting at 1200ms).
+- CTA uses two chained animations: `game-fade-in` at 320ms and a single `game-title-pulse` at 900ms.
+- `EmailGate` drops the `loading` prop. New props: `assembling`, `assemblePhase` (0–3), `assembleTicking`. Imports `usePrefersReducedMotion` directly to check reduced in `triggerShake`.
+- Form shake (`game-form-shake`, 4px, 180ms) fires for local validation AND server errors. Replay via class-remove → offsetWidth force-reflow → class-add + 220ms cleanup timer. Server error detected via `useEffect([error])`.
+- Assemble phase stagger uses raw `setTimeout` (stored in `assembleTimersRef`, not `birthMotion.wait`) so it runs concurrently with the 900ms floor wait without sharing `timerRef`. Under reduced motion, `assemblePhase` is set to 3 immediately and no timers are scheduled.
+- `handleEmailSubmit` runs `birthMotion.wait(emailAssemble)` and `startRun()` in `Promise.all`; smash only fires after both resolve. On failure: abort assemble, show form, error prop triggers shake in EmailGate. On success: `setShowSmash(true)` → `birthMotion.wait(80)` → `setShowSmash(false)` → `enterPlaying`.
+- `handleRestart` calls `birthMotion.skip()` and clears all assemble timers + birth state.
+- `game.css` reduced-motion twins cancel all enter/exit/assemble/tick/shake animations; assemble lines appear immediately (`opacity: 1`); title elements appear immediately; title exit is instant-hide.
+- **"What ships today" table** is updated: Title now has "staggered enter (band/headline/subtitle/CTA/meta), idle breath, overlapping exit to email". Email now has "assemble theater (three lines stagger over 900ms), parallel startRun hold, error shake, smash cut".
+
 ---
 
-### UX-5 — Ending show
+### UX-5 — Ending show ✅ COMPLETE (2026-09-06)
 
 **Goal:** the peak. Ship this the moment UX-1 is in.
 
-- [ ] Full ending timeline (silence → אתה הוא... → flash → name slam → portrait pop → role → count-up → blurb → recap → actions)
-- [ ] Tap-to-skip-to-name
-- [ ] Share withheld until name has been visible 400ms
-- [ ] New Life pulse once after share or 6s
-- [ ] Slot reserved below actions for Shuni CTA (copy already in the concept doc) — implement when Phase 3 says so
-- [ ] `aria-live` polite on the name; assertive not needed
+- [x] Full ending timeline (silence → אתה הוא... → flash → name slam → portrait pop → role → count-up → blurb → recap → actions)
+- [x] Tap-to-skip-to-name
+- [x] Share withheld until name has been visible 400ms
+- [x] New Life pulse once after share or 6s
+- [x] Slot reserved below actions for Shuni CTA (copy already in the concept doc) — implement when Phase 3 says so
+- [x] `aria-live` polite on the name; assertive not needed
 
-**Done when:** watching a first-time player, there is a visible pause *before* they tap Share — they are still arriving.
+**Done when:** watching a first-time player, there is a visible pause *before* they tap Share — they are still arriving. ✓
 
 **Maps to:** roadmap Phase 1 "better ending animation" and Phase 3 virality.
 
+**Implementation notes:**
+- `EndingScreen.tsx` is a self-contained beat machine. Props unchanged (`member`, `state`, `pack`, `shareUrl`, `onRestart`). No new GameShell state needed.
+- `beat` state (`EndingBeat` union) drives conditional rendering: each block renders only at-or-after its beat. `atOrAfter(current, target)` helper compares indices in `BEAT_ORDER`.
+- **Two-phase useEffect sequence:** main show (`useEffect([], [])`) runs the silence → preamble → prompt → flash → name linear path via `motion.wait()`. A second `useEffect` fires when `beat === "name"` (dependency `[beat === "name" ? 1 : 0]`) and chains portrait → role → stats → blurb → recap → actions. This split means skip-to-name fires the post-name sequence correctly without duplicating code.
+- **Skip logic:** `skipPhase` ref (0 = before preamble / ignore taps, 1 = skip-to-name, 2 = show complete). `handleSurfaceTap` checks phase. `onClick` on `.game-ending-screen`; action buttons `stopPropagation`. Spec says never skip the name itself — the skip jumps *to* name, not past it.
+- **Share gate:** `setTimeout(setShareReady, gateMs)` stored in `gateTimerRef`. Under reduced motion `gateMs = 0`. Gate timer is cleared in the post-name effect's cleanup so unmount can't call `setShareReady` on a dead component.
+- **Count-up:** `startCountUp(end, durationMs, reduced, setter)` — pure helper that returns a cancel function. All active cancels stored in `countUpCancels` ref; cancelled on unmount or effect cleanup. Under reduced motion, snaps immediately to target.
+- **New Life pulse:** `endingNewLifePulse` (6000ms) timer stored in `newLifeTimerRef`. Also fires early via `fireNewLifePulse()` after any share action. Sets `newLifePulse` state which adds `is-pulse` class to the secondary button (one-shot `game-title-pulse` WAAPI animation).
+- **Portrait:** existing `.game-sprite-portrait` with a new `game-ending-portrait-pop` class that plays `game-ending-portrait` (0.8 → 1.06 → 1, `--g-ease-overshoot`). Placeholder art is fine.
+- **Flash:** `.game-ending-flash-overlay` absolute fixed element rendered only while `beat === "flash"` (one frame). Plays `game-ending-flash` keyframe (80ms, 8% warm tint). Not a strobe; imperceptible under reduced motion (display:none twin).
+- **HUD:** `GameShell` now mounts `<Hud>` for both gameplay screens and `screen === "ending"` in a single block. CSS `[data-screen="ending"] .game-hud { opacity: 0; pointer-events: none; transition: opacity var(--g-t-hold) }` fades it over 450ms on entering the ending. Reduced-motion twin: `transition: none; opacity: 0` (instant hide).
+- `GAME_SEQUENCE` gains 13 new ending offsets in `useGameMotion.ts`: `endingWorld/Preamble` (400), `endingPrompt` (1300), `endingFlash` (2200), `endingName` (2280), `endingPortrait` (2480), `endingRole` (2680), `endingStats` (2860), `endingBlurb` (3200), `endingRecap` (3500), `endingActions` (3800), `endingShareGate` (400), `endingRecapStride` (60), `endingNewLifePulse` (6000).
+- `useGameMotion` gains a `useEffect` cleanup that clears `timerRef` on unmount — guards all existing consumers (UX-2 roll, UX-3 stage clear, UX-4 birth, UX-5 ending) from setState-after-unmount if a mid-sequence restart occurs.
+- All new CSS animations (`game-ending-flash`, `game-ending-portrait`) in keyframes block. Enter classes (`game-ending-role-enter`, `game-ending-stats-enter`, `game-ending-blurb-enter`, `game-ending-actions-enter`) use existing `game-fade-in`. Recap stagger via `--recap-i` CSS custom property. All scoped to `@media (prefers-reduced-motion: no-preference)`. Reduce twins in the single reduce block cancel all travel; all elements appear at opacity 1 instantly.
+
 ---
 
-### UX-6 — Share landing and replay hook
+### UX-6 — Share landing and replay hook ✅ COMPLETE (2026-09-06)
 
 **Goal:** the friend feels dared, not briefed.
 
-- [ ] Share-page mini-reveal (faster ending grammar)
-- [ ] Recap collapsed by default
-- [ ] Primary CTA: התחל חיים
-- [ ] Share text stays the punchline: `חייתי חיים שלמים והפכתי ל[name]. מה אתה תהיה?`
-- [ ] After New Life, skip or soften email on known subscriber (product decision — flag it, don't silently drop consent)
-- [ ] WhatsApp / stories image formats stay a Phase 3 art+layout task; this phase only makes the *on-page* landing feel like a show
+- [x] Share-page mini-reveal (faster ending grammar)
+- [x] Recap collapsed by default
+- [x] Primary CTA: התחל חיים
+- [x] Share text stays the punchline: `חייתי חיים שלמים והפכתי ל[name]. מה אתה תהיה?`
+- [x] After New Life, skip or soften email on known subscriber (product decision — soften implemented: returning player gets lighter copy + prefilled email; full consent-skip is a product/legal call, flagged below)
+- [x] WhatsApp / stories image formats stay a Phase 3 art+layout task; this phase only makes the *on-page* landing feel like a show
 
-**Done when:** a shared link played on a second phone makes someone tap the CTA before scrolling.
+**Done when:** a shared link played on a second phone makes someone tap the CTA before scrolling. ✓
 
 **Maps to:** roadmap Phase 3 share experience.
 
+**Open product/legal decision:** `startRun` still requires email + `consent: true`. A consent-skip path (e.g. "start immediately if cookie/token exists") would require Israeli privacy legal review. For now, returning players see lighter copy ("עוד סיבוב. / אותו מייל. חיים חדשים.") with the email prefilled — the gate stays but the friction is lower.
+
+**Implementation notes:**
+- `src/game/ui/ShareLanding.tsx` — new client island (pure CSS stagger, no JS beat machine). Props: `member { id, name, role, endingBlurb? }`, `stats { musicianship, swag }`, `log: LogEntry[]`. Replaces the old static markup in the RSC.
+- `src/app/life/r/[runId]/page.tsx` — now passes `member`, `stats`, `log` to `<ShareLanding>`. OG image route unchanged.
+- CSS enter classes: `.game-sl-band` (t=0), `.game-sl-you-are` (t=80), `.game-sl-name` (t=160, slam with `--g-t-base` + `--g-ease-overshoot`), `.game-sl-reveal` (t=360, portrait/role/stats/blurb/recap), `.game-sl-dare` (t=500), `.game-sl-cta` (t=600). All gated in `@media (prefers-reduced-motion: no-preference)` + reduce twins in the single block.
+- `.game-share-dare` typography (20px, 700, #888, 1px letter-spacing).
+- Recap uses native `<details>` / `<summary>` ("החיים שלהם בקצרה ▸") — collapsed by default, no JS required.
+- `.game-ending-screen.is-exiting` plays `game-exit-up` over `--g-t-base` (200ms); reduce twin: instant-hide.
+- `EndingScreen.tsx` — `exiting?: boolean` prop adds `is-exiting` class; `handleShare` punchline now `חייתי חיים שלמים והפכתי ל[name]. מה אתה תהיה?`; `navigator.share({ text, url })` separates URL from sentence; clipboard/WhatsApp fallbacks concat `\n` + url.
+- `GameShell.tsx` — `handleRestart` made async; sets `endingExiting` state, waits `birthMotion.wait(GAME_DURATION.base)`, then runs existing reset body (old synchronous `birthMotion.skip()` removed). New states: `endingExiting`, `storedEmail`, `isReturning`. `useEffect([], [])` reads `localStorage["shazamat-life-email"]` after hydration. After successful `startRun` persists email to localStorage. Passes `returning` and `defaultEmail` to `EmailGate`.
+- `EmailGate.tsx` — `returning?: boolean` and `defaultEmail?: string` props. `useEffect([defaultEmail])` syncs prefill after hydration without overwriting user edits. Returns softer copy block (`עוד סיבוב. / אותו מייל. חיים חדשים.`) when `returning` is true.
+- All new animations have reduce-motion twins in the single `@media (prefers-reduced-motion: reduce)` block.
+
 ---
 
-### UX-7 — Completeness (haptics, sync, scars)
+### UX-7 — Completeness (haptics, sync, scars) ✅ COMPLETE (2026-09-06)
 
 **Goal:** the loop feels finished. Do this after 1–6, not instead.
 
-- [ ] `navigator.vibrate` patterns (Android; no-op on iOS Safari): 10ms tap, 20ms gain, 30ms loss, `[10, 40, 30]` on name slam. Off under reduced motion.
-- [ ] SFX sync points in the audio stub — fire on the same frame as the visual, even if files are silent. IDs already listed in the roadmap: `stat-up`, `stat-down`, `choice-select`, `stage-clear`. Add `roll-tick`, `reveal-slam`, `rare-enter`.
-- [ ] Flying stat numbers well → HUD
-- [ ] Recap lines as a readable life (stage dots, not a raw dump of the first five choices)
-- [ ] Keyboard: arrows move between choices, Enter commits, Space skips ceremony
-- [ ] Focus rings stay 3px orange (brand rule)
-- [ ] Accessibility pass: contrast on `#aaa` body text, live regions, tap targets already 52px — keep them
-- [ ] A/B hooks for email assemble copy and ending hold length (900 vs 1300 vs 2200) if analytics land
+- [x] `navigator.vibrate` patterns (Android; no-op on iOS Safari): 10ms tap, 20ms gain, 30ms loss, `[10, 40, 30]` on name slam. Off under reduced motion.
+- [x] SFX sync points in the audio stub — fire on the same frame as the visual, even if files are silent. IDs already listed in the roadmap: `stat-up`, `stat-down`, `choice-select`, `stage-clear`. Added `roll-tick`, `reveal-slam`, `rare-enter`.
+- [x] Flying stat numbers well → HUD
+- [x] Recap lines as a readable life (stage dots, not a raw dump of the first five choices)
+- [x] Keyboard: arrows move between choices, Enter commits, Space skips ceremony
+- [x] Focus rings stay 3px orange (brand rule)
+- [x] Accessibility pass: contrast on `#aaa` body text bumped to `#ccc`; recap/meta `#888` bumped to `#bbb`; live regions unchanged; tap targets kept at 52px
+- [x] A/B hooks for email assemble copy (`?ux_assemble=alt`) and ending hold length (`?ux_hold=900|1300|2200`) — URL-param only; no analytics SDK
 
-**Done when:** turning sound and haptics off still works; turning them on makes the same moments feel thicker, not different.
+**Done when:** turning sound and haptics off still works; turning them on makes the same moments feel thicker, not different. ✓
+
+**Implementation notes:**
+- `src/game/ui/haptics.ts` — `haptic(pattern, reduced)` wrapping `navigator.vibrate?.()`. `HAP_TAP = 10`, `HAP_GAIN = 20`, `HAP_LOSS = 30`, `HAP_NAME = [10, 40, 30]`. SSR-guarded. iOS Safari no-ops naturally.
+- `src/game/ui/experiments.ts` — `getExperimentFlags()` reads `?ux_assemble` and `?ux_hold` from `window.location.search`. Returns defaults (`"default"`, `2200`) during SSR. No analytics SDK; hooks are URL-readable for Phase 3 to attach.
+- `src/game/audio/index.ts` — `playSfx(id, reduced)` now accepts a `reduced` flag and returns early when true. No real playback yet; call sites wired so dropping mp3s later requires no UI changes.
+- `src/game/content/sfx.ts` — catalog extended with `roll-tick`, `reveal-slam`, `rare-enter`. `ending-reveal` kept.
+- SFX + haptic call sites (same frame as visual): `choice-select` + `HAP_TAP` at lock commit in `handleChoicePress`; `stat-up`/`stat-down` + `HAP_GAIN`/`HAP_LOSS` in `revealHudStat`; `rare-enter` in `enterPlaying` when rarity is rare/ultra; `stage-clear` at slam beat in `runStageClearCeremony`; `reveal-slam` + `HAP_NAME` in `EndingScreen.setNameBeat`; `roll-tick` via `onAnimationIteration` on the die span in `RollTicker`.
+- `src/game/ui/flyingNumbers.ts` — `spawnFlyingNumber(statId, delta, emoji, reduced, mood)` measures source (`.game-stat-delta[data-stat-id]`) and target (`.game-hud-stat[data-hud-stat]`) rects relative to `.game-surface`, creates an absolutely-positioned flyer, animates with WAAPI (translate + fade, 450ms). Gains use `--g-ease-overshoot`; losses/sad use `--g-ease-out`. `abortFlyingNumbers()` cancels all in-flight animations — called from `snapAllHudStats` on skip/continue.
+- `data-stat-id` added to `.game-stat-delta` in `OutcomeDisplay`; `data-hud-stat` added to `.game-hud-stat` in `Hud`.
+- `src/game/ui/lifeRecap.ts` — pure `buildLifeRecap(log, stages)` helper. One line per stage (last log entry per stage wins); stage order follows `pack.stages`; `outcomeLabel ?? choiceLabel` for the text.
+- `src/game/ui/LifeRecap.tsx` — stage-dot strip (7 dots, `.is-played` on played stages) + stage-ordered lines (stage label in orange, text in `#bbb`). `animated` prop adds CSS stagger via `--recap-i` (same pattern as existing recap). Used by `EndingScreen` (replaces raw 5-line dump) and `ShareLanding` (inside collapsed `<details>`).
+- `ShareLanding` local `LogEntry` interface replaced with schema import; `pack` imported to pass `pack.stages` to `LifeRecap`.
+- `EndingScreen` wires `?ux_hold` via `getExperimentFlags()`: flash fires at `holdMs`, name at `holdMs + 80`; post-name sequence unchanged. Default 2200 unchanged.
+- `EmailGate` wires `?ux_assemble=alt` via `getExperimentFlags()`: switches assemble lines to set B (`שם: ░░░░`, `תשוקה: ░░░`, `גורל: ...`).
+- `EventCard` — arrow-key roving tabIndex: `onKeyDown` on the `role="group"` div; ArrowDown/ArrowRight = next, ArrowUp/ArrowLeft = previous. Ignores keys when `!choicesReady` or locked. Enter stays native button activation.
+- `GameShell` — `handleSurfaceKeyDown` on `.game-surface`; Space skips: rolling → `rollMotion.skip()`, stage-clear → `handleStageClearSkip()`, outcome → `handleContinueClick()`. Ignored when focus is in a form field or button (lets native Space-click work).
+- `game.css` — global `3px solid #DB7738` focus-visible rule on `.game-root :focus-visible` and `.game-share-page :focus-visible`; removed `outline: none` from `.game-choice-btn:focus-visible` and `.game-email-input:focus`. Contrast: `.game-event-body` `#aaa → #ccc`; `.game-ending-blurb` and `.game-share-blurb` `#aaa → #ccc`; `.game-assemble-line` `#888 → #bbb`; `.game-ending-recap-entry` `#888 → #bbb`; `.game-share-log-outcome` `#888 → #bbb`; `.game-share-dare` `#888 → #bbb`.
+- `src/game/ui/ux7.test.ts` — 30 tests (15 existing engine + 15 new): `buildLifeRecap` grouping, stage order, last-entry-wins, fallback to `choiceLabel`; `getExperimentFlags` SSR default, `ux_assemble=alt`, `ux_hold` valid values and reject/fallback. All pass.
 
 ---
 

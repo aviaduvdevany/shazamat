@@ -165,12 +165,21 @@ describe("Engine: selectNextEvent", () => {
     }
   });
 
-  it("returns stage-clear when event count reached", () => {
+  it("returns stage-clear when event count reached (non-last stage)", () => {
     const state = createRun({ runId: "test-5", seed: 42, contentVersion: 1 }, mockPack);
     const exhausted = { ...state, eventsPlayedInStage: 99 };
     const rng = stateRng(exhausted);
     const result = selectNextEvent(exhausted, mockPack, rng);
     expect(result.type).toBe("stage-clear");
+  });
+
+  it("returns ending (not stage-clear) when last stage event count reached", () => {
+    const state = createRun({ runId: "test-5b", seed: 42, contentVersion: 1 }, mockPack);
+    // stageIndex 1 is "school" — the last stage in mockPack
+    const lastExhausted = { ...state, stageIndex: 1, eventsPlayedInStage: 99 };
+    const rng = stateRng(lastExhausted);
+    const result = selectNextEvent(lastExhausted, mockPack, rng);
+    expect(result.type).toBe("ending");
   });
 
   it("respects oncePerRun — does not repeat seen events if no others left", () => {

@@ -44,6 +44,12 @@ export default function AdminLayout({
               >
                 אלבומים
               </a>
+              <a
+                href="/admin/game/sprites"
+                className="px-2.5 py-1.5 sm:px-3 text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-md transition-all duration-150"
+              >
+                Sprites
+              </a>
             </nav>
 
             {/* Logout */}

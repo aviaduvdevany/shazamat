@@ -25,9 +25,11 @@ interface Props {
   displayStats?: Record<string, number> | null;
   /** Per-stat pulse + ghost data driven by GameShell during outcome. */
   statDisplay?: Record<string, StatDisplay> | null;
+  /** UX-3: Increment to fire a 200ms WAAPI pulse on the age label after stage slam. */
+  agePulseNonce?: number;
 }
 
-export function Hud({ state, pack, displayStats, statDisplay }: Props) {
+export function Hud({ state, pack, displayStats, statDisplay, agePulseNonce }: Props) {
   const stage = pack.stages[state.stageIndex];
   const ageLabel = stage?.ageLabel ?? stage?.label ?? "";
 
@@ -35,6 +37,10 @@ export function Hud({ state, pack, displayStats, statDisplay }: Props) {
   const statEls = useRef<Map<string, HTMLDivElement>>(new Map());
   // Track previous nonces to detect real changes (not just prop-object churns).
   const prevNonces = useRef<Record<string, number>>({});
+
+  // UX-3: Ref for the age label element and its previous nonce.
+  const ageElRef = useRef<HTMLDivElement | null>(null);
+  const prevAgePulseNonce = useRef(0);
 
   // Fire WAAPI pulse whenever a stat's nonce increments.
   useEffect(() => {
@@ -62,10 +68,33 @@ export function Hud({ state, pack, displayStats, statDisplay }: Props) {
     }
   }); // intentionally runs every render; prevNonces ref guards against extra-fires
 
+  // UX-3: Fire WAAPI pulse on age label when agePulseNonce increments.
+  useEffect(() => {
+    const nonce = agePulseNonce ?? 0;
+    if (nonce !== prevAgePulseNonce.current && nonce > 0) {
+      const el = ageElRef.current;
+      if (el) {
+        el.animate(
+          [
+            { transform: "scale(1)", offset: 0 },
+            { transform: "scale(1.08)", offset: 0.4 },
+            { transform: "scale(1)", offset: 1 },
+          ],
+          {
+            duration: GAME_DURATION.base,
+            easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+            fill: "none",
+          }
+        );
+      }
+    }
+    prevAgePulseNonce.current = nonce;
+  }); // same pattern as stat pulses — runs every render; ref guards double-fire
+
   return (
     <>
       <div className="game-hud" role="status" aria-label="סטטוס שחקן">
-        <div className="game-hud-age">{ageLabel}</div>
+        <div className="game-hud-age" ref={ageElRef}>{ageLabel}</div>
         <div className="game-hud-stats">
           {pack.stats.map((def) => {
             const disp = statDisplay?.[def.id];
@@ -82,6 +111,7 @@ export function Hud({ state, pack, displayStats, statDisplay }: Props) {
                 key={def.id}
                 className="game-hud-stat"
                 title={`${def.label}: ${rawVal}`}
+                data-hud-stat={def.id}
                 ref={(el) => {
                   if (el) statEls.current.set(def.id, el);
                   else statEls.current.delete(def.id);

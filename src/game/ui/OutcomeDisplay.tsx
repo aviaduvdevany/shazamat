@@ -29,6 +29,7 @@ export function OutcomeDisplay({ outcomeLabel, statDeltas, pack, onContinue }: P
                 key={id}
                 className={`game-stat-delta${delta < 0 ? " negative" : ""}`}
                 style={{ "--delta-i": i } as React.CSSProperties}
+                data-stat-id={id}
               >
                 {def?.emoji} {sign}{delta} {def?.label}
               </div>

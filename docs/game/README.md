@@ -104,6 +104,7 @@ Both should pass before and after any change.
 | [roadmap.md](./roadmap.md) | What's built, what's next, phase definitions and progress |
 | [ux-plan.md](./ux-plan.md) | **UI, motion, timing, and feel** — phased UX plan. Not sprites. Read before adding transitions or animations. |
 | [sprite-guide.md](./sprite-guide.md) | **Art bible** — sizes, palette, layer grid, and the full file list for generating every sprite. Hand this to an external art/generation agent. |
+| [sprite-lab.md](./sprite-lab.md) | **Sprite Lab operator guide** — how to generate, review, and promote sprites with PixelLab. Env setup, CLI commands, wave order, cost breakdown. |
 | [shazamat-life-simulator-concept.md](./shazamat-life-simulator-concept.md) | Original design document — tone, philosophy, examples |
 
 ---
@@ -242,12 +243,24 @@ Subdomain: `life.shazamat.com` → middleware rewrites to `/life`. To enable it:
 
 ## Environment variables
 
-The game uses the same `DATABASE_URL` as the rest of the site (Neon Postgres). No additional environment variables are required for Phase 0.
+The game uses the same `DATABASE_URL` as the rest of the site (Neon Postgres).
 
-| Variable | Used by |
-|---|---|
-| `DATABASE_URL` | `startRun`, `checkpointRun`, `completeRun`, `getCompletedRun` |
-| `NEXT_PUBLIC_SITE_URL` | Share URL construction |
+| Variable | Required for | Where to set |
+|---|---|---|
+| `DATABASE_URL` | `startRun`, `checkpointRun`, `completeRun`, `getCompletedRun` | `.env.local`, Vercel |
+| `NEXT_PUBLIC_SITE_URL` | Share URL construction | `.env.local`, Vercel |
+| `PIXELLAB_API_TOKEN` | Sprite generation (local only) | `.env.local` — do NOT set on Vercel production |
+
+### Adding PIXELLAB_API_TOKEN
+
+1. Create an account at [pixellab.ai](https://pixellab.ai) and copy your token from the account page.
+2. Add to `.env.local` (already gitignored):
+   ```bash
+   PIXELLAB_API_TOKEN=your_token_here
+   ```
+3. Verify: `npm run sprites:balance`
+
+See [`docs/game/sprite-lab.md`](./sprite-lab.md) for the full generation workflow.
 
 ---
 
@@ -258,6 +271,15 @@ npm run game:test      # Run Vitest unit tests for the engine
 npm run game:validate  # Check content integrity (sprite refs, event ids, copy, affinities)
 npm run dev            # Start dev server — game is at http://localhost:3000/life
 npm run build          # Full production build (includes prisma generate)
+
+# Sprite Lab (requires PIXELLAB_API_TOKEN in .env.local)
+npm run sprites:balance                              # Check PixelLab account balance
+npm run sprites:status                               # See all 77 assets and their lab status
+npm run sprites:generate -- --id body-adult --n 4   # Generate 4 variants of one asset
+npm run sprites:generate -- --batch A --family body  # Generate a whole family
+npm run sprites:approve  -- --id body-adult --version <ver>
+npm run sprites:promote  -- --id body-adult          # Copy approved → public/game/
+npm run sprites:promote  -- --approved               # Promote all approved at once
 ```
 
 Run `game:validate` after every content change. Run `game:test` after any engine change.

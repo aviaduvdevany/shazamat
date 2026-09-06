@@ -85,14 +85,10 @@ export function selectNextEvent(
     if (forced) return { type: "event", event: forced };
   }
 
-  // Check if stage is done
+  // Check if stage is done — last stage goes straight to ending
   if (state.eventsPlayedInStage >= currentStage.eventCount) {
+    if (state.stageIndex >= pack.stages.length - 1) return { type: "ending" };
     return { type: "stage-clear" };
-  }
-
-  // Check if this is the last stage
-  if (state.stageIndex >= pack.stages.length - 1 && state.eventsPlayedInStage >= currentStage.eventCount) {
-    return { type: "ending" };
   }
 
   // Build candidate pool
@@ -105,7 +101,8 @@ export function selectNextEvent(
   });
 
   if (candidates.length === 0) {
-    // No candidates → advance stage early
+    // No candidates → advance stage early; same last-stage rule applies
+    if (state.stageIndex >= pack.stages.length - 1) return { type: "ending" };
     return { type: "stage-clear" };
   }
 
