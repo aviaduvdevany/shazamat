@@ -171,7 +171,7 @@ async function cmdGenerate() {
     die("Provide --id <id> or --batch <A|B|C> [--family <family>]");
   }
 
-  const n = Math.max(1, parseInt(values["n"] ?? "4", 10));
+  const n = Math.max(1, parseInt(values["n"] ?? "1", 10));
   const seed = values["seed"] != null ? parseInt(values["seed"]!, 10) : undefined;
 
   console.log(`\nGenerating ${n} variant(s) for ${targets.length} asset(s)...\n`);

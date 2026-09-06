@@ -25,6 +25,9 @@ export const stages: Stage[] = [
     label: "צבא",
     ageLabel: "גילאי 18–21",
     eventCount: 3,
+    onEnter: [
+      { type: "spriteSet", layer: "body", partId: "body-adult" },
+    ],
   },
   {
     id: "trip",
