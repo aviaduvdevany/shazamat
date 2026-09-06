@@ -84,7 +84,7 @@ The concept doc at [`shazamat-life-simulator-concept.md`](./shazamat-life-simula
 
 Brief and full file list: [`docs/game/sprite-guide.md`](./sprite-guide.md).
 
-- [ ] Generate real 64×64 looks from `look-adult` (child, teen, soldiers, trip, jobs)
+- [ ] Generate real 64×64 looks from `look-adult` (child, teen, soldiers, trip, career, shazamat, jobs)
 - [ ] Real scene backgrounds for: childhood-bedroom, school-stage, school-practice-room, school-classroom, army-base
 - [ ] Real member portraits (96×96) for all 7 members
 

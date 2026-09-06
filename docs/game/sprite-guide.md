@@ -386,11 +386,11 @@ Complete dressed sprites. Generate `look-adult` first, then style/edit the rest.
 | `look-teen-band` | A | REPLACE | Same teen, black tee with tiny unreadable white band mark |
 | `look-soldier-nahal` | A | REPLACE | Same man, IDF olive, buzz, combat boots, dull tag, no yellow |
 | `look-soldier-golani` | A | REPLACE | Same soldier + one Golani yellow `#D4A01A` chest tag |
-| `look-trip` | B | REPLACE | Same man, travel clothes, grown hair, backpack |
+| `look-trip` | A | REPLACE | Same man, travel clothes, grown hair, backpack |
 | `look-wolt` | B | REPLACE | Same man, teal courier shirt `#00C2B8` |
 | `look-hitech` | B | REPLACE | Same man, pale button-down or navy polo |
-| `look-career` | B | REPLACE | Same man, black musician tee, cheap chinos |
-| `look-shazamat` | B | REPLACE | Same man, black merch tee + orange hem tick, stage jeans, no instrument |
+| `look-career` | A | REPLACE | Same man, black musician tee, cheap chinos |
+| `look-shazamat` | A | REPLACE | Same man, black merch tee + orange hem tick, stage jeans, no instrument |
 
 ### 8.8 Scenes — `public/game/scenes/` — 160×144, opaque
 

@@ -106,9 +106,9 @@ Wave order matters. Edit assets need a parent version on disk (approved if you p
 | Wave | Assets | Dependency |
 |------|--------|------------|
 | 1 | `look-adult`, all scenes | none |
-| 2 | `look-child`, `look-teen`, `look-soldier-nahal` | look-adult |
+| 2 | `look-child`, `look-teen`, `look-soldier-nahal`, `look-trip`, `look-career`, `look-shazamat` | look-adult |
 | 3 | `look-teen-band`, `look-soldier-golani` | look-teen / look-soldier-nahal |
-| 4 | Batch B looks (`look-trip`, `look-wolt`, `look-hitech`, `look-career`, `look-shazamat`) | look-adult |
+| 4 | Batch B job looks (`look-wolt`, `look-hitech`) | look-adult |
 | 5 | Portraits (aviad, itay, nimrod, shay, reef, nir, gidon) | optional: drop `.sprites/refs/members/{id}.jpg` for photo path |
 
 ---

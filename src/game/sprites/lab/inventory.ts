@@ -119,7 +119,7 @@ export const INVENTORY: LabAsset[] = [
   ),
   look(
     "look-trip",
-    "B",
+    "A",
     "REPLACE",
     "Same man as a backpacker, sun-faded tank or open shirt, faded maroon travel pants, grown-out slightly greasy dark hair, olive backpack with visible straps, a bit stupid, keep the same face",
     "edit",
@@ -143,7 +143,7 @@ export const INVENTORY: LabAsset[] = [
   ),
   look(
     "look-career",
-    "B",
+    "A",
     "REPLACE",
     "Same man, black faded musician tee nothing printed, black cheap chinos, keep short dark hair and face",
     "edit",
@@ -151,7 +151,7 @@ export const INVENTORY: LabAsset[] = [
   ),
   look(
     "look-shazamat",
-    "B",
+    "A",
     "REPLACE",
     "Same man on stage, black tee with tiny white shin-like mark and one orange #DB7738 hem tick, tight black stage jeans with 1px orange stitch, keep short dark hair and face",
     "edit",
