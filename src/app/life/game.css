@@ -97,6 +97,7 @@
 }
 
 .game-hud-stat-bar {
+  position: relative;
   width: 40px;
   height: 4px;
   background: #222;
@@ -109,6 +110,17 @@
   background: #DB7738;
   border-radius: 2px;
   transition: width var(--g-t-hold) var(--g-ease-out);
+}
+
+/* Ghost bar — shown on losses; fades out over hudGhostDrain (300ms). */
+.game-hud-stat-ghost {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: rgba(224, 85, 85, 0.5);
+  border-radius: 2px;
+  animation: game-ghost-drain 300ms var(--g-ease-linear) forwards;
+  pointer-events: none;
 }
 
 /* ── Stage label ────────────────────────────────────────── */
@@ -213,6 +225,43 @@
   line-height: 1.6;
 }
 
+/* ── UX-1: Event enter choreography (reduced-motion: no-preference) ─
+   Elements animate in on mount; delays are hard-coded ms (not tokens)
+   because they are bible offsets, not durations. game-event-first adds
+   a 200ms breath after the headline (first event of the run only).
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .game-event-kicker {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: 40ms;
+  }
+
+  .game-event-headline {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: 100ms;
+  }
+
+  .game-event-body {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: 180ms;
+  }
+
+  /* First event of the run: extra 200ms hold after headline. */
+  .game-event-first .game-event-body {
+    animation-delay: 380ms;
+  }
+
+  /* Choice stagger: enter from below, staggered via --choice-i. */
+  .game-choice-btn {
+    animation: game-choice-enter var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: calc(260ms + var(--choice-i, 0) * 40ms);
+  }
+
+  .game-event-first ~ .game-choices .game-choice-btn {
+    animation-delay: calc(460ms + var(--choice-i, 0) * 40ms);
+  }
+}
+
 /* ── Choices (thumb-zone, pinned bottom) ─────────────────── */
 .game-choices {
   padding: 12px 16px;
@@ -252,6 +301,22 @@
   border-color: #DB7738;
 }
 
+/* ── UX-1: Commit lock ─────────────────────────────────────
+   .is-chosen  — confirmed choice (orange fill)
+   .is-unchosen — all other choices when locked (dimmed, no input)
+──────────────────────────────────────────────────────────── */
+.game-choice-btn.is-chosen {
+  background: #DB7738;
+  border-color: #DB7738;
+  color: #000;
+}
+
+.game-choice-btn.is-unchosen {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .game-choice-btn {
     transition: background var(--g-t-fast) var(--g-ease-out), border-color var(--g-t-fast) var(--g-ease-out), transform var(--g-t-ack) var(--g-ease-out);
@@ -261,7 +326,7 @@
   }
 }
 
-/* ── Outcome flash ──────────────────────────────────────── */
+/* ── Outcome ─────────────────────────────────────────────── */
 .game-outcome {
   padding: 20px;
   display: flex;
@@ -312,6 +377,27 @@
 
 .game-continue-btn:hover {
   opacity: 0.9;
+}
+
+/* ── UX-1: Outcome choreography (reduced-motion: no-preference) ──
+   Outcome label enters 160ms after mount (read-before-numbers beat).
+   Each delta staggered via --delta-i (240ms + n×80ms from mount).
+   Continue fades in after last delta + 350ms.
+──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  .game-outcome-label {
+    animation: game-fade-in var(--g-t-base) var(--g-ease-out) both;
+    animation-delay: 160ms;
+  }
+
+  .game-stat-delta {
+    animation-delay: calc(240ms + var(--delta-i, 0) * 80ms);
+  }
+
+  .game-continue-btn {
+    animation: game-fade-in var(--g-t-fast) var(--g-ease-out) backwards;
+    animation-delay: calc(240ms + var(--deltas-count, 0) * 80ms + 350ms);
+  }
 }
 
 /* ── Stage clear screen ──────────────────────────────────── */
@@ -700,10 +786,47 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Choice enter: rises from below (block-end → block-start direction). */
+@keyframes game-choice-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Ghost bar drain on HUD losses. */
+@keyframes game-ghost-drain {
+  from { opacity: 0.8; }
+  to   { opacity: 0; }
+}
+
+/* ── UX-1: Screen shake — bad outcomes / large negative deltas ──────
+   Applied to .game-surface via the `shaking` state in GameShell.
+   Decaying lateral jitter; duration ~220ms (timing-bible: 180–280ms).
+   Reduced-motion twin is in the reduce block below.
+──────────────────────────────────────────────────────────── */
+@keyframes game-shake {
+  0%   { transform: translateX(0); }
+  14%  { transform: translateX(-5px); }
+  28%  { transform: translateX(5px); }
+  44%  { transform: translateX(-4px); }
+  60%  { transform: translateX(4px); }
+  76%  { transform: translateX(-2px); }
+  88%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+.game-shake {
+  animation: game-shake 220ms var(--g-ease-linear);
+}
+
 /* ── Reduced-motion contract (single source of truth) ──────
    Remap all travel tokens to instant. Meaning stays (deltas
    still appear, name still appears, aria-live still fires).
    UX-1+ must include a reduce twin for every new animation.
+──────────────────────────────────────────────────────────── */
+/* ── Reduced-motion contract (single source of truth) ──────
+   Remap all travel tokens to instant. Meaning stays: deltas
+   still appear, name still appears, aria-live still fires.
+   UX-1 twins below cancel every new animation added above.
 ──────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .game-root,
@@ -718,10 +841,34 @@
     --g-ease-overshoot: var(--g-ease-out);
   }
 
-  /* Kill travel on known movers */
+  /* ── UX-0 twins ──────────────────────────────────────────── */
   .game-stat-delta { animation: none; }
 
-  /* Forward-looking stubs: UX-1+ cannot ship these without a reduce twin */
+  /* ── UX-1 twins ──────────────────────────────────────────── */
+  /* Event enter: elements appear immediately (no delay, no travel). */
+  .game-event-kicker,
+  .game-event-headline,
+  .game-event-body,
+  .game-choice-btn {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Outcome: label and continue appear immediately. */
+  .game-outcome-label,
+  .game-continue-btn {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Ghost bar: meaning (bar jumps) stays; travel (fade) cancels. */
+  .game-hud-stat-ghost { animation: none; opacity: 0; }
+
+  /* Shake: forward-declared in UX-0, confirmed here. */
   .game-shake          { animation: none !important; transform: none !important; }
+
+  /* Stagger stub from UX-0. */
   .game-stagger > *    { animation: none; }
 }
