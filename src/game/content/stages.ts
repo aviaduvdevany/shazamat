@@ -8,7 +8,8 @@ export const stages: Stage[] = [
     eventCount: 2,
     onEnter: [
       { type: "spriteSet", layer: "body", partId: "body-child" },
-      { type: "spriteSet", layer: "expression", partId: "expression-neutral" },
+      // Child-specific expression — diffed against body-child for correct face alignment
+      { type: "spriteSet", layer: "expression", partId: "expression-neutral-child" },
     ],
   },
   {
@@ -18,6 +19,8 @@ export const stages: Stage[] = [
     eventCount: 3,
     onEnter: [
       { type: "spriteSet", layer: "body", partId: "body-teen" },
+      // Teen uses adult expression until dedicated teen sprites are generated
+      { type: "spriteSet", layer: "expression", partId: "expression-neutral" },
     ],
   },
   {
@@ -27,6 +30,7 @@ export const stages: Stage[] = [
     eventCount: 3,
     onEnter: [
       { type: "spriteSet", layer: "body", partId: "body-adult" },
+      { type: "spriteSet", layer: "expression", partId: "expression-neutral" },
     ],
   },
   {

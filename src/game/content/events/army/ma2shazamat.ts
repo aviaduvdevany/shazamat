@@ -14,7 +14,7 @@ export const ma2shazamat: GameEvent = {
     condition: { type: "flag", key: "seenMaIm" },
   },
 
-  kicker: "גיל 19 — בסיס, לפני הפסקה",
+  kicker: "2מה2שאזאמאט",
   headline: "מה עם שאזאמאט?",
   body: "אין תשובה טובה לשאלה הזו.",
 
@@ -29,7 +29,7 @@ export const ma2shazamat: GameEvent = {
     },
     {
       id: "answer",
-      label: "מה2שאזאמאט",
+      label: "מה, מה, מה, מה?",
       effects: [
         { type: "stat", id: "musicianship", delta: 3 },
         { type: "stat", id: "swag", delta: 3 },

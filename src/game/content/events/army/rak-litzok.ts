@@ -9,7 +9,7 @@ export const rakLitzokEvent: GameEvent = {
   mood: "tense",
   scene: "school-stage",
 
-  kicker: "גיל 20 — חופשת שישי",
+  kicker: "רק לצוק",
   headline: "יש הפגנה בתל אביב.",
   body: "לא כולם הולכים. אתה יכול.",
 

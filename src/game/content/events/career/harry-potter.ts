@@ -8,7 +8,7 @@ export const harryPotterEvent: GameEvent = {
   oncePerRun: true,
   mood: "funny",
 
-  kicker: "גיל 28 — אחרי חזרה",
+  kicker: "הארי פוטר",
   headline: "מישהו הביא את הגביע האש לחדר החזרות.",
   body: "הספר, לא הסרט. לא ברור מה הוא עושה שם. לא ברור מי הביא.",
 

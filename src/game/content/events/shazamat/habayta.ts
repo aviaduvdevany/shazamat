@@ -8,7 +8,7 @@ export const habaytaEvent: GameEvent = {
   oncePerRun: true,
   mood: "sad",
 
-  kicker: "ההווה — הופעה, שישי",
+  kicker: "הביתה",
   headline: "לאחד מחברי הלהקה יש ילדה.",
   body: "ההופעה נגמרת בחצות. הוא רוצה להיות שם בבוקר.",
 

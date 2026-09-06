@@ -10,7 +10,7 @@ export const allenCarrEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination" },
 
-  kicker: "גיל 22 — אכסניה",
+  kicker: "אלן קאר",
   headline: "על השולחן: חפיסת סיגריות. פחות מחצי.",
   body: "אתה מעשן כבר שלוש שנים. זה לא ממש תוכנית, זה פשוט קרה. אבל אולי עכשיו זה הזמן.",
 

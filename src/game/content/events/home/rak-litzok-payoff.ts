@@ -10,7 +10,7 @@ export const rakLitzokPayoffEvent: GameEvent = {
 
   requires: { type: "flag", key: "protestSeed", value: true },
 
-  kicker: "גיל 25 — הפגנה, תל אביב",
+  kicker: "רק לצוק",
   headline: "מישהו הדליק פח.",
   body: "האש גבוהה. המשטרה בדרך. לידך עומד גדעון עם מבט שאומר הכל.",
 

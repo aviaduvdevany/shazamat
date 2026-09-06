@@ -8,7 +8,7 @@ export const loOtoDavarEvent: GameEvent = {
   oncePerRun: true,
   mood: "sad",
 
-  kicker: "ההווה",
+  kicker: "לא אותו דבר",
   headline: "אתה לא אותו אחד שהיה בשכונה עם הקוקילידה.",
 
   choices: [

@@ -8,7 +8,7 @@ export const haverimArsimEvent: GameEvent = {
   oncePerRun: true,
   mood: "funny",
 
-  kicker: "גיל 25 — שישי בצהריים",
+  kicker: "קוזה נוסטרה",
   headline: "חברים מהשכונה הגיעו לתל אביב.",
   body: "הם לא השתנו בכלל. אתה — שאלה פתוחה.",
 

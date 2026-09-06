@@ -8,11 +8,14 @@
  * "batch" = generation priority (A → ship, B → scars, C → color extras)
  *
  * "model" = which PixelLab endpoint to use by default:
- *   pixen    — POST /create-image-pixen  (sync, fast, 64×64 / 96×96)
- *   pixflux  — POST /create-image-pixflux (sync, scenes 160×144)
- *   style    — POST /generate-with-style-v2 (async, style-locked follow-up)
- *   inpaint  — POST /inpaint-v3 (async, layer extraction from a body)
- *   photo    — POST /image-to-pixelart-pro (async, portrait from ref photo)
+ *   pixen      — POST /create-image-pixen  (sync, fast, 64×64 / 96×96)
+ *   pixflux    — POST /create-image-pixflux (sync, scenes 160×144)
+ *   style      — POST /generate-with-style-v2 (async, style-locked follow-up)
+ *   inpaint    — POST /inpaint-v3 (async, layer extraction from a body)
+ *   photo      — POST /image-to-pixelart-pro (async, portrait from ref photo)
+ *   edit-diff  — POST /edit-image-pixen (async) + pixel-diff → cleanest layers
+ *   pixen-wig  — POST /create-image-pixen at layer dimensions → paste on canvas
+ *   bitforge   — POST /create-image-bitforge with inpaint + style → isolateLayer
  *
  * "styleRef" = id of the asset whose approved processed.png must be used as style lock.
  */
@@ -30,7 +33,18 @@ export type AssetFamily =
 
 export type AssetBatch = "A" | "B" | "C";
 export type AssetStatus = "REPLACE" | "NEW";
-export type AssetModel = "pixen" | "pixflux" | "style" | "inpaint" | "photo";
+export type AssetModel =
+  | "pixen"
+  | "pixflux"
+  | "style"
+  | "inpaint"
+  | "photo"
+  /** Approach A — edit-image-pixen + pixel diff against the base body */
+  | "edit-diff"
+  /** Approach B — pixen generates the layer at exact region dimensions, paste onto canvas */
+  | "pixen-wig"
+  /** Approach C — bitforge style-guided inpaint + transparent background */
+  | "bitforge";
 
 export interface LabAsset {
   id: string;
@@ -53,6 +67,53 @@ export interface LabAsset {
 }
 
 export const INVENTORY: LabAsset[] = [
+  // ── TEST: three method comparison for adult short hair ───────────────────
+  // Generate with: npm run sprites:generate -- --id hair-test-edit-diff
+  //                npm run sprites:generate -- --id hair-test-pixen-wig
+  //                npm run sprites:generate -- --id hair-test-bitforge
+  // Review at /admin/game/sprites — promote whichever wins, then delete these.
+  {
+    id: "hair-test-edit-diff",
+    family: "hair",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/hair/hair-test-edit-diff.png",
+    promptSeed:
+      "Add simple dark short hair only to the top of the head, flat dark brown pixel art hair, no changes to face or body",
+    model: "edit-diff",
+    styleRef: "body-adult",
+    layer: "hair",
+    noBackground: true,
+  },
+  {
+    id: "hair-test-pixen-wig",
+    family: "hair",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/hair/hair-test-pixen-wig.png",
+    promptSeed:
+      "Simple dark short pixel art hair piece, top of head view, front-facing, dark brown hair only, no face no body, isolated hair shape",
+    model: "pixen-wig",
+    layer: "hair",
+    noBackground: true,
+  },
+  {
+    id: "hair-test-bitforge",
+    family: "hair",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/hair/hair-test-bitforge.png",
+    promptSeed:
+      "Simple dark short hair on scalp only, paint only hair pixels in the top-of-head region, dark brown pixel art hair",
+    model: "bitforge",
+    styleRef: "body-adult",
+    layer: "hair",
+    noBackground: true,
+  },
+
   // ── 8.1 Bodies ───────────────────────────────────────────────────────────
   {
     id: "body-child",
@@ -332,8 +393,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/hair/hair-child.png",
     promptSeed:
-      "Messy dark kid hair, slightly too long in front, paint only hair pixels in the scalp region",
-    model: "inpaint",
+      "Add messy dark kid hair to the top of the head, slightly too long in front, dark brown pixel art hair only, do not change face or body",
+    model: "edit-diff",
     styleRef: "body-child",
     layer: "hair",
     noBackground: true,
@@ -346,8 +407,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/hair/hair-short.png",
     promptSeed:
-      "Simple dark short hair, teen and adult default, paint only hair pixels in the scalp region",
-    model: "inpaint",
+      "Add simple dark short hair to the top of the head, neat dark brown pixel art hair only, do not change face or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "hair",
     noBackground: true,
@@ -360,8 +421,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/hair/hair-buzz.png",
     promptSeed:
-      "Army buzz cut, scalp shows through, 2-3 pixel dark stubble, paint only hair pixels in the scalp region",
-    model: "inpaint",
+      "Add an army buzz cut to the scalp, very short dark stubble 2-3 pixels, scalp shows through, do not change face or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "hair",
     noBackground: true,
@@ -374,14 +435,16 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/hair/hair-grown.png",
     promptSeed:
-      "Grown-out trip hair, a bit greasy, still dark, paint only hair pixels in the scalp region",
-    model: "inpaint",
+      "Add grown-out dark hair to the scalp, a bit greasy and unkempt, longer than short, do not change face or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "hair",
     noBackground: true,
   },
 
-  // ── 8.5 Expressions ───────────────────────────────────────────────────────
+  // ── 8.5 Expressions (adult) ───────────────────────────────────────────────
+  // Generated with edit-diff against body-adult. Full-canvas extraction means
+  // only the pixels that actually changed are kept — perfect alignment by math.
   {
     id: "expression-neutral",
     family: "expression",
@@ -390,8 +453,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/expression/expression-neutral.png",
     promptSeed:
-      "Paint face only: flat closed mouth, two-pixel calm eyes, inpaint only the small face region",
-    model: "inpaint",
+      "Change the face expression to calm neutral: flat closed mouth, two small calm eyes, relaxed brows, do not change hair or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "expression",
     noBackground: true,
@@ -404,8 +467,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/expression/expression-happy.png",
     promptSeed:
-      "Paint face only: small grin, squinted happy eyes, inpaint only the small face region",
-    model: "inpaint",
+      "Change the face expression to happy: small grin mouth, squinted happy eyes, slightly raised cheeks, do not change hair or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "expression",
     noBackground: true,
@@ -418,8 +481,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/expression/expression-worried.png",
     promptSeed:
-      "Paint face only: tight mouth, inner brows raised, worried look, inpaint only the small face region",
-    model: "inpaint",
+      "Change the face expression to worried: tight pressed mouth, inner brows raised and angled, anxious look, do not change hair or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "expression",
     noBackground: true,
@@ -432,8 +495,8 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/expression/expression-shocked.png",
     promptSeed:
-      "Paint face only: round open mouth, wide round eyes, shocked look, inpaint only the small face region",
-    model: "inpaint",
+      "Change the face expression to shocked: round open mouth, wide round eyes, startled look, do not change hair or body",
+    model: "edit-diff",
     styleRef: "body-adult",
     layer: "expression",
     noBackground: true,
@@ -446,9 +509,56 @@ export const INVENTORY: LabAsset[] = [
     canvas: [64, 64],
     destPath: "game/sprites/expression/expression-smug.png",
     promptSeed:
-      "Paint face only: half-lidded eyes, tiny smirk, smug look, inpaint only the small face region",
-    model: "inpaint",
+      "Change the face expression to smug: half-lidded eyes, tiny one-sided smirk, do not change hair or body",
+    model: "edit-diff",
     styleRef: "body-adult",
+    layer: "expression",
+    noBackground: true,
+  },
+
+  // ── 8.5b Expressions (child) ──────────────────────────────────────────────
+  // Same diff approach as adult expressions but diffed against body-child.
+  // The child face sits at a different position/scale than the adult face;
+  // diffing against body-child naturally captures the right pixels.
+  {
+    id: "expression-neutral-child",
+    family: "expression",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/expression/expression-neutral-child.png",
+    promptSeed:
+      "Change the face expression to calm neutral: flat closed mouth, two small calm eyes, relaxed brows, do not change hair or body",
+    model: "edit-diff",
+    styleRef: "body-child",
+    layer: "expression",
+    noBackground: true,
+  },
+  {
+    id: "expression-happy-child",
+    family: "expression",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/expression/expression-happy-child.png",
+    promptSeed:
+      "Change the face expression to happy: small grin mouth, squinted happy eyes, slightly raised cheeks, do not change hair or body",
+    model: "edit-diff",
+    styleRef: "body-child",
+    layer: "expression",
+    noBackground: true,
+  },
+  {
+    id: "expression-worried-child",
+    family: "expression",
+    batch: "A",
+    diskStatus: "NEW",
+    canvas: [64, 64],
+    destPath: "game/sprites/expression/expression-worried-child.png",
+    promptSeed:
+      "Change the face expression to worried: tight pressed mouth, inner brows raised and angled, anxious look, do not change hair or body",
+    model: "edit-diff",
+    styleRef: "body-child",
     layer: "expression",
     noBackground: true,
   },

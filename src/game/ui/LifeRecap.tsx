@@ -4,9 +4,6 @@ import type { Stage } from "../schema/stages";
 import type { LogEntry } from "../schema/state";
 import { buildLifeRecap } from "./lifeRecap";
 
-export type { RecapLine } from "./lifeRecap";
-export { buildLifeRecap };
-
 interface Props {
   log: LogEntry[];
   stages: Stage[];

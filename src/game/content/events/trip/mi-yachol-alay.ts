@@ -10,7 +10,7 @@ export const miYacholAlayEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination" },
 
-  kicker: "גיל 22 — בר, איפשהו",
+  kicker: "מי יכול עלי",
   headline: "מישהו שנראה לא נחמד מסתכל עלייך.",
   body: "אתה רגוע לחלוטין. הוא ממשיך להסתכל.",
 

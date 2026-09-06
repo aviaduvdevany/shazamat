@@ -9,7 +9,7 @@ export const haverMeviHaverEvent: GameEvent = {
   mood: "neutral",
   scene: "school-practice-room",
 
-  kicker: "גיל 14 — חדר החזרות",
+  kicker: "חבר מביא חבר",
   headline: "יש בחור בבית הספר שמנגן גיטרה. הוא הביא עוד בחור. גם הוא מנגן.",
   body: "אחד מהם מסתכל עלייך ואומר: ״אתה מנגן על משהו?״",
 

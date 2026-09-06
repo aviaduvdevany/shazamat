@@ -8,7 +8,7 @@ export const blaadenuEnMishakEvent: GameEvent = {
   oncePerRun: true,
   mood: "epic",
 
-  kicker: "גיל 29 — הודעה בוואטסאפ",
+  kicker: "בלעדנו אין משחק",
   headline: "אנחנו מתחילים להקה. אתה בפנים?",
   body: "יש לך עבודה. יש לך שכירות. יש לך שש שניות להחליט.",
 

@@ -9,7 +9,7 @@ export const tohnithHaliveEvent: GameEvent = {
   mood: "tense",
   scene: "school-stage",
 
-  kicker: "גיל 28 — הופעה ראשונה",
+  kicker: "תוכנית העלייב",
   headline: "אתה עומד מאחורי הקלעים. הבמה ממולך.",
   body: "לא ידוע כמה אנשים יש שם. אפשר לשמוע שתיקה.",
 

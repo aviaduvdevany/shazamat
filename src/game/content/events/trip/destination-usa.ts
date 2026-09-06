@@ -10,7 +10,7 @@ export const destinationUsaEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination", value: "usa" },
 
-  kicker: "גיל 22 — ניו יורק",
+  kicker: "תופס אויר",
   headline: "אתה עומד מחוץ לחנות עם ויטרינה יפה מאוד.",
   body: "המחיר שרשום בחלון הוא לא לך. אבל.",
 

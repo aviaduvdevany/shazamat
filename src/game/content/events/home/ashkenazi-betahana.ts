@@ -9,7 +9,7 @@ export const ashkenaziBetahanaEvent: GameEvent = {
   mood: "funny",
   scene: "school-stage",
 
-  kicker: "גיל 24 — דרום תל אביב, אחרי חצות",
+  kicker: "אשכנזי בתחנה",
   headline: "יש פחית ספריי. יש קיר. יש ״שאזאמאט״.",
   body: "כולכם שם. מישהו אומר ״שאם תפסו אותנו זה בגלל הג׳ינג׳י.״",
 

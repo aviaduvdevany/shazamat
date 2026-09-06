@@ -10,7 +10,7 @@ export const mayimAmukimEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination" },
 
-  kicker: "גיל 22 — איפשהו בחו\"ל",
+  kicker: "מים עמוקים",
   headline: "בחור שנראה לגמרי אמין מציע לך משהו.",
   body: "הוא אומר שזה ״החומר הטוב״. הוא נראה כמו מישהו שמוכר ציוד גנוב בשוק. יש לו עיניים ידידותיות.",
 

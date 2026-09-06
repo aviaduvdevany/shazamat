@@ -8,7 +8,7 @@ export const heyterimEvent: GameEvent = {
   oncePerRun: true,
   mood: "funny",
 
-  kicker: "ההווה — האינסטגרם",
+  kicker: "הייטרים",
   headline: "מישהו כתב תגובה.",
   body: "היא מיוחדת בצורה שקשה לתאר. כולם רואים אותה.",
 

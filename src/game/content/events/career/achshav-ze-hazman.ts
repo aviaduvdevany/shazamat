@@ -9,7 +9,7 @@ export const achshavZeHazmanEvent: GameEvent = {
   mood: "neutral",
   scene: "school-stage",
 
-  kicker: "גיל 27 — ינואר",
+  kicker: "עכשיו זה הזמן",
   headline: "יש הרשמה לבתי ספר למוזיקה.",
   body: "לאן?",
 

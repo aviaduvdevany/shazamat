@@ -9,7 +9,7 @@ export const shevaRaotTovotEvent: GameEvent = {
   mood: "epic",
   scene: "school-stage",
 
-  kicker: "ההווה — שמחנו",
+  kicker: "שבע טובות",
   headline: "שבעה אנשים. לילה אחד. רק אחת מהשתיים יכולה לקרות.",
   body: "לא ברור מה תהיה. זה לא היה ברור מאז.",
 

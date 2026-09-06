@@ -10,7 +10,7 @@ export const destinationAustraliaEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination", value: "australia" },
 
-  kicker: "גיל 22 — בונדי ביץ׳",
+  kicker: "תופס אויר",
   headline: "זה גדול עלייך.",
   body: "הים. השמיים. האנשים. הכל. גדול עלייך.",
 

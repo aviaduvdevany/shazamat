@@ -314,12 +314,11 @@
 }
 
 .game-event-kicker {
-  font-size: 11px;
+  font-size: 14px;
   color: #DB7738;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 .game-event-headline {
@@ -331,9 +330,9 @@
 }
 
 .game-event-body {
-  font-size: 14px;
-  color: #ccc;
-  line-height: 1.6;
+  font-size: 18px;
+  color: #d8d8d8;
+  line-height: 1.65;
 }
 
 /* ── UX-1 / UX-2: Event enter choreography ──────────────────

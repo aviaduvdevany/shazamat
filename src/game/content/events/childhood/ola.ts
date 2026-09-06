@@ -9,7 +9,7 @@ export const olaEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 8 — הפסקה",
+  kicker: "אולה",
   headline: "מישהו בחצר צועק מילה שאף אחד לא הגדיר.",
   body: "כולם מסתכלים. הוא צועק שוב. זה נשמע כמו שם. זה לא שם.",
 

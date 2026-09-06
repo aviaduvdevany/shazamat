@@ -10,7 +10,7 @@ export const destinationEastAsiaEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination", value: "east-asia" },
 
-  kicker: "גיל 22 — טוקיו",
+  kicker: "תופס אויר",
   headline: "הכל מסודר. הכל שקט. הכל עובד.",
   body: "זה מוזר בצורה שממש עובדת.",
 

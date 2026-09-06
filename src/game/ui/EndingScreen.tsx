@@ -77,6 +77,13 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
   const { holdMs } = getExperimentFlags();
 
   const [beat, setBeat] = useState<EndingBeat>("");
+  /**
+   * Increments each time the name beat is first reached (normal flow or tap-skip).
+   * Used as the dependency for the post-name useEffect so its cleanup only runs
+   * on unmount — NOT when beat changes away from "name" to "portrait" etc.,
+   * which was the root cause of the post-name sequence being killed mid-run.
+   */
+  const [nameTrigger, setNameTrigger] = useState(0);
   const [shareReady, setShareReady] = useState(false);
   const [copied, setCopied] = useState(false);
   const [newLifePulse, setNewLifePulse] = useState(false);
@@ -86,6 +93,9 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
 
   // Skip phase: 0 = before preamble (ignore taps), 1 = skip-to-name, 2 = show done
   const skipPhase = useRef<0 | 1 | 2>(0);
+  // Guards setNameBeat so it only fires once per run (prevents double-fire from
+  // skip handler + runShow both resolving on the same frame).
+  const nameShownRef = useRef(false);
 
   // Persistent cleanup refs
   const countUpCancels = useRef<Array<() => void>>([]);
@@ -98,6 +108,7 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
     motion.resetSkip();
     setBeat("");
     skipPhase.current = 0;
+    nameShownRef.current = false;
 
     async function runShow() {
       // t=0–400: silence (preamble)
@@ -131,17 +142,24 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
   }, [holdMs]);
 
   function setNameBeat(alive: boolean) {
-    if (!alive) return;
+    if (!alive || nameShownRef.current) return;
+    nameShownRef.current = true;
     playSfx("reveal-slam", reduced);
     haptic(HAP_NAME, reduced);
     setBeat("name");
+    setNameTrigger((n) => n + 1);
   }
 
   // ── Post-name sequence ──────────────────────────────────────
-  // Triggered when beat transitions to "name" (normal flow or skip).
+  // Triggered once when nameTrigger increments (set inside setNameBeat).
+  // Deliberately does NOT depend on `beat` so that setBeat("portrait"), etc.
+  // called from within runPostName never re-fire the cleanup and kill `alive`.
   useEffect(() => {
-    if (beat !== "name") return;
+    if (nameTrigger === 0) return;
     let alive = true;
+
+    // Reset skip so a pre-name tap doesn't instantly collapse post-name timing.
+    motion.resetSkip();
 
     // Gate Share: show button only after name has been visible 400ms.
     // Under reduced motion, gate is instant (GAME_SEQUENCE.endingShareGate collapsed to 0).
@@ -210,20 +228,20 @@ export function EndingScreen({ member, state, pack, shareUrl, onRestart, exiting
       countUpCancels.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beat === "name" ? 1 : 0]);
+  }, [nameTrigger]);
 
   // ── Skip handler ────────────────────────────────────────────
   function handleSurfaceTap() {
     if (skipPhase.current === 0) return; // silence period — ignore
     if (skipPhase.current === 1) {
-      // If name isn't visible yet, jump to it and start post-name sequence.
-      // If name is already visible (tap during portrait/role/stats/…),
-      // just fast-forward the current in-flight wait — do NOT reset beat to
-      // "name" or the post-name useEffect dependency would re-fire.
       if (!atOrAfter(beat, "name")) {
+        // Jump to name: setNameBeat fires the trigger and sets beat.
+        // motion.skip() unblocks runShow so it also calls setNameBeat,
+        // but nameShownRef guards against double-fire.
+        setNameBeat(true);
         motion.skip();
-        setBeat("name");
       } else {
+        // Name already visible — fast-forward the current post-name wait.
         motion.skip();
       }
     }

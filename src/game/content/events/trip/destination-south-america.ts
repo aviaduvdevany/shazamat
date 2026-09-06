@@ -10,7 +10,7 @@ export const destinationSouthAmericaEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination", value: "south-america" },
 
-  kicker: "גיל 22 — בואנוס איירס",
+  kicker: "תופס אויר",
   headline: "אתה על אוטובוס שאי אפשר להסביר לאן הוא הולך.",
   body: "מישהו שישב לידך יצא בתחנה שלפני. השאיר ספר בספרדית. אתה לא מדבר ספרדית.",
 

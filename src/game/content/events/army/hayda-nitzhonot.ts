@@ -9,7 +9,7 @@ export const haydaNitzhonot: GameEvent = {
   mood: "tense",
   scene: "school-stage",
 
-  kicker: "גיל 18 — מרכז הגיוס",
+  kicker: "היידה ניצחונות",
   headline: "פרופיל 97. אתה הולך לקרבי.",
   body: "הקצין שואל לאן אתה מבקש. לפניך שני אוטובוסים.",
 

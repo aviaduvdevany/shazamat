@@ -115,6 +115,12 @@ export function GameShell() {
   const [agePulseNonce, setAgePulseNonce] = useState(0);
   /** Prevents double-fire of handleStageClear (skip tap + auto). */
   const stageClearFireRef = useRef(false);
+  /**
+   * Frozen stageIndex from when the ceremony STARTED (before advanceStage fires).
+   * Used to keep currentStageForClear / nextStageForClear stable across the
+   * mid-ceremony setGameState(advancedState) call that would otherwise shift them.
+   */
+  const ceremonyBaseIndexRef = useRef<number | null>(null);
   /** Raw setTimeout ids for the assemble phase stagger (not birthMotion.wait). */
   const assembleTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const checkpointTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -565,6 +571,7 @@ export function GameShell() {
    */
   async function runStageClearCeremony(state: GameState, runId: string) {
     stageClearFireRef.current = false;
+    ceremonyBaseIndexRef.current = state.stageIndex;
     clearMotion.resetSkip();
 
     setScreen("stage-clear");
@@ -704,16 +711,14 @@ export function GameShell() {
     ? pack.members.find((m) => m.id === gameState.endingMemberId) ?? null
     : null;
 
-  const nextStageForClear = gameState
-    ? pack.stages[gameState.stageIndex + 1]
-    : undefined;
-
-  // UX-3: The current stage (for "סוף · ילדות" kicker) is the one we're leaving.
-  // During the ceremony stageIndex is still on the completed stage until slam fires;
-  // after slam advanceStage bumps it, so we use stageIndex directly.
-  const currentStageForClear = gameState
-    ? pack.stages[gameState.stageIndex]
-    : undefined;
+  // UX-3: Use the frozen base index captured at ceremony start so that the
+  // mid-ceremony setGameState(advancedState) call doesn't shift these values.
+  const clearBaseIndex =
+    screen === "stage-clear" && ceremonyBaseIndexRef.current !== null
+      ? ceremonyBaseIndexRef.current
+      : (gameState?.stageIndex ?? 0);
+  const currentStageForClear = pack.stages[clearBaseIndex];
+  const nextStageForClear = pack.stages[clearBaseIndex + 1];
 
   // UX-2: keystone events get a headline slam.
   const isKeystone =

@@ -13,7 +13,7 @@ export const hagashemLoYavo: GameEvent = {
     condition: { type: "flag", key: "seenMaIm" },
   },
 
-  kicker: "ההווה — אחרי הופעה",
+  kicker: "הגשם לא יבוא",
   headline: "מה עם שאזאמאט?",
   body: "אין תשובה טובה לשאלה הזו.",
 
@@ -28,7 +28,7 @@ export const hagashemLoYavo: GameEvent = {
     },
     {
       id: "answer",
-      label: "הגשם לא יבוא",
+      label: "מה, מה, מה, מה?",
       effects: [
         { type: "stat", id: "musicianship", delta: 3 },
         { type: "stat", id: "swag", delta: 3 },

@@ -20,7 +20,7 @@ export const maImGaviaHaesh: GameEvent = {
     ],
   },
 
-  kicker: "גיל 22 — חו\"ל, ערב",
+  kicker: "גביע האש",
   headline: "מה עם שאזאמאט?",
   body: "אין תשובה טובה לשאלה הזו.",
 
@@ -35,7 +35,7 @@ export const maImGaviaHaesh: GameEvent = {
     },
     {
       id: "answer",
-      label: "מה עם שאזאמאט וגביע האש",
+      label: "מה, מה, מה, מה?",
       effects: [
         { type: "stat", id: "musicianship", delta: 3 },
         { type: "stat", id: "swag", delta: 3 },

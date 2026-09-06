@@ -8,6 +8,8 @@
  * Sync endpoints (return the image directly):
  *   POST /create-image-pixen      → createImagePixen()
  *   POST /create-image-pixflux    → createImagePixflux()
+ *   POST /create-image-bitforge   → createImageBitforge()
+ *   POST /inpaint                 → inpaint()
  *   POST /correct-pixelart        → correctPixelart()
  *   POST /reduce-colors           → reduceColors()
  *   POST /remove-background       → removeBackground()
@@ -16,6 +18,7 @@
  * Async endpoints (return a job id, poll with getJobStatus()):
  *   POST /generate-with-style-v2  → generateWithStyle()
  *   POST /inpaint-v3              → inpaintV3()
+ *   POST /edit-image-pixen        → editImagePixen()
  *   POST /image-to-pixelart-pro   → imageToPixelartPro()
  *
  * Jobs:
@@ -199,6 +202,70 @@ export class PixelLabClient {
     crop_to_mask?: boolean;
   }): Promise<AsyncJobResponse> {
     return this.request<AsyncJobResponse>("POST", "/inpaint-v3", params);
+  }
+
+  // ── New generation endpoints ───────────────────────────────────────────────
+
+  /**
+   * POST /edit-image-pixen (async) — instruction-based edit that preserves
+   * pose/composition. Only the requested change is applied; unchanged pixels
+   * are kept intact, making pixel-diff hair extraction reliable.
+   */
+  async editImagePixen(params: {
+    image: PixelLabImage;
+    description: string;
+    width?: number;
+    height?: number;
+    no_background?: boolean;
+    seed?: number;
+  }): Promise<AsyncJobResponse> {
+    return this.request<AsyncJobResponse>("POST", "/edit-image-pixen", params);
+  }
+
+  /**
+   * POST /create-image-bitforge (sync) — style-transfer generator that also
+   * supports inpainting (mask_image) and transparent background.
+   * Max 200×200. Cheaper than inpaint-v3, no Tier-1 requirement.
+   */
+  async createImageBitforge(params: {
+    description: string;
+    negative_description?: string;
+    image_size: PixelLabImageSize;
+    no_background?: boolean;
+    style_image?: PixelLabImage;
+    init_image?: PixelLabImage;
+    init_image_strength?: number;
+    inpainting_image?: PixelLabImage;
+    mask_image?: PixelLabImage;
+    color_image?: PixelLabImage;
+    outline?: string;
+    detail?: string;
+    text_guidance_scale?: number;
+    seed?: number;
+  }): Promise<SyncImageResponse> {
+    return this.request<SyncImageResponse>("POST", "/create-image-bitforge", params);
+  }
+
+  /**
+   * POST /inpaint (sync, legacy but fully supported) — mask-based inpaint
+   * with transparent background. Max 200×200, no Tier-1 requirement.
+   * Cheaper than inpaint-v3 and synchronous.
+   */
+  async inpaint(params: {
+    description: string;
+    negative_description?: string;
+    image_size: PixelLabImageSize;
+    inpainting_image: PixelLabImage;
+    mask_image: PixelLabImage;
+    no_background?: boolean;
+    init_image?: PixelLabImage;
+    color_image?: PixelLabImage;
+    outline?: string;
+    detail?: string;
+    text_guidance_scale?: number;
+    seed?: number;
+  }): Promise<SyncImageResponse> {
+    return this.request<SyncImageResponse>("POST", "/inpaint", params);
   }
 
   /** POST /image-to-pixelart-pro — portrait from reference photo */

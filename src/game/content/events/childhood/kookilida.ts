@@ -9,7 +9,7 @@ export const kookilidaEvent: GameEvent = {
   mood: "funny",
   scene: "childhood-bedroom",
 
-  kicker: "גיל 7 — הקיוסק של השכונה",
+  kicker: "קוקילידה",
   headline: "יש קוקילידה בקיוסק.",
   body: "אתה עומד מול הוויטרינה. מאחוריך, השכונה שלך. איפה זה?",
 

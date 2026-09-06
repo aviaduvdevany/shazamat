@@ -9,7 +9,7 @@ export const tahushatBetenEvent: GameEvent = {
   mood: "tense",
   scene: "school-stage",
 
-  kicker: "גיל 17 — יום שישי בלילה",
+  kicker: "תחושת בטן",
   headline: "יש תוכנית. לא ברור למה.",
   body: "כולם בטוחים שזה יצא מעולה.",
 

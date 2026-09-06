@@ -9,7 +9,7 @@ export const shevaLevAdomEvent: GameEvent = {
   mood: "neutral",
   scene: "school-classroom",
 
-  kicker: "גיל 17 — אחרי שיעורים",
+  kicker: "שבע לב אדום",
   headline: "יש מישהי.",
   body: "היא לא יודעת שאתה קיים. זו לא בהכרח בעיה.",
 

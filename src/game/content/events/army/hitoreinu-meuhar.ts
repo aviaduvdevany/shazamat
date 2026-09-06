@@ -9,7 +9,7 @@ export const hitoreinuMeuharEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 19 — חמש בבוקר",
+  kicker: "התעוררנו מאוחר",
   headline: "הכינוס התחיל לפני שש דקות.",
   body: "כולם שם. חוץ ממך.",
 

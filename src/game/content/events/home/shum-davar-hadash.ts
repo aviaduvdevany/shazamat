@@ -9,7 +9,7 @@ export const shumDavarHadashEvent: GameEvent = {
   mood: "sad",
   scene: "school-classroom",
 
-  kicker: "גיל 26 — סטודיו, לילה",
+  kicker: "שום דבר חדש",
   headline: "על שולחן העבודה: קפה קר, מתאם אודיו, ותיבת כדורים.",
   body: "שי ממשיך לערבב. זה המיקס הרביעי של הלילה.",
 

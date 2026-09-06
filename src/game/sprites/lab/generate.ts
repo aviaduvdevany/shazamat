@@ -26,7 +26,13 @@ import {
 } from "./client";
 import { composePrompt } from "./prompts";
 import { processSprite, qaCheck } from "./process";
-import { buildMaskPng, isolateLayer, toInpaintImage } from "./extract";
+import {
+  buildMaskPng,
+  isolateLayer,
+  toInpaintImage,
+  extractLayerByDiff,
+  pasteOntoCanvas,
+} from "./extract";
 import {
   saveVersion,
   getApprovedBuffer,
@@ -151,6 +157,109 @@ export async function generateOne(
         inpaintFull,
         asset.layer as keyof typeof import("./extract").LAYER_BOXES
       );
+      break;
+    }
+
+    // ── Approach A: edit-image-pixen + pixel diff ─────────────────────────────
+    // Sends the approved body PNG to edit-image-pixen with a hair instruction.
+    // Because the model preserves unchanged pixels verbatim, diffing edited vs
+    // original yields clean hair-only pixels with no face contamination.
+    // NOTE: edit-image-pixen has a 500-char description limit — use promptSeed
+    // directly (not the full composed description with the style preamble).
+    case "edit-diff": {
+      if (!asset.styleRef || !asset.layer) {
+        throw new Error(`Asset "${asset.id}" has model=edit-diff but missing styleRef or layer`);
+      }
+      const bodyBuffer = getApprovedBuffer(asset.styleRef);
+      const job = await client.editImagePixen({
+        image: bufferToPixelLabImage(bodyBuffer),
+        description: asset.promptSeed, // 500-char limit — skip style preamble
+        width: w,
+        height: h,
+        seed,
+      });
+      jobId = job.background_job_id;
+      const result = await client.waitForJob(jobId);
+      const imgData = result.image as PixelLabImage | undefined;
+      if (!imgData?.base64) {
+        throw new Error(`editImagePixen job ${jobId} returned no image`);
+      }
+      const editedBuffer = pixelLabImageToBuffer(imgData);
+      rawBuffer = await extractLayerByDiff(
+        editedBuffer,
+        bodyBuffer,
+        asset.layer as keyof typeof import("./extract").LAYER_BOXES
+      );
+      break;
+    }
+
+    // ── Approach B: pixen-wig (standalone hair piece, exact layer size) ───────
+    // Generates a transparent hair piece at the hair-region dimensions (rounded
+    // up to the nearest multiple of 4, as required by pixen), then pastes it
+    // onto a 64×64 transparent canvas at the correct layer position.
+    case "pixen-wig": {
+      if (!asset.layer) {
+        throw new Error(`Asset "${asset.id}" has model=pixen-wig but missing layer`);
+      }
+      const { LAYER_BOXES: boxes } = await import("./extract");
+      const box = boxes[asset.layer as keyof typeof boxes];
+      // pixen requires: divisible by 4, and square when either side < 32
+      let wigW = Math.ceil(box.w / 4) * 4;
+      let wigH = Math.ceil(box.h / 4) * 4;
+      if (wigW < 32 || wigH < 32) {
+        const sq = Math.max(wigW, wigH, 32);
+        wigW = sq;
+        wigH = sq;
+      }
+      const wigRes = await client.createImagePixen({
+        description,
+        image_size: { width: wigW, height: wigH },
+        outline: "single color black outline",
+        detail: "highly detailed",
+        direction: "south",
+        no_background: true,
+        background_removal_task: "remove_complex_background",
+        seed,
+      });
+      const wigBuffer = pixelLabImageToBuffer(wigRes.image);
+      rawBuffer = await pasteOntoCanvas(
+        wigBuffer,
+        asset.layer as keyof typeof import("./extract").LAYER_BOXES
+      );
+      costUsd = wigRes.usage?.usd ?? undefined;
+      break;
+    }
+
+    // ── Approach C: bitforge — style-guided inpaint with no_background ────────
+    // Uses /create-image-bitforge which supports style_image + inpainting +
+    // transparent background in a single cheap (~$0.007) synchronous call.
+    // Result still needs isolateLayer because the body background isn't
+    // fully transparent — but cheaper than inpaint-v3 and no Tier-1 needed.
+    case "bitforge": {
+      if (!asset.styleRef || !asset.layer) {
+        throw new Error(`Asset "${asset.id}" has model=bitforge but missing styleRef or layer`);
+      }
+      const bodyBuffer = getApprovedBuffer(asset.styleRef);
+      const maskBuffer = await buildMaskPng(
+        asset.layer as keyof typeof import("./extract").LAYER_BOXES
+      );
+      const res = await client.createImageBitforge({
+        description,
+        image_size: { width: w, height: h },
+        style_image: bufferToPixelLabImage(bodyBuffer),
+        inpainting_image: bufferToPixelLabImage(bodyBuffer),
+        mask_image: bufferToPixelLabImage(maskBuffer),
+        no_background: true,
+        outline: "single color black outline",
+        detail: "highly detailed",
+        seed,
+      });
+      const bitBuffer = pixelLabImageToBuffer(res.image);
+      rawBuffer = await isolateLayer(
+        bitBuffer,
+        asset.layer as keyof typeof import("./extract").LAYER_BOXES
+      );
+      costUsd = res.usage?.usd ?? undefined;
       break;
     }
 

@@ -9,7 +9,7 @@ export const hayomAniLoEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 15 — שש וחצי בבוקר",
+  kicker: "היום אני לא",
   headline: "השעון מצלצל. שיעור ראשון בעוד עשרים דקות.",
   body: "המיטה מנצחת.",
 

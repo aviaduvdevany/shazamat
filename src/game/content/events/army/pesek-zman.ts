@@ -9,7 +9,7 @@ export const pesekZmanEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 19 — חופשת שישי",
+  kicker: "פסק זמן",
   headline: "יש לך שתים עשרה שעות.",
   body: "אתה בבית. כולם ישנים. הבית שקט.",
 

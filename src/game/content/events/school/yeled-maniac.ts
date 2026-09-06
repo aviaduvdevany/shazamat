@@ -9,7 +9,7 @@ export const yeledManiacEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 16 — שיעור מתמטיקה",
+  kicker: "ילד מניאק",
   headline: "המורה מסתכלת עלייך.",
   body: "לא בגלל שעשית משהו. בגלל שאתה אתה.",
 

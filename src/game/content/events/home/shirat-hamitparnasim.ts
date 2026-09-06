@@ -9,7 +9,7 @@ export const shiratHamitparnasimEvent: GameEvent = {
   mood: "funny",
   scene: "school-classroom",
 
-  kicker: "גיל 23 — תל אביב",
+  kicker: "שירת התפרנים",
   headline: "השכירות צריכה להשתלם.",
   body: "לפניך שלוש אפשרויות. כולן לגיטימיות. כולן עצובות קצת.",
 

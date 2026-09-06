@@ -9,7 +9,7 @@ export const kozaNostraEvent: GameEvent = {
   mood: "epic",
   scene: "school-stage",
 
-  kicker: "ההווה — הלהקה",
+  kicker: "קוזה נוסטרה",
   headline: "שבעה אנשים. אף אחד לא מפקד. כולם מפקדים.",
   body: "זה עובד ממש לא ברור איך.",
 

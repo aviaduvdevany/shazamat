@@ -14,7 +14,7 @@ export const maImShavatHamelech: GameEvent = {
     condition: { type: "flag", key: "seenMaIm" },
   },
 
-  kicker: "גיל 17 — שיעור היסטוריה",
+  kicker: "שבעת המלך",
   headline: "מה עם שאזאמאט?",
   body: "אין תשובה טובה לשאלה הזו.",
 
@@ -29,7 +29,7 @@ export const maImShavatHamelech: GameEvent = {
     },
     {
       id: "answer",
-      label: "שבעת המלך",
+      label: "מה, מה, מה, מה?",
       effects: [
         { type: "stat", id: "musicianship", delta: 3 },
         { type: "stat", id: "swag", delta: 3 },

@@ -22,11 +22,17 @@ export const spriteCatalog: SpriteCatalog = {
     // Instruments
     { id: "instrument-guitar-small", layer: "instrument", file: "game/sprites/instrument/instrument-guitar-small.png", label: "גיטרה קטנה" },
     { id: "instrument-bass", layer: "instrument", file: "game/sprites/instrument/instrument-bass.png", label: "בס" },
-    // Expressions
+    // Expressions — adult (diffed against body-adult)
     { id: "expression-neutral", layer: "expression", file: "game/sprites/expression/expression-neutral.png", label: "ניטרלי" },
     { id: "expression-happy", layer: "expression", file: "game/sprites/expression/expression-happy.png", label: "שמח" },
     { id: "expression-worried", layer: "expression", file: "game/sprites/expression/expression-worried.png", label: "מוטרד" },
+    // Expressions — child (diffed against body-child, face at child proportions)
+    { id: "expression-neutral-child", layer: "expression", file: "game/sprites/expression/expression-neutral-child.png", label: "ניטרלי (ילד)" },
+    { id: "expression-happy-child", layer: "expression", file: "game/sprites/expression/expression-happy-child.png", label: "שמח (ילד)" },
+    { id: "expression-worried-child", layer: "expression", file: "game/sprites/expression/expression-worried-child.png", label: "מוטרד (ילד)" },
     { id: "body-adult", layer: "body", file: "game/sprites/body/body-adult.png", label: "גוף מבוגר" },
+    { id: "hair-buzz", layer: "hair", file: "game/sprites/hair/hair-buzz.png", label: "שיער גוזז" },
+    { id: "hair-child", layer: "hair", file: "game/sprites/hair/hair-child.png", label: "שיער ילד" },
   ],
 
   scenes: [

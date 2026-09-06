@@ -16,7 +16,7 @@ export const siahatLitufimEvent: GameEvent = {
     ],
   },
 
-  kicker: "גיל 18 — שבוע לפני הגיוס",
+  kicker: "שיחת ליטופים",
   headline: "שיחה שאי אפשר להסביר אותה לאף אחד מבחוץ.",
 
   choices: [

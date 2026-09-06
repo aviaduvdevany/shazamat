@@ -9,7 +9,7 @@ export const tofesAvirEvent: GameEvent = {
   mood: "epic",
   scene: "school-stage",
 
-  kicker: "גיל 21 — נמל תעופה בן גוריון",
+  kicker: "תופס אויר",
   headline: "הצבא נגמר. הדרכון ביד.",
   body: "לאן?",
 

@@ -10,7 +10,7 @@ export const destinationIndiaEvent: GameEvent = {
 
   requires: { type: "flag", key: "travelDestination", value: "india" },
 
-  kicker: "גיל 22 — גואה",
+  kicker: "תופס אויר",
   headline: "אתה ער כבר שלושים ושש שעות.",
   body: "לא ברור אם זה בגלל הים, המוזיקה, או מה שהיה אתמול. כנראה שילוב.",
 
